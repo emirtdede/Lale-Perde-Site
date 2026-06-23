@@ -130,7 +130,7 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
       
       {/* Left Sidebar Layout */}
       <aside style={{ position: 'sticky', top: '100px' }}>
-        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.5rem', color: 'var(--color-text)', marginBottom: '1rem', lineHeight: 1.1 }}>
+        <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.5rem', color: 'var(--color-text)', marginBottom: '1rem', lineHeight: 1.1, whiteSpace: 'nowrap' }}>
           {language === 'tr' ? 'Ölçü Sihirbazı' : 'Measure Wizard'}
         </h1>
         <p style={{ opacity: 0.8, fontSize: '0.95rem', lineHeight: 1.5, marginBottom: '3rem' }}>
@@ -279,81 +279,206 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '2.5rem', alignItems: 'start' }}>
               
-              {/* LEFT: 2D Interactive Preview */}
               <div 
                 ref={containerRef}
                 style={{ 
                   position: 'relative', 
-                  backgroundColor: 'var(--color-neutral)', 
+                  backgroundColor: '#0a111a', 
                   borderRadius: '12px', 
                   border: '1px solid var(--color-border)',
                   height: '500px', 
                   display: 'flex',
                   justifyContent: 'center',
                   alignItems: 'center',
-                  touchAction: 'none'
+                  touchAction: 'none',
+                  overflow: 'hidden'
                 }}
               >
+                {/* Window Background (centered behind curtain) */}
                 <div style={{
-                  position: 'relative',
+                  position: 'absolute',
+                  width: '240px',
+                  height: '220px',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  border: '6px solid #162435',
+                  borderRadius: '4px',
+                  backgroundColor: '#a3c6e4',
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gridTemplateRows: '1fr 1fr',
+                  gap: '4px',
+                  zIndex: 1,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
+                }}>
+                  <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
+                  <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
+                  <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
+                  <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
+                </div>
+
+                {/* Semi-transparent Wavy Curtain */}
+                <div style={{
+                  position: 'absolute',
                   width: `${Math.max(30, (width / 800) * 100)}%`,
                   height: `${Math.max(30, (height / 400) * 100)}%`,
-                  backgroundColor: 'rgba(255, 255, 255, 0.8)',
-                  border: '1px solid rgba(0,0,0,0.1)',
-                  backgroundImage: 'linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)',
-                  backgroundSize: '20px 100%',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.15)',
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  background: 'repeating-linear-gradient(90deg, rgba(245, 245, 247, 0.6) 0px, rgba(255, 255, 255, 0.8) 12px, rgba(245, 245, 247, 0.6) 24px, rgba(200, 200, 200, 0.3) 30px, rgba(245, 245, 247, 0.6) 36px)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                  zIndex: 2,
                   transition: isDraggingWidth || isDraggingHeight ? 'none' : 'all 0.3s ease-out'
                 }}>
-                  {/* Width Label (A) */}
-                  <div style={{ position: 'absolute', top: '-40px', left: '50%', transform: 'translateX(-50%)', backgroundColor: '#1A1A1A', color: '#F2C94C', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, border: '1px solid #F2C94C' }}>
-                    A: {width} cm
-                  </div>
-                  {/* Height Label (B) */}
-                  <div style={{ position: 'absolute', top: '50%', right: '-65px', transform: 'translateY(-50%)', backgroundColor: '#1A1A1A', color: '#F2C94C', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600, border: '1px solid #F2C94C' }}>
-                    B: <br/>{height}<br/>cm
+                  {/* Width dashed line and arrows (A) */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '-25px',
+                    left: '0',
+                    right: '0',
+                    height: '2px',
+                    borderTop: '2px dashed #BD954B',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    {/* Left Arrow */}
+                    <div style={{
+                      position: 'absolute',
+                      left: '0',
+                      top: '-5px',
+                      borderTop: '5px transparent solid',
+                      borderBottom: '5px transparent solid',
+                      borderRight: '7px solid #BD954B',
+                    }} />
+                    {/* Right Arrow */}
+                    <div style={{
+                      position: 'absolute',
+                      right: '0',
+                      top: '-5px',
+                      borderTop: '5px transparent solid',
+                      borderBottom: '5px transparent solid',
+                      borderLeft: '7px solid #BD954B',
+                    }} />
+                    {/* Width Label A */}
+                    <div style={{
+                      backgroundColor: '#0F172A',
+                      color: '#BD954B',
+                      padding: '2px 8px',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      border: '1px solid #BD954B',
+                      transform: 'translateY(-1px)',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      A: {width} cm
+                    </div>
                   </div>
 
-                  {/* Drag Handle - Width (Right edge) */}
+                  {/* Height dashed line and arrows (B) */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '0',
+                    bottom: '0',
+                    right: '-25px',
+                    width: '2px',
+                    borderLeft: '2px dashed #BD954B',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    {/* Top Arrow */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '0',
+                      left: '-5px',
+                      borderLeft: '5px transparent solid',
+                      borderRight: '5px transparent solid',
+                      borderBottom: '7px solid #BD954B',
+                    }} />
+                    {/* Bottom Arrow */}
+                    <div style={{
+                      position: 'absolute',
+                      bottom: '0',
+                      left: '-5px',
+                      borderLeft: '5px transparent solid',
+                      borderRight: '5px transparent solid',
+                      borderTop: '7px solid #BD954B',
+                    }} />
+                    {/* Height Label B */}
+                    <div style={{
+                      position: 'absolute',
+                      backgroundColor: '#0F172A',
+                      color: '#BD954B',
+                      padding: '4px 6px',
+                      borderRadius: '4px',
+                      fontSize: '0.75rem',
+                      fontWeight: 600,
+                      border: '1px solid #BD954B',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      textAlign: 'center',
+                      lineHeight: '1.1',
+                      left: '10px',
+                      whiteSpace: 'nowrap'
+                    }}>
+                      <span>B:</span>
+                      <span>{height}</span>
+                      <span>cm</span>
+                    </div>
+                  </div>
+
+                  {/* Drag Handle - Width (Top Right) */}
                   <div 
                     onPointerDown={(e) => { e.preventDefault(); setIsDraggingWidth(true); }}
                     style={{
                       position: 'absolute',
-                      top: '0',
-                      right: '-12px',
-                      height: '100%',
+                      top: '-10px',
+                      right: '-10px',
                       width: '24px',
+                      height: '24px',
                       cursor: 'ew-resize',
+                      zIndex: 10,
                       display: 'flex',
-                      flexDirection: 'column',
-                      justifyContent: 'flex-start',
                       alignItems: 'center',
-                      zIndex: 10
+                      justifyContent: 'center'
                     }}
                   >
-                    <div style={{ width: '20px', height: '20px', backgroundColor: '#F2C94C', border: '3px solid #FFF', borderRadius: '50%', marginTop: '-10px', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
-                    <div style={{ width: '2px', flex: 1, backgroundColor: '#F2C94C', borderLeft: '1px dashed #FFF' }} />
+                    <div style={{ width: '16px', height: '16px', backgroundColor: '#BD954B', border: '2px solid #FFF', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
                   </div>
 
-                  {/* Drag Handle - Height (Bottom edge) */}
+                  {/* Drag Handle - Height (Bottom Right) */}
                   <div 
                     onPointerDown={(e) => { e.preventDefault(); setIsDraggingHeight(true); }}
                     style={{
                       position: 'absolute',
-                      bottom: '-12px',
-                      left: '0',
-                      width: '100%',
+                      bottom: '-10px',
+                      right: '-10px',
+                      width: '24px',
                       height: '24px',
                       cursor: 'ns-resize',
+                      zIndex: 10,
                       display: 'flex',
-                      justifyContent: 'flex-end',
                       alignItems: 'center',
-                      zIndex: 10
+                      justifyContent: 'center'
                     }}
                   >
-                    <div style={{ height: '20px', width: '20px', backgroundColor: '#F2C94C', border: '3px solid #FFF', borderRadius: '50%', marginRight: '-10px', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
-                    <div style={{ height: '2px', flex: 1, backgroundColor: '#F2C94C', borderTop: '1px dashed #FFF', position: 'absolute', width: '100%', left: 0 }} />
+                    <div style={{ width: '16px', height: '16px', backgroundColor: '#BD954B', border: '2px solid #FFF', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
                   </div>
+                </div>
+
+                {/* Info Icon (Bottom Left) */}
+                <div style={{ position: 'absolute', bottom: '15px', left: '15px', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', zIndex: 3 }}>
+                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                  </svg>
                 </div>
               </div>
 
