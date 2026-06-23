@@ -1,0 +1,162 @@
+export const tr = {
+  nav: {
+    home: "Giriş",
+    story: "Hikayemiz",
+    products: "Ürünler",
+    services: "Hizmetler",
+    guide: "Rehber",
+    wizard: "Ölçü Sihirbazı",
+    contact: "İletişim",
+    appointment: "Randevu",
+    consultancy: "Tasarım Danışmanlığı",
+    searchPlaceholder: "Ürün, renk veya kumaş ara...",
+    adminPanel: "Yönetim Paneli"
+  },
+  hero: {
+    subtitle: "Premium Ev Tekstili & Tasarım",
+    title: "Işığın En Zarif Hali",
+    discoverBtn: "Koleksiyonu Keşfet",
+    appointmentBtn: "Ücretsiz Keşif Randevusu",
+    scrollDown: "Aşağı Kaydır",
+    day: "Gündüz",
+    night: "Gece"
+  },
+  story: {
+    label: "Felsefemiz",
+    title: "İskandinav Minimalizmi, İtalyan Dokunuşuyla Buluşuyor",
+    text1: "Lale Perde olarak, pencerelerin yalnızca dış dünyaya açılan birer açıklık değil, evinizin ruhunu yansıtan en önemli tasarım ögesi olduğuna inanıyoruz. Tasarımlarımızda sadeliği, işlevselliği ve doğal gün ışığını en estetik biçimde içeri almayı hedefliyoruz.",
+    quote: '"Işığın odanıza yayılış şekli, yaşam kalitenizi belirler."',
+    text2: "Özenle seçilmiş keten lifleri, yumuşak dokulu tüller ve zengin renk geçişleriyle her mekana özel çözümler üretiyoruz. Modern lüksü, sakin ve davetkar İskandinav minimalizmiyle harmanlayarak mekanlarınıza sıcak bir gün ışığı atmosferi taşıyoruz."
+  },
+  fabric: {
+    label: "Zanaat & Doku",
+    title: "Kusursuz Kumaş Kalitesi",
+    desc: "Hassas dokuma teknikleri, altın ve lacivert iplik harmanları ile her detayda hissedilen lüks hissiyatı.",
+    btn: "Doku Örneklerini İnceleyin"
+  },
+  collections: {
+    label: "Küratörlüğünü Yaptığımız Seriler",
+    title: "Seçkin Koleksiyonlarımız",
+    subtitle: "Her mekana uyum sağlayacak, farklı işlevsellik ve estetik zenginlik sunan perde modellerimiz.",
+    items: {
+      tul: "Tül Perdeler",
+      tulDesc: "Evinize yumuşak bir aydınlık ve esinti getiren, ince ve dökümlü premium tül tasarımları.",
+      fon: "Fon Perdeler",
+      fonDesc: "Zengin keten dokuları ve derin lacivert/bej renk alternatifleriyle odaya karakter katan kalın dökümlü kumaşlar.",
+      stor: "Stor & Jaluzi",
+      storDesc: "Modern ve minimalist mekanlar için mükemmel ışık kontrolü sunan fonksiyonel ahşap ve kumaş jaluziler.",
+      motor: "Motorlu Sistemler",
+      motorDesc: "Akıllı ev sistemlerine entegre olabilen, uzaktan kumandalı ve sessiz çalışan lüks motorlu perde mekanizmaları."
+    }
+  },
+  appointment: {
+    label: "Ayrıcalıklı Deneyim",
+    title: "Evinizde Ücretsiz Keşif ve Tasarım Hizmeti",
+    desc: "Tasarım uzmanlarımız evinizi ziyaret ederek pencere ölçülerinizi alsın, mobilya ve ışık açısına en uygun renk ve kumaş kataloğunu sizinle birlikte belirlesin.",
+    emailLabel: "E-POSTA",
+    phoneLabel: "TELEFON & WHATSAPP",
+    addressLabel: "SHOWROOM ADRESİ",
+    formTitle: "Tasarım Randevu Formu",
+    fullName: "Adınız Soyadınız",
+    phone: "Telefon Numaranız",
+    email: "E-posta Adresiniz",
+    serviceInterest: "İlgi Duyduğunuz Hizmet",
+    details: "Evinizin Detayları ve Talepleriniz",
+    submitBtn: "Randevu Talebini Gönder",
+    successMsg: "Talebiniz başarıyla alındı. Tasarım uzmanlarımız en kısa sürede sizinle iletişime geçecektir.",
+    placeholderName: "Örn. Emir Dede",
+    placeholderPhone: "Örn. 0555 555 55 55",
+    placeholderEmail: "emirdede@example.com",
+    placeholderDetails: "Tasarım tercihlerinizi, pencerelerinizin yapısını belirtebilirsiniz...",
+    appointmentFormTitle: "Ücretsiz Keşif & Ölçü Randevusu",
+    appointmentDate: "Müsait Olduğunuz Tarih",
+    appointmentTime: "Müsait Olduğunuz Saat",
+    appointmentAddress: "Ev Adresiniz",
+    placeholderAddress: "Lütfen ölçü alınacak detaylı ev adresinizi giriniz...",
+    appointmentSubmitBtn: "Randevu Talebini Gönder",
+    appointmentSuccessMsg: "Randevu talebiniz başarıyla alındı. Tasarım uzmanlarımız en kısa sürede sizinle iletişime geçecektir.",
+    services: {
+      tul: "Tül Perde Tasarımı",
+      fon: "Fon & Kumaş Perde",
+      motor: "Akıllı & Motorlu Sistemler",
+      all: "Komple Ev / Showroom Keşfi"
+    }
+  },
+  footer: {
+    brandDesc: "İskandinav sadeliğini ve modern lüksü pencerelerinize taşıyan premium ev tekstili markası.",
+    colCollections: "Koleksiyonlar",
+    colServices: "Hizmetlerimiz",
+    colHours: "Çalışma Saatleri",
+    allRightsReserved: "Tüm hakları saklıdır.",
+    createdBy: "",
+    tagline: "Modern Luxury & Minimalist Design",
+    gizlilik: "Gizlilik Politikası",
+    cerez: "Çerez Politikası",
+    kvkk: "KVKK Aydınlatma Metni",
+    kullanici: "Kullanım Koşulları",
+    satis: "Mesafeli Satış Sözleşmesi",
+    bilgi: "Ön Bilgilendirme Formu",
+    iade: "İade ve Cayma Şartları"
+  },
+  wizard: {
+    title: "Ölçü Sihirbazı",
+    subtitle: "Pencereleriniz için doğru perde ölçüsünü adım adım hesaplayın.",
+    step1Title: "1. Adım: Perde Tipini Seçin",
+    step2Title: "2. Adım: Genişlik (En) Ölçüsü",
+    step2Desc: "Pencere çerçevesinin sol dış kenarından sağ dış kenarına kadar olan mesafeyi ölçün. Korniş kullanıyorsanız korniş uzunluğunu girin.",
+    step3Title: "3. Adım: Yükseklik (Boy) Ölçüsü",
+    step3Desc: "Kornişten perdenin bitmesini istediğiniz noktaya (genellikle yere veya mermer hizasına) kadar olan dikey mesafeyi ölçün.",
+    widthLabel: "En (Genişlik) - cm",
+    heightLabel: "Boy (Yükseklik) - cm",
+    next: "İleri",
+    back: "Geri",
+    finish: "Özet ve Teklif Al",
+    summaryTitle: "Ölçüm Özetiniz",
+    selectedProduct: "Seçilen Perde:",
+    calculatedDimensions: "Hesaplanan Ölçüler:",
+    whatsappMessageBtn: "WhatsApp Fiyat Teklifi Al",
+    howToMeasure: "Nasıl Ölçü Alınır?"
+  },
+  catalog: {
+    title: "Ürün Kataloğumuz",
+    subtitle: "Doğal dokular, zarif renkler ve modern tasarımlar",
+    filterTitle: "Filtreler",
+    category: "Kategori",
+    color: "Renk",
+    fabricType: "Kumaş Tipi",
+    search: "Arama",
+    sort: "Sıralama",
+    sortBy: {
+      newest: "En Yeniler",
+      popular: "Popülerlik",
+      name: "İsim (A-Z)"
+    },
+    noProducts: "Aramanıza veya filtrelerinize uygun ürün bulunamadı.",
+    backToCatalog: "Kataloğa Dön",
+    all: "Tümü",
+    width: "En (cm)",
+    height: "Boy (cm)",
+    calculateQuote: "Teklif Hesapla",
+    sendWpBtn: "WhatsApp'tan Teklif Al"
+  },
+  contactPage: {
+    label: "Kurumsal & İş Ortaklığı",
+    title: "İş Ortaklığı & Toptan Satış",
+    desc: "Toptan alım, bayilik başvuruları veya projeleriniz için iş ortaklığı taleplerinizi bu alan üzerinden iletebilirsiniz. Kurumsal ekibimiz en kısa sürede sizinle iletişime geçecektir.",
+    formTitle: "Kurumsal İletişim Formu",
+    fullName: "Yetkili Adı Soyadı",
+    phone: "Telefon Numaranız",
+    email: "E-posta Adresiniz",
+    subjectLabel: "İş Birliği Türü",
+    details: "Mesajınız & Talep Detayları",
+    submitBtn: "Talep Formunu Gönder",
+    successMsg: "Kurumsal iş ortaklığı talebiniz başarıyla iletildi. Yetkili ekibimiz en kısa sürede sizinle iletişime geçecektir.",
+    placeholderDetails: "Lütfen firmanız, talep ettiğiniz adetler veya proje detayları hakkında bilgi yazınız...",
+    subjects: {
+      general: "Toptan Alım (Toplu Sipariş)",
+      cooperation: "Bayilik / Showroom Başvurusu",
+      suggestion: "Proje & Mimar İş Birliği",
+      other: "Diğer Kurumsal Talepler"
+    }
+  }
+};

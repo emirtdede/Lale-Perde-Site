@@ -1,0 +1,41 @@
+Created At: 2026-06-23T15:37:32Z
+Completed At: 2026-06-23T15:37:32Z
+File Path: `file:///c:/Users/DEDE-/Desktop/lale-perde-site/src/app/urunler/page.tsx`
+Total Lines: 33
+Total Bytes: 1175
+Showing lines 1 to 33
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: import { supabase } from '../../lib/supabaseClient';
+2: import { mapProductFromDb, mapCategoryFromDb } from '../../context/dbMappers';
+3: import ProductsCatalogClient from './ProductsCatalogClient';
+4: import { Metadata } from 'next';
+5: 
+6: export const revalidate = 60; // ISR cache for 60 seconds
+7: 
+8: export const metadata: Metadata = {
+9:   title: 'Lale Perde • Ürün Kataloğu',
+10:   description: 'Doğal dokular, zarif renkler ve modern tasarımlarla eviniz için en iyi perde seçeneklerini inceleyin.',
+11: };
+12: 
+13: export default async function ProductsCatalogPage() {
+14:   // Fetch active products and categories securely on the server
+15:   const [
+16:     { data: rawProducts },
+17:     { data: rawCats }
+18:   ] = await Promise.all([
+19:     supabase.from('products').select('*').eq('status', 'active').order('display_order', { ascending: true }),
+20:     supabase.from('categories').select('*').eq('status', 'active').order('display_order', { ascending: true })
+21:   ]);
+22: 
+23:   const products = (rawProducts || []).map(mapProductFromDb);
+24:   const categories = (rawCats || []).map(mapCategoryFromDb);
+25: 
+26:   return (
+27:     <ProductsCatalogClient 
+28:       initialProducts={products} 
+29:       initialCategories={categories} 
+30:     />
+31:   );
+32: }
+33: 
+The above content shows the entire, complete file contents of the requested file.

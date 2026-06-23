@@ -1,0 +1,266 @@
+════════════════════════════════════════
+SİSTEM ANAYASASI — VIBE CODING
+════════════════════════════════════════
+
+Bu dosya (.rules), projenin tek ve yegane çalışma anayasasıdır.
+Kullandığın AI aracı ne olursa olsun, her oturuma veya göreve
+KATI BİR ŞEKİLDE sadece bu dosyayı okuyarak başlamakla yükümlüsün.
+Başka hiçbir araca özel kural dosyası arama veya oluşturma.
+
+════════════════════════════════════════
+PROJE BAŞLANGICI
+════════════════════════════════════════
+
+Eğer project_docs klasörü yoksa oluştur.
+
+Aşağıdaki dosyaları ve klasörleri oluştur:
+
+  project_docs/VIBE_CODING_GUIDE.md   ← Şablon ve Referans Deposu
+  project_docs/PRD.md
+  project_docs/SRS.md
+  project_docs/SAD.md
+  project_docs/DATABASE_SCHEMA.md
+  project_docs/API_SPECIFICATION.md
+  project_docs/UI_UX_GUIDELINES.md
+  project_docs/DEVELOPMENT_ROADMAP.md
+  project_docs/MEMORY.md
+  project_docs/GLOSSARY.md
+  project_docs/CHANGELOG.md
+  project_docs/CHANGELOG_ARCHIVE/
+  project_docs/TASKS.md
+  project_docs/TASKS_ARCHIVE/
+  project_docs/TECHNICAL_DEBT.md
+  project_docs/DECISIONS.md
+  project_docs/RISKS.md
+  project_docs/FILE_STRUCTURE.md
+  project_docs/TESTING_STATUS.md
+  project_docs/ENVIRONMENT.md
+  project_docs/SECURITY.md
+  project_docs/DEPLOYMENT.md
+  project_docs/PROMPTS_LIBRARY.md
+  project_docs/LOCALIZATION.md
+
+  locales/tr.js
+  locales/en.js
+  plans/
+  .env.example  ← GitHub'a pushlanacak boş şablon (Değerler boş bırakılır).
+  .env          ← Gerçek gizli değerlerin dosyası (KESİNLİKLE .gitignore içinde olmalı).
+
+────────────────────────────────────────
+GÖREV BAŞLAMADAN ÖNCE
+────────────────────────────────────────
+
+KESİNLİKLE TÜM DOSYALARI BAŞTAN SONA OKUMA.
+Token sınırını koru; bağlama göre (Dynamic Context Routing)
+hareket et.
+
+ZORUNLU — her görev öncesinde SADECE şu 2 dosyayı oku:
+
+  1. MEMORY.md                 → Projenin özeti ve güncel durumu
+  2. TASKS.md                  → Aktif ve sıradaki görevler
+
+BAĞLAMA GÖRE — görevin içeriğine göre EK OLARAK oku:
+
+  Doküman formatı/şablonu     → VIBE_CODING_GUIDE.md (ÖNCE BURAYA BAK)
+  Yeni özellik (feature)      → PRD.md + SRS.md
+  Mimari karar / algoritma    → SAD.md
+  Veritabanı değişikliği      → DATABASE_SCHEMA.md
+  API değişikliği             → API_SPECIFICATION.md
+  Güvenlik görevi             → SECURITY.md
+  Sunucu/CI-CD/Dağıtım görevi → DEPLOYMENT.md
+  Çoklu AI / Özel Promptlar   → PROMPTS_LIBRARY.md
+  Yeni metin/Çeviri/Dil işi   → LOCALIZATION.md + locales/ dosyaları
+  Yeni terimle karşılaşma     → GLOSSARY.md
+
+────────────────────────────────────────
+KATİ MİMARİ VE GELİŞTİRME STANDARTLARI
+────────────────────────────────────────
+
+DOKÜMANTASYON ŞABLONLARI VE REFERANS:
+  ✓ Yeni bir doküman oluşturman veya mevcut bir dokümanın formatını
+    (örn: PRD nasıl yazılır, SRS başlıkları nelerdir) öğrenmen
+    gerektiğinde, uydurma formatlar KULLANMA.
+  ✓ Mutlaka önce project_docs/VIBE_CODING_GUIDE.md dosyasını oku ve
+    oradaki şablonu (template) birebir kopyalayarak doldur.
+
+GELİŞTİRME HİYERARŞİSİ (PRD → SRS → SAD):
+  Yeni bir özellik/modül geliştirilirken şu sıra KESİN ZORUNLUDUR:
+  1. PRD (Ne yapılacak, neden yapılacak?)
+  2. SRS (Nasıl davranacak, nasıl test edilecek?)
+  3. SAD (Hangi mimari/teknoloji ile inşa edilecek?)
+  ✓ Bu belgelerden biri eksikse, kod yazmaya GEÇİLMEZ. Belirsizlik
+    durumunda önce eksik olan belgeyi VIBE_CODING_GUIDE.md şablonuna
+    göre doldurmayı teklif et.
+
+HARDCODED METİN YASAĞI VE DİL YÖNETİMİ:
+  ✗ Koda doğrudan metin yazmak KESİNLİKLE YASAKTIR.
+    (buton yazısı, uyarı mesajı, başlık, placeholder vb.)
+  ✓ Tüm metinler locales/tr.js ve locales/en.js dosyalarında tutulur.
+  ✓ Yeni bir UI elemanı eklerken çeviri standartlarını, üslubu
+    ve doğru kelime karşılıklarını korumak için ÖNCE
+    project_docs/LOCALIZATION.md dosyasını oku.
+
+HARDCODED İŞ MANTIĞI YASAĞI (Zero-Code Change):
+  ✗ İş kuralları ve durumlar (state) koda sabit olarak gömülmez.
+  ✓ Tüm iş mantığı yapılandırma dosyaları, veritabanı değerleri
+    veya .env üzerinden yönetilir.
+
+TDD ZORUNLULUĞU:
+  ✓ Gerçek feature kodu yazılmadan ÖNCE unit/entegrasyon
+    testleri yazılmalıdır.
+  ✓ Birim testleri dış bağımlılıklardan (DB, ağ, dosya sistemi)
+    tamamen izole edilmeli; mock/stub kullanılmalıdır.
+  ✓ İş mantığı fonksiyonları Pure Function prensibine uygun
+    yazılmalı; yan etkiler (DB yazma, API çağrısı vb.) net
+    sınırlarla ayrıştırılmalıdır.
+
+BAĞIMLILIK KİLİDİ:
+  ✗ Kullanıcı onayı olmadan yeni paket kurulamaz.
+  ✓ Paketler kesin sürüm numarasıyla kilitlenir.
+    ("1.2.3" — "^1.2.3" değil)
+
+AUDIT & LOGGING:
+  ✓ Kritik eylemler, veri mutasyonları ve sistem hataları
+    loglanmalıdır.
+  ✓ Asenkron medya operasyonlarında (canvas render, PDF dışa
+    aktarım vb.) try/catch blokları zorunludur.
+
+UTF-8 ZORUNLULUĞU:
+  ✓ Tüm dosyalar istisnasız UTF-8 formatında oluşturulur.
+    (Türkçe karakter ve Unicode hatalarını önler.)
+
+PLAN FORMATI VE /plans DİZİNİNİN KULLANIMI:
+  ✓ Karmaşık bir göreve başlarken, doğrudan kod yazmaya GİRİŞMEDEN ÖNCE,
+    yapacağın işin adım adım eylem planını SOHBET EKRANINA DEĞİL,
+    kesinlikle /plans dizinine yeni bir markdown dosyası olarak kaydet.
+    (Örn: /plans/odeme_sistemi_entegrasyonu.md)
+  ✓ Bu dizin senin düşünme, taslak çıkarma ve görev takip defterindir.
+    Kodu yazarken bu plandaki adımları takip et ve tamamladıkça işaretle.
+  ✗ Görevler için efor/süre tahmini yapılmaz. (saat, gün vb.)
+  ✓ Odak: işi kodlanabilir, eyleme geçirilebilir adımlara bölmek.
+
+DOKÜMAN UZUNLUK LİMİTİ:
+  ✓ Hiçbir dokümantasyon dosyası 250 satırı geçemez.
+  ✓ Limit aşıldığında eski içerik ilgili _ARCHIVE klasörüne taşınır
+    ve ana dosyadan referans verilir.
+  ✓ MEMORY.md için özel limit: maksimum 100 satır.
+
+────────────────────────────────────────
+ÇALIŞMA KURALLARI
+────────────────────────────────────────
+
+KESİN YASAKLAR (kullanıcı izni olmadan):
+  ✗ Dosya silme
+  ✗ Teknoloji değiştirme
+  ✗ Mimari değiştirme
+  ✗ Çalışan sistemi yeniden yazma
+  ✗ Gereksiz refactor
+  ✗ Aynı anda birden fazla modülü değiştirme
+  ✗ Onaysız kütüphane kurma
+  ✗ .env dosyasını commit etme veya log'a yazma
+  ✗ Koda hardcoded metin veya iş kuralı gömme
+
+ZORUNLU KURALLAR:
+  ✓ Büyük görevleri küçük adımlara böl
+  ✓ Önce mevcut kodu oku, sonra değiştir
+  ✓ Her değişiklik minimum etki prensibi ile yapılmalı
+  ✓ Belirsiz durumda tahmin etme, kullanıcıya sor
+  ✓ GLOSSARY.md'deki terimleri kullan
+  ✓ Yeni mimari karar alındıysa DECISIONS.md'ye yaz
+  ✓ Yeni feature öncesinde test yaz (TDD)
+  ✓ Yeni UI metni öncesinde dil dosyalarını güncelle
+
+────────────────────────────────────────
+FALLBACK VE ANTİ-DÖNGÜ KURALLARI
+────────────────────────────────────────
+
+SONSUZ DÖNGÜ KIRICISI:
+  Bir hatayı (derleme, linting, test başarısızlığı vb.)
+  çözmeye çalışırken arka arkaya 3 kez başarısız olursan:
+    → Otonom denemeyi DERHAL durdur.
+    → Mevcut durumu ve denenen çözümleri raporla.
+    → Kullanıcıdan açıkça yönlendirme/müdahale talep et.
+
+DOSYA/KOMUT HATASI:
+  Okunması gereken bir belge bulunamazsa veya terminal
+  komutu çökerse:
+    → Tahmin yürütme.
+    → İşlemi durdur ve rollback yap.
+    → Kullanıcıyı bilgilendir.
+
+GRACEFUL DEGRADATION (Uygulama Seviyesi):
+  Dış servisler yanıt vermezse veya DB bağlantısı koparsa:
+    → Beyaz ekran döndürme.
+    → Önbellek (cache) verisi sun veya i18n üzerinden
+      uygun hata mesajı döndür.
+
+────────────────────────────────────────
+GÖREV SONUNDA: SÜREKLİ GÜNCELLEME
+────────────────────────────────────────
+
+ZORUNLU HAFIZA VE GÖREV GÜNCELLEMELERİ:
+
+  MEMORY.md (Kritik Zorunluluk)
+    → Her prompt veya görev sonrasında projede (kod, yapı vb.)
+      anlamlı bir değişiklik yapıldıysa MEMORY.md dosyasını
+      ANINDA güncellemek ZORUNLUDUR.
+    → Durumu, son yapılan işi, sıradaki adımı güncelle.
+    → Maksimum 100 satır — öz tut, aşma.
+
+  CHANGELOG.md
+    → Conventional Commits formatında tarih ve değişiklikleri
+      ekle (feat, fix, refactor, docs, test, chore)
+    → 200 satırı geçince eski kayıtları
+      CHANGELOG_ARCHIVE/YYYY-MM.md dosyasına taşı
+
+  TASKS.md
+    → Tamamlananları [x] işaretle
+    → Ortaya çıkan yeni görevleri ekle
+    → 250 satırı geçince eski görevleri TASKS_ARCHIVE/YYYY-MM.md
+      dosyasına taşı ve ana dosyadan referans ver
+
+GEREKİRSE ŞU DOSYALARI GÜNCELLE:
+  PRD.md                (iş hedefi değiştiyse)
+  SRS.md                (gereksinim değiştiyse)
+  SAD.md                (mimari/teknoloji değiştiyse)
+  DATABASE_SCHEMA.md    (şema değiştiyse)
+  API_SPECIFICATION.md  (endpoint eklendi/değiştiyse)
+  FILE_STRUCTURE.md     (yeni dosya/klasör eklendiyse)
+  TECHNICAL_DEBT.md     (borç eklendi/ödendiyse)
+  DECISIONS.md          (mimari karar alındıysa)
+  RISKS.md              (yeni risk belirlendiyse)
+  TESTING_STATUS.md     (test yazıldıysa)
+  ENVIRONMENT.md        (yeni env değişkeni eklendiyse)
+  SECURITY.md           (güvenlik kuralı değiştiyse)
+  DEPLOYMENT.md         (sunucu/dağıtım süreci değiştiyse)
+  PROMPTS_LIBRARY.md    (yeni bir prompt/ajan kuralı eklendiyse)
+  LOCALIZATION.md       (çeviri kuralı veya tonu değiştiyse)
+  locales/tr.js         (yeni UI metni eklendiyse)
+  locales/en.js         (yeni UI metni eklendiyse)
+
+────────────────────────────────────────
+RAPORLAMA
+────────────────────────────────────────
+
+Her görev sonunda kısa rapor ver:
+
+  ✓ Oluşturulan dosyalar
+  ✓ Değiştirilen dosyalar
+  ✗ Silinen dosyalar (varsa)
+  ⚠ Tespit edilen riskler
+  → Önerilen sonraki adım
+
+────────────────────────────────────────
+GIT
+────────────────────────────────────────
+
+Testler geçildikten ve önemli dönüm noktalarına ulaşıldıktan
+sonra commit checkpoint'i öner.
+
+Commit formatı (Conventional Commits standardı):
+  feat(modül): kısa açıklama
+  fix(modül): kısa açıklama
+  docs(modül): kısa açıklama
+  refactor(modül): kısa açıklama
+  test(modül): kısa açıklama
+  chore(modül): kısa açıklama

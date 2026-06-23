@@ -1,0 +1,162 @@
+export const en = {
+  nav: {
+    home: "Home",
+    story: "Our Story",
+    products: "Products",
+    services: "Services",
+    guide: "Guides",
+    wizard: "Measurement Wizard",
+    contact: "Contact",
+    appointment: "Consultation",
+    consultancy: "Design Consultancy",
+    searchPlaceholder: "Search product, color, or fabric...",
+    adminPanel: "Admin Panel"
+  },
+  hero: {
+    subtitle: "Premium Home Textiles & Design",
+    title: "The Most Elegant Form of Light",
+    discoverBtn: "Discover Collection",
+    appointmentBtn: "Book Free Consultation",
+    scrollDown: "Scroll Down",
+    day: "Day",
+    night: "Night"
+  },
+  story: {
+    label: "Philosophy",
+    title: "Scandinavian Minimalism Meets Italian Touch",
+    text1: "At Lale Perde, we believe windows are not just openings to the outside world, but the most important design element reflecting the soul of your home. We aim to bring simplicity, functionality, and natural light in the most aesthetic way.",
+    quote: '"The way light spreads into your room determines your quality of life."',
+    text2: "We produce custom solutions for every space with carefully selected linen fibers, soft-textured sheers, and rich color transitions. We blend modern luxury with calm, inviting Scandinavian minimalism to bring a warm daylight atmosphere to your spaces."
+  },
+  fabric: {
+    label: "Craft & Texture",
+    title: "Flawless Fabric Quality",
+    desc: "Luxury felt in every detail with precise weaving techniques, gold, and dark blue thread blends.",
+    btn: "Examine Texture Samples"
+  },
+  collections: {
+    label: "Curated Series",
+    title: "Our Elite Collections",
+    subtitle: "Our curtain models offering different functionalities and aesthetic richness to suit every space.",
+    items: {
+      tul: "Sheer Curtains",
+      tulDesc: "Fine, flowing premium sheer designs bringing soft light and breeze to your home.",
+      fon: "Drape Curtains",
+      fonDesc: "Thick draping fabrics that add character to the room with rich linen textures and deep blue/beige alternatives.",
+      stor: "Roller & Venetian Blinds",
+      storDesc: "Functional wood and fabric venetian blinds offering perfect light control for modern minimalist spaces.",
+      motor: "Motorized Systems",
+      motorDesc: "Luxury motorized curtain mechanisms that integrate with smart home systems, operating silently and remotely."
+    }
+  },
+  appointment: {
+    label: "Exclusive Experience",
+    title: "Free Measurement & Design Service at Your Home",
+    desc: "Our design experts visit your home to take window measurements and choose the most suitable color and fabric catalog with you.",
+    emailLabel: "E-MAIL",
+    phoneLabel: "PHONE & WHATSAPP",
+    addressLabel: "SHOWROOM ADDRESS",
+    formTitle: "Design Appointment Form",
+    fullName: "Your Name",
+    phone: "Phone Number",
+    email: "Email Address",
+    serviceInterest: "Service of Interest",
+    details: "Your Home Details & Requests",
+    submitBtn: "Submit Request",
+    successMsg: "Your request has been successfully received. Our design experts will contact you shortly.",
+    placeholderName: "e.g. Emir Dede",
+    placeholderPhone: "e.g. 0555 555 55 55",
+    placeholderEmail: "emirdede@example.com",
+    placeholderDetails: "Describe your design preferences, window structures...",
+    appointmentFormTitle: "Free Home Survey & Measurement",
+    appointmentDate: "Preferred Date",
+    appointmentTime: "Preferred Time Slot",
+    appointmentAddress: "Home Address",
+    placeholderAddress: "Please enter your detailed home address for survey...",
+    appointmentSubmitBtn: "Book Appointment",
+    appointmentSuccessMsg: "Your appointment request has been successfully received. Our design experts will contact you shortly.",
+    services: {
+      tul: "Sheer Curtain Design",
+      fon: "Drape & Fabric Curtain",
+      motor: "Smart & Motorized Systems",
+      all: "Complete Home / Showroom Survey"
+    }
+  },
+  footer: {
+    brandDesc: "Premium home textile brand bringing Scandinavian simplicity and modern luxury to your windows.",
+    colCollections: "Collections",
+    colServices: "Services",
+    colHours: "Working Hours",
+    allRightsReserved: "All rights reserved.",
+    createdBy: "",
+    tagline: "Modern Luxury & Minimalist Design",
+    gizlilik: "Privacy Policy",
+    cerez: "Cookie Policy",
+    kvkk: "GDPR & KVKK Text",
+    kullanici: "Terms of Use",
+    satis: "Distance Sales Agreement",
+    bilgi: "Preliminary Info Form",
+    iade: "Return & Cancellation Terms"
+  },
+  wizard: {
+    title: "Measurement Wizard",
+    subtitle: "Calculate the correct curtain measurements for your windows step-by-step.",
+    step1Title: "Step 1: Select Curtain Type",
+    step2Title: "Step 2: Width (En) Measurement",
+    step2Desc: "Measure from the outer left edge of the window frame to the outer right edge. If using a rod/track, enter the track length.",
+    step3Title: "Step 3: Height (Boy) Measurement",
+    step3Desc: "Measure the vertical distance from the curtain rod to the point you want the curtain to end (usually floor or window sill).",
+    widthLabel: "Width (En) - cm",
+    heightLabel: "Height (Boy) - cm",
+    next: "Next",
+    back: "Back",
+    finish: "Summary & Get Quote",
+    summaryTitle: "Measurement Summary",
+    selectedProduct: "Selected Curtain:",
+    calculatedDimensions: "Calculated Dimensions:",
+    whatsappMessageBtn: "Get WhatsApp Price Quote",
+    howToMeasure: "How to Measure?"
+  },
+  catalog: {
+    title: "Our Product Catalog",
+    subtitle: "Natural textures, elegant colors, and modern designs",
+    filterTitle: "Filters",
+    category: "Category",
+    color: "Color",
+    fabricType: "Fabric Type",
+    search: "Search",
+    sort: "Sort By",
+    sortBy: {
+      newest: "Newest",
+      popular: "Popularity",
+      name: "Name (A-Z)"
+    },
+    noProducts: "No products found matching your search or filters.",
+    backToCatalog: "Back to Catalog",
+    all: "All",
+    width: "Width (cm)",
+    height: "Height (cm)",
+    calculateQuote: "Calculate Quote",
+    sendWpBtn: "Get Quote via WhatsApp"
+  },
+  contactPage: {
+    label: "Corporate & Partnership",
+    title: "Partnership & Wholesale",
+    desc: "You can submit your partnership requests for wholesale purchases, dealership applications, or corporate projects here. Our corporate team will contact you shortly.",
+    formTitle: "Corporate Contact Form",
+    fullName: "Authorized Person Name",
+    phone: "Phone Number",
+    email: "Email Address",
+    subjectLabel: "Cooperation Type",
+    details: "Your Message & Request Details",
+    submitBtn: "Submit Request Form",
+    successMsg: "Your corporate partnership request has been successfully sent. Our authorized team will contact you shortly.",
+    placeholderDetails: "Please write information about your company, requested quantities, or project details...",
+    subjects: {
+      general: "Wholesale Purchase (Bulk Order)",
+      cooperation: "Dealership / Showroom Application",
+      suggestion: "Project & Architect Cooperation",
+      other: "Other Corporate Requests"
+    }
+  }
+};
