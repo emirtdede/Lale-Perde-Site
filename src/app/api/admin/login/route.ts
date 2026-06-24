@@ -2,10 +2,14 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
+import bcrypt from 'bcryptjs';
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'lale-perde-fallback-secret-key-32chars'
-);
+const getSecretKey = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("FATAL: JWT_SECRET ortam değişkeni eksik!");
+  }
+  return new TextEncoder().encode(process.env.JWT_SECRET);
+};
 
 // Create a Supabase client with the Service Role Key to bypass RLS
 const supabaseAdmin = createClient(
@@ -33,7 +37,7 @@ export async function POST(request: Request) {
     }
 
     const isValidUser = (username === authRecord.admin_username || username === authRecord.admin_email);
-    const isValidPass = (password === authRecord.admin_password_hash);
+    const isValidPass = await bcrypt.compare(password, authRecord.admin_password_hash);
 
     if (isValidUser && isValidPass) {
       if (preCheck) {
@@ -48,11 +52,13 @@ export async function POST(request: Request) {
 
       // Create session
       const alg = 'HS256';
-      const token = await new SignJWT({ user: 'admin' })
-        .setProtectedHeader({ alg })
-        .setIssuedAt()
-        .setExpirationTime('24h') // 24 hours
-        .sign(SECRET_KEY);
+      const token = await new SignJWT({ 
+        username,
+        role: 'admin'
+      })
+        .setProtectedHeader({ alg: 'HS256' })
+        .setExpirationTime('24h')
+        .sign(getSecretKey());
 
       // Set HTTP-only cookie
       const cookieStore = await cookies();

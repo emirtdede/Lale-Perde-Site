@@ -8,7 +8,11 @@ import { useDb } from '../../context/DbContext';
 
 export default function GuidePage() {
   const { t, language } = useLanguage();
-  const { guides: rawGuides } = useDb();
+  const { guides: rawGuides, fetchGuidesLazy } = useDb();
+
+  useEffect(() => {
+    fetchGuidesLazy?.();
+  }, [fetchGuidesLazy]);
 
   const guidesList = React.useMemo(() => {
     return [...rawGuides].sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));

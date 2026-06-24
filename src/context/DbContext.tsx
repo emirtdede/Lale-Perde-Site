@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import {
   Product,
@@ -95,6 +95,11 @@ interface DbContextType {
   fetchVisitorLogsPaginated: (page: number, limit?: number) => Promise<{ data: VisitorLog[], count: number }>;
   fetchInboxPaginated: (page: number, limit?: number) => Promise<{ data: InboxMessage[], count: number }>;
   fetchSearchLogsPaginated: (page: number, limit?: number) => Promise<{ data: SearchLog[], count: number }>;
+  
+  // Lazy Fetches
+  fetchServicesLazy?: () => Promise<void>;
+  fetchGuidesLazy?: () => Promise<void>;
+  fetchCampaignsLazy?: () => Promise<void>;
 }
 
 const DbContext = createContext<DbContextType | undefined>(undefined);
@@ -178,9 +183,6 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         { data: rawFabrics },
         { data: rawSettings },
         { data: rawHome },
-        { data: rawSrvs },
-        { data: rawGuides },
-        { data: rawCamps },
         { data: rawMountings }
       ] = await Promise.all([
         supabase.from('categories').select('*').order('display_order', { ascending: true }),
@@ -188,9 +190,6 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         supabase.from('fabric_types').select('*').order('display_order', { ascending: true }),
         supabase.from('site_settings').select('id, store_name, phone, email, address, whatsapp_number, google_maps_embed, announcement_tr, announcement_en, announcement_active, working_hours_tr, working_hours_en, google_ads_id, ads_label_whatsapp, ads_label_contact, shopier_url, instagram_url, facebook_url, linkedin_url, campaign_interval'),
         supabase.from('home_page_content').select('*'),
-        supabase.from('services').select('*'),
-        supabase.from('guides').select('*'),
-        supabase.from('campaigns').select('*'),
         supabase.from('mounting_types').select('*').order('display_order', { ascending: true })
       ]);
 
@@ -200,9 +199,6 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       if (rawMountings) setMountingTypes(rawMountings.map(mapMountingTypeFromDb));
       if (rawSettings && rawSettings[0]) setSettings(mapSettingsFromDb(rawSettings[0]));
       if (rawHome && rawHome[0]) setHomeContent(mapHomeContentFromDb(rawHome[0]));
-      if (rawSrvs) setServices(rawSrvs.map(mapServiceFromDb));
-      if (rawGuides) setGuides(rawGuides.map(mapGuideFromDb));
-      if (rawCamps) setCampaigns(rawCamps.map(mapCampaignFromDb).sort((a, b) => (a.displayOrder || 1) - (b.displayOrder || 1)));
 
       // These will be fetched paginated by their respective components
       setInbox([]);
@@ -239,6 +235,25 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   useEffect(() => {
     fetchData();
   }, []);
+
+  // LAZY FETCHES
+  const fetchServicesLazy = async () => {
+    if (services.length > 0) return; // Already fetched
+    const { data } = await supabase.from('services').select('*');
+    if (data) setServices(data.map(mapServiceFromDb));
+  };
+
+  const fetchGuidesLazy = async () => {
+    if (guides.length > 0) return;
+    const { data } = await supabase.from('guides').select('*');
+    if (data) setGuides(data.map(mapGuideFromDb));
+  };
+
+  const fetchCampaignsLazy = async () => {
+    if (campaigns.length > 0) return;
+    const { data } = await supabase.from('campaigns').select('*');
+    if (data) setCampaigns(data.map(mapCampaignFromDb).sort((a, b) => (a.displayOrder || 1) - (b.displayOrder || 1)));
+  };
 
   // PAGINATION FETCHES
   const fetchProductsPaginated = async (page: number, limit: number = 50) => {
@@ -569,24 +584,26 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // SEARCH LOGS MUTATIONS
   const incrementSearchLog = async (query: string) => {
-    // Check if query exists
-    const trimmed = query.trim().toLowerCase();
-    if (!trimmed) return false;
+    const trimmed = query.trim();
+    if (!trimmed || trimmed.length < 2) return false;
 
-    const existing = searchLogs.find(l => l.query === trimmed);
-    if (existing) {
-      const newCount = existing.count + 1;
-      const { data, error } = await supabase.from('search_logs').update({ count: newCount }).eq('query', trimmed).select();
-      if (!error && data && data[0]) {
-        setSearchLogs(prev => prev.map(item => item.query === trimmed ? data[0] : item));
+    try {
+      const response = await fetch('/api/public/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'search', data: { query: trimmed } })
+      });
+      const result = await response.json();
+      if (response.ok && result.data && result.data[0]) {
+        setSearchLogs(prev => {
+          const exists = prev.find(item => item.query === trimmed);
+          if (exists) return prev.map(item => item.query === trimmed ? result.data[0] : item);
+          return [...prev, result.data[0]];
+        });
         return true;
       }
-    } else {
-      const { data, error } = await supabase.from('search_logs').insert([{ query: trimmed, count: 1 }]).select();
-      if (!error && data && data[0]) {
-        setSearchLogs(prev => [...prev, data[0]]);
-        return true;
-      }
+    } catch (e) {
+      console.error('Error logging search', e);
     }
     return false;
   };
@@ -594,95 +611,113 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   // VISITOR LOGS MUTATIONS
   const addVisitorLog = async (log: VisitorLog) => {
     const insertData = mapVisitorLogToDb(log);
-    const { data, error } = await supabase.from('visitor_logs').insert([insertData]).select();
-    if (error) {
-      console.error('Error inserting visitor log', error);
-      return false;
+    try {
+      const response = await fetch('/api/public/logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'visitor', data: insertData })
+      });
+      const result = await response.json();
+      if (response.ok && result.data && result.data[0]) {
+        setVisitorLogs(prev => [mapVisitorLogFromDb(result.data[0]), ...prev]);
+        return true;
+      }
+    } catch (e) {
+      console.error('Error inserting visitor log', e);
     }
-    if (data && data[0]) {
-      setVisitorLogs(prev => [mapVisitorLogFromDb(data[0]), ...prev]);
-    }
-    return true;
+    return false;
   };
 
   const updateVisitorLogDwellTime = async (id: string, duration: number) => {
-    const { data, error } = await supabase.from('visitor_logs').update({ duration }).eq('id', id).select();
-    if (error) {
-      console.error('Error updating visitor log duration', error);
-      return false;
+    try {
+      const response = await fetch('/api/public/logs', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'visitor_duration', id, data: { duration } })
+      });
+      if (response.ok) {
+        setVisitorLogs(prev => prev.map(item => item.id === id ? { ...item, duration } : item));
+        return true;
+      }
+    } catch (e) {
+      console.error('Error updating visitor log duration', e);
     }
-    if (data && data[0]) {
-      setVisitorLogs(prev => prev.map(item => item.id === id ? mapVisitorLogFromDb(data[0]) : item));
-    }
-    return true;
+    return false;
   };
 
+  const contextValue = useMemo(() => ({
+    categories,
+    curtainTypes,
+    fabricTypes,
+    mountingTypes,
+    settings,
+    homeContent,
+    services,
+    guides,
+    campaigns,
+    inbox,
+    searchLogs,
+    visitorLogs,
+    loading,
+    
+    addProduct,
+    updateProduct,
+    deleteProduct,
+    
+    addCategory,
+    updateCategory,
+    deleteCategory,
+    
+    addCurtainType,
+    updateCurtainType,
+    deleteCurtainType,
+    
+    addFabricType,
+    updateFabricType,
+    deleteFabricType,
+
+    addMountingType,
+    updateMountingType,
+    deleteMountingType,
+    
+    updateSettings,
+    updateHomeContent,
+    
+    addService,
+    updateService,
+    deleteService,
+    
+    addGuide,
+    updateGuide,
+    deleteGuide,
+    
+    addCampaign,
+    updateCampaign,
+    deleteCampaign,
+    
+    addInboxMessage,
+    updateInboxMessage,
+    
+    incrementSearchLog,
+    
+    addVisitorLog,
+    updateVisitorLogDwellTime,
+
+    fetchProductsPaginated,
+    fetchVisitorLogsPaginated,
+    fetchInboxPaginated,
+    fetchSearchLogsPaginated,
+    
+    fetchServicesLazy,
+    fetchGuidesLazy,
+    fetchCampaignsLazy
+  }), [
+    categories, curtainTypes, fabricTypes, mountingTypes, settings, homeContent, 
+    services, guides, campaigns, inbox, searchLogs, visitorLogs, loading
+  ]);
+
   return (
-    <DbContext.Provider
-      value={{
-        categories,
-        curtainTypes,
-        fabricTypes,
-        mountingTypes,
-        settings,
-        homeContent,
-        services,
-        guides,
-        campaigns,
-        inbox,
-        searchLogs,
-        visitorLogs,
-        loading,
-        
-        addProduct,
-        updateProduct,
-        deleteProduct,
-        
-        addCategory,
-        updateCategory,
-        deleteCategory,
-        
-        addCurtainType,
-        updateCurtainType,
-        deleteCurtainType,
-        
-        addFabricType,
-        updateFabricType,
-        deleteFabricType,
-
-        addMountingType,
-        updateMountingType,
-        deleteMountingType,
-        
-        updateSettings,
-        updateHomeContent,
-        
-        addService,
-        updateService,
-        deleteService,
-        
-        addGuide,
-        updateGuide,
-        deleteGuide,
-        
-        addCampaign,
-        updateCampaign,
-        deleteCampaign,
-        
-        addInboxMessage,
-        updateInboxMessage,
-        
-        incrementSearchLog,
-        
-        addVisitorLog,
-        updateVisitorLogDwellTime,
-
-        fetchProductsPaginated,
-        fetchVisitorLogsPaginated,
-        fetchInboxPaginated,
-        fetchSearchLogsPaginated
-      }}
-    >
+    <DbContext.Provider value={contextValue}>
       {children}
     </DbContext.Provider>
   );

@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useDb } from '@/context/DbContext';
-import { Category } from '@/context/dbTypes';
+import { Category, CurtainType, FabricType, MountingType } from '@/context/dbTypes';
+import { useLanguage } from '@/context/LanguageContext';
+import { uploadImageToServer } from '@/utils/uploadImage';
 import CurtainTypesSubTab from './CurtainTypesSubTab';
 import FabricTypesSubTab from './FabricTypesSubTab';
 import MountingTypesSubTab from './MountingTypesSubTab';
-import { useLanguage } from '@/context/LanguageContext';
 
 const TrashIcon = () => (
   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -430,12 +431,21 @@ export default function CategoriesTab() {
     }
   };
 
-  const handleCropComplete = (croppedWebp: string) => {
-    setEditForm(prev => ({
-      ...prev,
-      images: [...(prev.images || []), croppedWebp]
-    }));
-    setCropQueue(prev => prev.slice(1));
+  const handleCropComplete = async (croppedWebp: string) => {
+    try {
+      setIsConverting(true);
+      const uploadedUrl = await uploadImageToServer(croppedWebp, 'categories');
+      setEditForm(prev => ({
+        ...prev,
+        images: [...(prev.images || []), uploadedUrl]
+      }));
+    } catch (e) {
+      console.error(e);
+      alert('Dosya yüklenemedi.');
+    } finally {
+      setIsConverting(false);
+      setCropQueue(prev => prev.slice(1));
+    }
   };
 
   const handleCropCancel = () => {

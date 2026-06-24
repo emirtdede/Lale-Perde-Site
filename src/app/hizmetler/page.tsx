@@ -8,7 +8,11 @@ import { useDb } from '../../context/DbContext';
 
 export default function ServicesPage() {
   const { t, language } = useLanguage();
-  const { services: rawServices } = useDb();
+  const { services: rawServices, fetchServicesLazy } = useDb();
+
+  useEffect(() => {
+    fetchServicesLazy?.();
+  }, [fetchServicesLazy]);
 
   const servicesList = React.useMemo(() => {
     return [...rawServices].sort((a, b) => a.displayOrder - b.displayOrder);

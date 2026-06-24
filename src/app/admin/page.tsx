@@ -41,9 +41,17 @@ interface SearchResultItem {
 }
 
 export default function AdminPage() {
-  const { settings, updateSettings, services, guides, inbox, campaigns } = useDb();
+  const { settings, updateSettings, services, guides, inbox, campaigns, fetchServicesLazy, fetchGuidesLazy, fetchCampaignsLazy } = useDb();
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      fetchServicesLazy?.();
+      fetchGuidesLazy?.();
+      fetchCampaignsLazy?.();
+    }
+  }, [isAuthenticated, fetchServicesLazy, fetchGuidesLazy, fetchCampaignsLazy]);
   const [activeTab, setActiveTab] = useState<AdminTab>('dashboard');
   const router = useRouter();
   const { theme, toggleTheme } = useTheme();

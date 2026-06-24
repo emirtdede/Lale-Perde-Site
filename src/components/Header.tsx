@@ -18,8 +18,12 @@ export const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const { settings, campaigns, incrementSearchLog } = useDb();
+  const { settings, campaigns, incrementSearchLog, fetchCampaignsLazy } = useDb();
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    fetchCampaignsLazy?.();
+  }, [fetchCampaignsLazy]);
 
   // Filter active campaigns based on today's date
   const activeCampaigns = React.useMemo(() => {

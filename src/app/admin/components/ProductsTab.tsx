@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { useDb } from '@/context/DbContext';
 import { Product, Category } from '@/context/dbTypes';
 import { useLanguage } from '@/context/LanguageContext';
+import { uploadImageToServer } from '@/utils/uploadImage';
+
 
 const TrashIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -604,22 +606,31 @@ export default function ProductsTab() {
     }
   };
 
-  const handleCropComplete = (croppedWebp: string) => {
+  const handleCropComplete = async (croppedWebp: string) => {
     const currentCrop = cropQueue[0];
     if (!currentCrop) return;
 
-    if (currentCrop.type === 'cover') {
-      setEditForm(prev => ({
-        ...prev,
-        coverImage: croppedWebp
-      }));
-    } else {
-      setEditForm(prev => ({
-        ...prev,
-        images: [...(prev.images || []), croppedWebp]
-      }));
+    try {
+      setIsConverting(true);
+      const uploadedUrl = await uploadImageToServer(croppedWebp, 'products');
+      
+      if (currentCrop.type === 'cover') {
+        setEditForm(prev => ({
+          ...prev,
+          coverImage: uploadedUrl
+        }));
+      } else {
+        setEditForm(prev => ({
+          ...prev,
+          images: [...(prev.images || []), uploadedUrl]
+        }));
+      }
+    } catch (error) {
+      alert(t('admin.products.alerts.fileReadError'));
+    } finally {
+      setIsConverting(false);
+      setCropQueue(prev => prev.slice(1));
     }
-    setCropQueue(prev => prev.slice(1));
   };
 
   const handleCropCancel = () => {

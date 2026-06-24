@@ -8,10 +8,14 @@ const supabaseAdmin = createClient(
 );
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
+import bcrypt from 'bcryptjs';
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'lale-perde-fallback-secret-key-32chars'
-);
+const getSecretKey = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("FATAL: JWT_SECRET ortam değişkeni eksik!");
+  }
+  return new TextEncoder().encode(process.env.JWT_SECRET);
+};
 
 export async function POST(request: Request) {
   const cookieStore = await cookies();
@@ -22,7 +26,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await jwtVerify(token.value, SECRET_KEY);
+    await jwtVerify(token.value, getSecretKey());
     
     const body = await request.json();
     const { action, currentPassword, newPassword, adminEmail, adminPhone, twoFactorEnabled, twoFactorType, adminUsername } = body;
@@ -41,13 +45,14 @@ export async function POST(request: Request) {
     const updates: any = {};
 
     if (action === 'change_password') {
-      if (currentPassword !== authRecord.admin_password_hash) {
+      const isValid = await bcrypt.compare(currentPassword, authRecord.admin_password_hash);
+      if (!isValid) {
         return NextResponse.json({ error: 'Mevcut şifre hatalı' }, { status: 400 });
       }
       if (!newPassword || newPassword.length < 6) {
         return NextResponse.json({ error: 'Yeni şifre geçersiz' }, { status: 400 });
       }
-      updates.admin_password_hash = newPassword;
+      updates.admin_password_hash = await bcrypt.hash(newPassword, 10);
     } else if (action === 'update_profile') {
       if (adminUsername !== undefined) updates.admin_username = adminUsername;
       if (adminEmail !== undefined) updates.admin_email = adminEmail;

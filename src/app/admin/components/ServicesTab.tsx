@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { useDb } from '@/context/DbContext';
 import { ServiceItem } from '@/context/dbTypes';
 import { useLanguage } from '@/context/LanguageContext';
+import { uploadImageToServer } from '@/utils/uploadImage';
+
 
 const EditIcon = () => (
   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -377,12 +379,21 @@ export default function ServicesTab() {
     }
   };
 
-  const handleCropComplete = (croppedWebp: string) => {
-    setEditForm(prev => ({
-      ...prev,
-      image: croppedWebp
-    }));
-    setCropQueue([]);
+  const handleCropComplete = async (croppedWebp: string) => {
+    try {
+      setIsConverting(true);
+      const uploadedUrl = await uploadImageToServer(croppedWebp, 'services');
+      setEditForm(prev => ({
+        ...prev,
+        image: uploadedUrl
+      }));
+    } catch (e) {
+      console.error(e);
+      alert(t('admin.services.alerts.fileReadError'));
+    } finally {
+      setIsConverting(false);
+      setCropQueue([]);
+    }
   };
 
   const handleCropCancel = () => {

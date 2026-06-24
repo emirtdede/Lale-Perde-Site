@@ -44,7 +44,7 @@ CREATE POLICY "Allow public insert on inbox" ON public.inbox FOR INSERT WITH CHE
 
 -- 11. Visitor Logs & Search Logs
 ALTER TABLE public.visitor_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public insert on visitor_logs" ON public.visitor_logs FOR INSERT WITH CHECK (true);
+-- No public policies. Only API endpoint using Service Role can insert.
 
 ALTER TABLE public.search_logs ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Allow public insert on search_logs" ON public.search_logs FOR INSERT WITH CHECK (true);
+-- No public policies. Only API endpoint using Service Role can insert.

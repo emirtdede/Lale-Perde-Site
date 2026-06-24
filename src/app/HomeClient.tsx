@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../context/LanguageContext';
 import { useDb } from '../context/DbContext';
@@ -260,8 +261,16 @@ export default function HomeClient({
           className="hero-bg" 
           id="hero-bg" 
           ref={heroBgRef}
-          style={{ backgroundImage: "linear-gradient(to bottom, rgba(26, 46, 64, 0.4), rgba(26, 46, 64, 0.7)), url('/assets/hero.png')" }}
         >
+          <Image 
+            src="/assets/hero.png" 
+            alt="Lale Perde" 
+            fill 
+            priority
+            quality={90}
+            style={{ objectFit: 'cover', zIndex: -1 }} 
+          />
+          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(to bottom, rgba(26, 46, 64, 0.4), rgba(26, 46, 64, 0.7))', zIndex: -1 }} />
           <div className="bulb-glow" id="bulb-glow" ref={bulbGlowRef}>
             <div className="particles-container">
               {particles.map((p, idx) => (
@@ -304,7 +313,9 @@ export default function HomeClient({
       {/* Story / Philosophy Section */}
       <section id="hikayemiz" className="story">
         <div className="story-img-container reveal active">
-          <div className="story-img" id="story-img" ref={storyImgRef} style={{ backgroundImage: "url('/assets/scandi.png')" }}></div>
+          <div className="story-img" id="story-img" ref={storyImgRef} style={{ position: 'relative', overflow: 'hidden' }}>
+            <Image src="/assets/scandi.png" alt={t('story.title')} fill style={{ objectFit: 'cover' }} />
+          </div>
         </div>
         <div className="story-content reveal active">
           <span className="section-label">{t('story.label')}</span>
