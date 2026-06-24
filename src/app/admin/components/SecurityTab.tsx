@@ -38,8 +38,11 @@ export default function SecurityTab() {
       }));
     }
 
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     // Fetch secure settings from the server
-    fetch('/api/admin/verify')
+    fetch('/api/admin/verify', { signal })
       .then(res => res.json())
       .then(data => {
         if (data.authenticated) {
@@ -56,7 +59,15 @@ export default function SecurityTab() {
           });
         }
       })
-      .catch(err => console.error('Error fetching secure settings', err));
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error('Error fetching secure settings', err);
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
   }, [dbSettings]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
