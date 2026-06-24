@@ -26,7 +26,7 @@ interface GA4Stats {
 
 export default function DashboardTab() {
   const { inbox, visitorLogs, campaigns } = useDb();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [productCount, setProductCount] = useState(0);
 
   useEffect(() => {
@@ -174,7 +174,11 @@ export default function DashboardTab() {
         setFormStartedCount(body.formStartedCount || 0);
         setFormCompletedCount(body.formCompletedCount || 0);
         setHasFullHistoryLoaded(true);
-        showToast(t('admin.dashboard.alerts.syncSuccess'), false);
+        if (body.warning) {
+          showToast(language === 'tr' ? 'Google Analytics (GA4) API kimlik bilgileri eksik. Önbellekteki veriler gösteriliyor.' : 'Google Analytics (GA4) API credentials are missing. Showing cached data.', true);
+        } else {
+          showToast(t('admin.dashboard.alerts.syncSuccess'), false);
+        }
       } else {
         if (body.quotaExceeded) {
           setQuotaExceeded(true);
