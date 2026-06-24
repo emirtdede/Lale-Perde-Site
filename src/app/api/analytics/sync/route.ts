@@ -8,7 +8,11 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+let hasCheckedTable = false;
+
 async function ensureTableExists() {
+  if (hasCheckedTable) return;
+  hasCheckedTable = true;
   const connectionString = process.env.DATABASE_URL;
   if (!connectionString) {
     console.warn('DATABASE_URL is not configured. Cannot ensure table exists via pg.');

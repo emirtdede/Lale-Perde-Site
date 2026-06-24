@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import {
   Product,
@@ -609,7 +609,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   // VISITOR LOGS MUTATIONS
-  const addVisitorLog = async (log: VisitorLog) => {
+  const addVisitorLog = useCallback(async (log: VisitorLog) => {
     const insertData = mapVisitorLogToDb(log);
     try {
       const response = await fetch('/api/public/logs', {
@@ -626,9 +626,9 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       console.error('Error inserting visitor log', e);
     }
     return false;
-  };
+  }, []);
 
-  const updateVisitorLogDwellTime = async (id: string, duration: number) => {
+  const updateVisitorLogDwellTime = useCallback(async (id: string, duration: number) => {
     try {
       const response = await fetch('/api/public/logs', {
         method: 'PUT',
@@ -643,7 +643,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
       console.error('Error updating visitor log duration', e);
     }
     return false;
-  };
+  }, []);
 
   const contextValue = useMemo(() => ({
     categories,
