@@ -2,6 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useDb } from '@/context/DbContext';
 import { Category } from '@/context/dbTypes';
+import CurtainTypesSubTab from './CurtainTypesSubTab';
+import FabricTypesSubTab from './FabricTypesSubTab';
+import MountingTypesSubTab from './MountingTypesSubTab';
+import { useLanguage } from '@/context/LanguageContext';
 
 const TrashIcon = () => (
   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -301,7 +305,10 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default function CategoriesTab() {
+  const [activeSubTab, setActiveSubTab] = useState<'sectors' | 'curtains' | 'fabrics' | 'mountings'>('sectors');
+  
   const { categories: dbCategories, addCategory, updateCategory, deleteCategory } = useDb();
+  const { t } = useLanguage();
   const [categories, setCategories] = useState<Category[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<Category>>({});
@@ -443,7 +450,7 @@ export default function CategoriesTab() {
 
   const handleSave = async () => {
     if (!editForm.id || !editForm.nameTr || !editForm.nameEn) {
-      alert('Lütfen Türkçe ve İngilizce kategori adını girin.');
+      alert(t('admin.categories.alerts.fillNames'));
       return;
     }
 
@@ -461,7 +468,7 @@ export default function CategoriesTab() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Bu kategoriyi silmek istediğinize emin misiniz?')) {
+    if (confirm(t('admin.categories.alerts.confirmDelete'))) {
       await deleteCategory(id);
     }
   };
@@ -479,50 +486,122 @@ export default function CategoriesTab() {
 
   return (
     <div>
-      {portalTarget && !editingId && createPortal(
-        <button
-          onClick={handleAddNew}
-          style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
-        >
-          + Yeni Kategori Ekle
-        </button>,
-        portalTarget
+      {/* Sub Tabs Navigation */}
+      {!editingId && (
+        <div style={{ display: 'flex', gap: '1rem', marginBottom: '2rem', borderBottom: '1px solid rgba(189, 149, 75, 0.2)', paddingBottom: '1rem' }}>
+          <button 
+            onClick={() => setActiveSubTab('sectors')}
+            style={{
+              background: activeSubTab === 'sectors' ? 'rgba(189, 149, 75, 0.15)' : 'transparent',
+              color: activeSubTab === 'sectors' ? '#BD954B' : '#A3B3C2',
+              border: activeSubTab === 'sectors' ? '1px solid #BD954B' : '1px solid transparent',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.2s'
+            }}
+          >
+            {t('admin.categories.subTabs.sectors')}
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('curtains')}
+            style={{
+              background: activeSubTab === 'curtains' ? 'rgba(189, 149, 75, 0.15)' : 'transparent',
+              color: activeSubTab === 'curtains' ? '#BD954B' : '#A3B3C2',
+              border: activeSubTab === 'curtains' ? '1px solid #BD954B' : '1px solid transparent',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.2s'
+            }}
+          >
+            {t('admin.categories.subTabs.curtains')}
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('fabrics')}
+            style={{
+              background: activeSubTab === 'fabrics' ? 'rgba(189, 149, 75, 0.15)' : 'transparent',
+              color: activeSubTab === 'fabrics' ? '#BD954B' : '#A3B3C2',
+              border: activeSubTab === 'fabrics' ? '1px solid #BD954B' : '1px solid transparent',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.2s'
+            }}
+          >
+            {t('admin.categories.subTabs.fabrics')}
+          </button>
+          <button 
+            onClick={() => setActiveSubTab('mountings')}
+            style={{
+              background: activeSubTab === 'mountings' ? 'rgba(189, 149, 75, 0.15)' : 'transparent',
+              color: activeSubTab === 'mountings' ? '#BD954B' : '#A3B3C2',
+              border: activeSubTab === 'mountings' ? '1px solid #BD954B' : '1px solid transparent',
+              padding: '0.6rem 1.2rem',
+              borderRadius: '6px',
+              cursor: 'pointer',
+              fontWeight: 600,
+              transition: 'all 0.2s'
+            }}
+          >
+            {t('admin.categories.subTabs.mountings')}
+          </button>
+        </div>
       )}
+
+      {activeSubTab === 'curtains' && <CurtainTypesSubTab />}
+      {activeSubTab === 'fabrics' && <FabricTypesSubTab />}
+      {activeSubTab === 'mountings' && <MountingTypesSubTab />}
+
+      {activeSubTab === 'sectors' && (
+        <>
+          {portalTarget && !editingId && createPortal(
+            <button
+              onClick={handleAddNew}
+              style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
+            >
+              {t('admin.categories.addNewSector')}
+            </button>,
+            portalTarget
+          )}
 
       {editingId ? (
         <div style={{ backgroundColor: '#0F1820', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.3)', padding: '2rem', marginBottom: '2rem' }}>
           <h3 style={{ color: '#FFF', marginBottom: '1.5rem', fontSize: '1.2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-            {isAddingNew ? 'Yeni Kategori Ekle' : 'Kategori Düzenle'}
+            {isAddingNew ? t('admin.categories.addNewTitle') : t('admin.categories.editTitle')}
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div>
-              <label style={labelStyle}>Kategori Adı (TR) *</label>
+              <label style={labelStyle}>{t('admin.categories.nameTr')}</label>
               <input type="text" name="nameTr" value={editForm.nameTr || ''} onChange={handleChange} style={inputStyle} placeholder="Ör: Tül Perdeler" />
             </div>
             <div>
-              <label style={labelStyle}>Kategori Adı (EN) *</label>
+              <label style={labelStyle}>{t('admin.categories.nameEn')}</label>
               <input type="text" name="nameEn" value={editForm.nameEn || ''} onChange={handleChange} style={inputStyle} placeholder="Eg: Sheer Curtains" />
             </div>
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Açıklama (TR)</label>
+              <label style={labelStyle}>{t('admin.categories.descTr')}</label>
               <textarea name="descriptionTr" value={editForm.descriptionTr || ''} onChange={handleChange} rows={3} style={inputStyle} placeholder="Kategori açıklaması (Türkçe)" />
             </div>
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Açıklama (EN)</label>
+              <label style={labelStyle}>{t('admin.categories.descEn')}</label>
               <textarea name="descriptionEn" value={editForm.descriptionEn || ''} onChange={handleChange} rows={3} style={inputStyle} placeholder="Category description (English)" />
             </div>
 
             {/* Multiple Image Uploads */}
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Kategori Görselleri (WebP formatına otomatik dönüştürülür)</label>
+              <label style={labelStyle}>{t('admin.categories.images')}</label>
               <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
                 {(editForm.images || []).map((img, idx) => (
                   <div key={idx} style={{ position: 'relative', width: '90px', height: '90px', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(189,149,75,0.2)' }}>
                     <div style={{ width: '100%', height: '100%', backgroundImage: `url(${img})`, backgroundSize: 'cover', backgroundPosition: 'center' }} />
                     <button
                       onClick={() => handleRemoveImage(idx)}
-                      title="Görseli Kaldır"
+                      title={t('admin.categories.removeImage')}
                       style={{
                         position: 'absolute', top: '2px', right: '2px',
                         width: '22px', height: '22px',
@@ -555,13 +634,13 @@ export default function CategoriesTab() {
                   onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(189,149,75,0.4)'}
                 >
                   {isConverting ? (
-                    <span style={{ color: 'var(--color-accent)', fontSize: '0.7rem', textAlign: 'center' }}>Dönüştürülüyor...</span>
+                    <span style={{ color: 'var(--color-accent)', fontSize: '0.7rem', textAlign: 'center' }}>{t('admin.categories.converting')}</span>
                   ) : (
                     <div style={{ textAlign: 'center', color: '#A3B3C2', fontSize: '0.7rem' }}>
                       <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ display: 'block', margin: '0 auto 0.2rem' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>
-                      Ekle
+                      {t('admin.categories.addBtn')}
                     </div>
                   )}
                 </div>
@@ -575,26 +654,26 @@ export default function CategoriesTab() {
                 style={{ display: 'none' }}
               />
               <p style={{ color: '#A3B3C2', fontSize: '0.8rem', margin: 0 }}>
-                Birden fazla görsel seçebilirsiniz. Görseller otomatik olarak .webp formatına dönüştürülür. Sınır yoktur.
+                {t('admin.categories.imagesInfo')}
               </p>
             </div>
 
             <div>
-              <label style={labelStyle}>Sıralama</label>
+              <label style={labelStyle}>{t('admin.categories.displayOrder')}</label>
               <input type="number" name="displayOrder" value={editForm.displayOrder || 1} onChange={handleChange} style={inputStyle} min={1} />
             </div>
             <div>
-              <label style={labelStyle}>Durum</label>
+              <label style={labelStyle}>{t('admin.categories.status')}</label>
               <select name="status" value={editForm.status || 'active'} onChange={handleChange} style={inputStyle}>
-                <option value="active">Aktif</option>
-                <option value="passive">Pasif</option>
+                <option value="active">{t('admin.categories.statusActive')}</option>
+                <option value="passive">{t('admin.categories.statusPassive')}</option>
               </select>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem' }}>
-            <button onClick={handleSave} style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>Kaydet</button>
-            <button onClick={handleCancel} style={{ background: 'transparent', color: '#A3B3C2', border: '1px solid #A3B3C2', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer' }}>İptal</button>
+            <button onClick={handleSave} style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>{t('admin.categories.save')}</button>
+            <button onClick={handleCancel} style={{ background: 'transparent', color: '#A3B3C2', border: '1px solid #A3B3C2', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer' }}>{t('admin.categories.cancel')}</button>
           </div>
         </div>
       ) : (
@@ -602,18 +681,17 @@ export default function CategoriesTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', color: '#E0E6ED', fontSize: '0.9rem' }}>
             <thead style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(189, 149, 75, 0.2)' }}>
               <tr>
-                <th style={{ padding: '1rem', width: '40px' }}></th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Görsel</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Kategori Adı</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>İngilizce</th>
-                <th style={{ padding: '1rem', textAlign: 'center' }}>Sıra</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Durum</th>
-                <th style={{ padding: '1rem', textAlign: 'right' }}>İşlemler</th>
+                <th style={{ padding: '1rem', textAlign: 'center', width: '80px' }}>Sırala</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.categories.table.image')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.categories.table.name')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.categories.table.english')}</th>
+                <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.categories.table.status')}</th>
+                <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.categories.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {categories.length === 0 ? (
-                <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center' }}>Kategori bulunamadı.</td></tr>
+                <tr><td colSpan={7} style={{ padding: '2rem', textAlign: 'center' }}>{t('admin.categories.table.noData')}</td></tr>
               ) : (
                 categories.map((cat, idx) => (
                   <tr 
@@ -628,7 +706,7 @@ export default function CategoriesTab() {
                     onDragOver={(e) => handleDragOver(e, idx)}
                     onDrop={(e) => handleDrop(e, idx)}
                   >
-                    <td style={{ padding: '1rem', color: 'rgba(189, 149, 75, 0.6)', cursor: editingId ? 'default' : 'grab', userSelect: 'none', textAlign: 'center' }}>
+                    <td style={{ padding: '1rem', color: 'rgba(189, 149, 75, 0.6)', cursor: editingId ? 'default' : 'grab', userSelect: 'none', textAlign: 'center', fontSize: '1.2rem' }} title="Sürükle bırak ile sırala">
                       ☰
                     </td>
                     <td style={{ padding: '1rem' }}>
@@ -641,8 +719,7 @@ export default function CategoriesTab() {
                     </td>
                     <td style={{ padding: '1rem', fontWeight: 500 }}>{cat.nameTr}</td>
                     <td style={{ padding: '1rem', color: '#A3B3C2' }}>{cat.nameEn}</td>
-                    <td style={{ padding: '1rem', textAlign: 'center' }}>{cat.displayOrder}</td>
-                    <td style={{ padding: '1rem' }}>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
                       <span
                         onClick={() => handleToggleStatus(cat.id)}
                         style={{
@@ -656,51 +733,52 @@ export default function CategoriesTab() {
                           transition: 'all 0.2s'
                         }}
                       >
-                        {cat.status === 'active' ? 'Aktif' : 'Pasif'}
+                        {cat.status === 'active' ? t('admin.categories.statusActive') : t('admin.categories.statusPassive')}
                       </span>
                     </td>
-                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                      <button
-                        onClick={() => handleEdit(cat)}
-                        title="Düzenle"
-                        style={{
-                          background: 'none',
-                          border: '1px solid rgba(189, 149, 75, 0.3)',
-                          color: 'var(--color-accent)',
-                          padding: '0.35rem 0.5rem',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: '0.5rem',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(189,149,75,0.1)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(189,149,75,0.3)'; }}
-                      >
-                        <EditIcon />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(cat.id)}
-                        title="Sil"
-                        style={{
-                          background: 'none',
-                          border: '1px solid rgba(255, 75, 75, 0.3)',
-                          color: '#FF6B6B',
-                          padding: '0.35rem 0.5rem',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,75,75,0.1)'; e.currentTarget.style.borderColor = '#FF6B6B'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(255,75,75,0.3)'; }}
-                      >
-                        <TrashIcon />
-                      </button>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', flexDirection: 'row', gap: '0.4rem', width: 'auto' }}>
+                        <button
+                          onClick={() => handleEdit(cat)}
+                          title={t('admin.categories.edit')}
+                          style={{
+                            background: 'rgba(189, 149, 75, 0.1)',
+                            border: '1px solid rgba(189, 149, 75, 0.3)',
+                            color: 'var(--color-accent)',
+                            padding: '0.4rem',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(189,149,75,0.2)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(189, 149, 75, 0.1)'; e.currentTarget.style.borderColor = 'rgba(189,149,75,0.3)'; }}
+                        >
+                          <EditIcon />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(cat.id)}
+                          title={t('admin.categories.delete')}
+                          style={{
+                            background: 'rgba(255, 75, 75, 0.1)',
+                            border: '1px solid rgba(255, 75, 75, 0.3)',
+                            color: '#FF6B6B',
+                            padding: '0.4rem',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,75,75,0.2)'; e.currentTarget.style.borderColor = '#FF6B6B'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 75, 75, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255,75,75,0.3)'; }}
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -709,7 +787,9 @@ export default function CategoriesTab() {
           </table>
         </div>
       )}
-      {cropQueue.length > 0 && (
+        </>
+      )}
+      {cropQueue.length > 0 && activeSubTab === 'sectors' && (
         <ImageCropModal
           imageSrc={cropQueue[0]}
           onCrop={handleCropComplete}

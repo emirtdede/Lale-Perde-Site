@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AdminTab } from '../page';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface SidebarProps {
   activeTab: AdminTab;
@@ -45,13 +46,13 @@ export default function Sidebar({
   setIsMinimal, 
   onClose 
 }: SidebarProps) {
-  
+  const { t } = useLanguage();
   const [isMinimalHovered, setIsMinimalHovered] = useState(false);
 
   const menuItems: { id: AdminTab; label: string; icon: React.ReactNode }[] = [
     { 
       id: 'dashboard', 
-      label: 'Gösterge Paneli',
+      label: t('admin.sidebar.dashboard'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <rect x="3" y="3" width="7" height="9" rx="1"></rect>
@@ -63,7 +64,7 @@ export default function Sidebar({
     },
     { 
       id: 'homeContent', 
-      label: 'Anasayfa İçeriği',
+      label: t('admin.sidebar.homeContent'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
@@ -72,7 +73,7 @@ export default function Sidebar({
     },
     { 
       id: 'categories', 
-      label: 'Kategoriler',
+      label: t('admin.sidebar.categories'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5a1.99 1.99 0 011.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"></path>
@@ -81,7 +82,7 @@ export default function Sidebar({
     },
     { 
       id: 'products', 
-      label: 'Ürünler',
+      label: t('admin.sidebar.products'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
@@ -90,7 +91,7 @@ export default function Sidebar({
     },
     { 
       id: 'services', 
-      label: 'Hizmetler',
+      label: t('admin.sidebar.services'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 13a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"></path>
@@ -99,7 +100,7 @@ export default function Sidebar({
     },
     { 
       id: 'guides', 
-      label: 'Rehberler',
+      label: t('admin.sidebar.guides'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
@@ -108,7 +109,7 @@ export default function Sidebar({
     },
     { 
       id: 'contactInfo', 
-      label: 'İletişim Bilgileri',
+      label: t('admin.sidebar.contactInfo'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
@@ -118,7 +119,7 @@ export default function Sidebar({
     },
     { 
       id: 'inbox', 
-      label: 'Gelen Kutusu',
+      label: t('admin.sidebar.inbox'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0l-8 5-8-5.7"></path>
@@ -127,7 +128,7 @@ export default function Sidebar({
     },
     { 
       id: 'campaigns', 
-      label: 'Kampanyalar',
+      label: t('admin.sidebar.campaigns'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
@@ -136,7 +137,7 @@ export default function Sidebar({
     },
     { 
       id: 'visitors', 
-      label: 'Site Ziyaretçileri',
+      label: t('admin.sidebar.visitors'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
@@ -145,7 +146,7 @@ export default function Sidebar({
     },
     { 
       id: 'security', 
-      label: 'Gizlilik ve Güvenlik',
+      label: t('admin.sidebar.security'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
@@ -154,7 +155,7 @@ export default function Sidebar({
     },
     {
       id: 'googleAds',
-      label: 'Google Ads',
+      label: t('admin.sidebar.googleAds'),
       icon: (
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <circle cx="12" cy="12" r="10"></circle>
@@ -196,7 +197,7 @@ export default function Sidebar({
             onClick={() => setIsMinimal(false)}
             onMouseEnter={() => setIsMinimalHovered(true)}
             onMouseLeave={() => setIsMinimalHovered(false)}
-            title="Genişlet"
+            title={t('admin.sidebar.expand')}
             style={{
               background: 'rgba(189, 149, 75, 0.05)',
               border: '1px solid rgba(189, 149, 75, 0.25)',
@@ -235,7 +236,7 @@ export default function Sidebar({
               {/* Toggle Minimal Width Button */}
               <button 
                 onClick={() => setIsMinimal(true)}
-                title="Daralt"
+                title={t('admin.sidebar.collapse')}
                 style={{
                   background: 'rgba(189, 149, 75, 0.05)',
                   border: '1px solid rgba(189, 149, 75, 0.25)',
@@ -266,7 +267,7 @@ export default function Sidebar({
               {/* Close Sidebar Completely Button */}
               <button 
                 onClick={onClose}
-                title="Kapat"
+                title={t('admin.sidebar.close')}
                 style={{
                   background: 'rgba(255, 75, 75, 0.05)',
                   border: '1px solid rgba(255, 75, 75, 0.2)',
@@ -350,7 +351,7 @@ export default function Sidebar({
       {/* Logout Button */}
       <button 
         onClick={handleLogout}
-        title={isMinimal ? "Oturumu Kapat" : undefined}
+        title={isMinimal ? t('admin.sidebar.logout') : undefined}
         style={{ 
           marginTop: 'auto',
           background: 'rgba(255, 75, 75, 0.1)',
@@ -373,7 +374,7 @@ export default function Sidebar({
         <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
         </svg>
-        {!isMinimal && <span>Oturumu Kapat</span>}
+        {!isMinimal && <span>{t('admin.sidebar.logout')}</span>}
       </button>
     </aside>
   );

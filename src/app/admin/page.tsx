@@ -12,7 +12,10 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
-const LoadingTab = () => <div style={{ padding: '3rem', color: '#BD954B', textAlign: 'center', fontSize: '1.2rem' }}>Sekme Yükleniyor...</div>;
+const LoadingTab = () => {
+  const { t } = useLanguage();
+  return <div style={{ padding: '3rem', color: '#BD954B', textAlign: 'center', fontSize: '1.2rem' }}>{t('admin.loadingTab')}</div>;
+};
 
 const DynamicDashboardTab = dynamic(() => import('./components/DashboardTab'), { ssr: false, loading: LoadingTab });
 const HomePageContentTab = dynamic(() => import('./components/HomePageContentTab'), { ssr: false, loading: LoadingTab });
@@ -583,18 +586,18 @@ export default function AdminPage() {
             {/* Tab Title */}
             <h2 style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-serif)', fontSize: '2rem', margin: 0, whiteSpace: 'nowrap' }}>
               {{
-                dashboard: 'Gösterge Paneli',
-                homeContent: 'Anasayfa İçeriği',
-                categories: 'Kategori Yönetimi',
-                products: 'Ürün Yönetimi',
-                services: 'Hizmetler',
-                guides: 'Rehberler & Blog',
-                contactInfo: 'İletişim Bilgileri',
-                inbox: 'Gelen Kutusu',
-                campaigns: 'Kampanyalar ve Duyurular',
-                visitors: 'Site Ziyaretçileri',
-                security: 'Gizlilik ve Güvenlik',
-                googleAds: 'Google Ads Entegrasyonu',
+                dashboard: t('admin.sidebar.dashboard') || 'Dashboard',
+                homeContent: t('admin.sidebar.homeContent') || 'Home Page Content',
+                categories: t('admin.sidebar.categories') || 'Category Management',
+                products: t('admin.sidebar.products') || 'Product Management',
+                services: t('admin.sidebar.services') || 'Services',
+                guides: t('admin.sidebar.guides') || 'Guides & Blog',
+                contactInfo: t('admin.sidebar.contactInfo') || 'Contact Information',
+                inbox: t('admin.sidebar.inbox') || 'Inbox',
+                campaigns: t('admin.sidebar.campaigns') || 'Campaigns and Announcements',
+                visitors: t('admin.sidebar.visitors') || 'Site Visitors',
+                security: t('admin.sidebar.security') || 'Privacy and Security',
+                googleAds: t('admin.sidebar.googleAds') || 'Google Ads Integration',
               }[activeTab]}
             </h2>
 

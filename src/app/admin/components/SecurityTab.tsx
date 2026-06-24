@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useDb } from '@/context/DbContext';
 import { SystemSettings } from '@/context/dbTypes';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function SecurityTab() {
   const { settings: dbSettings, updateSettings } = useDb();
+  const { t } = useLanguage();
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [saved, setSaved] = useState(false);
   const [passwordError, setPasswordError] = useState('');
@@ -89,7 +91,7 @@ export default function SecurityTab() {
     
     // Check if field is empty when editing
     if (!isDeleting && !newValueInput.trim()) {
-      setVerificationError('Lütfen geçerli bir değer girin.');
+      setVerificationError(t('admin.security.twoFactor.errInvalidValue'));
       return;
     }
 
@@ -113,13 +115,13 @@ export default function SecurityTab() {
         });
         const data = await response.json();
         if (!response.ok) {
-          setVerificationError(data.error || 'Mevcut e-postaya doğrulama kodu gönderilemedi.');
+          setVerificationError(data.error || t('admin.security.twoFactor.errSendFailed'));
           setSendingEmail(false);
           return;
         }
       } catch (err) {
         console.error(err);
-        setVerificationError('E-posta servisi ile bağlantı kurulamadı.');
+        setVerificationError(t('admin.security.twoFactor.errConnection'));
         setSendingEmail(false);
         return;
       }
@@ -183,10 +185,10 @@ export default function SecurityTab() {
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
-        setVerificationError('Bilgiler veritabanına kaydedilemedi.');
+        setVerificationError(t('admin.security.twoFactor.errDbSave'));
       }
     } catch (e) {
-      setVerificationError('Sunucu hatası oluştu.');
+      setVerificationError(t('admin.security.twoFactor.errServer'));
     }
   };
 
@@ -194,7 +196,7 @@ export default function SecurityTab() {
     if (codeInput === sentCode) {
       saveNewValue();
     } else {
-      setVerificationError('Doğrulama kodu hatalı. Lütfen tekrar deneyin.');
+      setVerificationError(t('admin.security.twoFactor.errWrongCode'));
     }
   };
 
@@ -279,15 +281,15 @@ export default function SecurityTab() {
     setPasswordError('');
     
     if (!currentPassword) {
-      setPasswordError('Lütfen mevcut şifrenizi girin.');
+      setPasswordError(t('admin.security.password.errEmptyCurrent'));
       return;
     }
     if (newPassword.length < 6) {
-      setPasswordError('Yeni şifre en az 6 karakter olmalıdır.');
+      setPasswordError(t('admin.security.password.errShortNew'));
       return;
     }
     if (newPassword !== confirmPassword) {
-      setPasswordError('Yeni şifre ve onayı eşleşmiyor.');
+      setPasswordError(t('admin.security.password.errMismatch'));
       return;
     }
 
@@ -310,14 +312,14 @@ export default function SecurityTab() {
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
-        setPasswordError(data.error || 'Şifre güncellenemedi.');
+        setPasswordError(data.error || t('admin.security.password.errUpdateFailed'));
       }
     } catch (e) {
-      setPasswordError('Bağlantı hatası.');
+      setPasswordError(t('admin.security.password.errConnection'));
     }
   };
 
-  if (!settings) return <div style={{ color: '#E0E6ED' }}>Yükleniyor...</div>;
+  if (!settings) return <div style={{ color: '#E0E6ED' }}>{t('admin.security.loading')}</div>;
 
   return (
     <div>
@@ -325,10 +327,10 @@ export default function SecurityTab() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
         {/* Profile Info */}
         <div style={{ backgroundColor: '#0F1820', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.15)' }}>
-          <h3 style={{ color: '#E0E6ED', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>Yönetici Profili</h3>
+          <h3 style={{ color: '#E0E6ED', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>{t('admin.security.profile.title')}</h3>
           
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>Kullanıcı Adı</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>{t('admin.security.profile.username')}</label>
             <input
               type="text"
               name="adminUsername"
@@ -338,7 +340,7 @@ export default function SecurityTab() {
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>Yönetici E-Posta</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>{t('admin.security.profile.email')}</label>
             <input
               type="email"
               name="adminEmail"
@@ -348,7 +350,7 @@ export default function SecurityTab() {
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>Yönetici Telefon (Şifre Sıfırlama için)</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>{t('admin.security.profile.phone')}</label>
             <input
               type="text"
               name="adminPhone"
@@ -371,16 +373,16 @@ export default function SecurityTab() {
               width: '100%'
             }}
           >
-            Profili Kaydet
+            {t('admin.security.profile.saveBtn')}
           </button>
         </div>
 
         {/* Password Change */}
         <div style={{ backgroundColor: '#0F1820', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.15)' }}>
-          <h3 style={{ color: '#E0E6ED', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>Şifre Değiştir</h3>
+          <h3 style={{ color: '#E0E6ED', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>{t('admin.security.password.title')}</h3>
           
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>Mevcut Şifre</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>{t('admin.security.password.current')}</label>
             <input
               type="password"
               value={currentPassword}
@@ -389,7 +391,7 @@ export default function SecurityTab() {
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>Yeni Şifre</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>{t('admin.security.password.new')}</label>
             <input
               type="password"
               value={newPassword}
@@ -398,7 +400,7 @@ export default function SecurityTab() {
             />
           </div>
           <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>Yeni Şifre (Tekrar)</label>
+            <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>{t('admin.security.password.confirm')}</label>
             <input
               type="password"
               value={confirmPassword}
@@ -429,16 +431,16 @@ export default function SecurityTab() {
             onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(189, 149, 75, 0.1)'; }}
             onMouseOut={(e) => { e.currentTarget.style.background = 'transparent'; }}
           >
-            Şifreyi Güncelle
+            {t('admin.security.password.updateBtn')}
           </button>
         </div>
       </div>
 
       {/* 2FA Settings Card */}
       <div style={{ backgroundColor: '#0F1820', padding: '2rem', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.15)', marginTop: '2rem' }}>
-        <h3 style={{ color: '#E0E6ED', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>İki Adımlı Doğrulama (2FA)</h3>
+        <h3 style={{ color: '#E0E6ED', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>{t('admin.security.twoFactor.title')}</h3>
         <p style={{ color: '#A3B3C2', fontSize: '0.85rem', marginBottom: '2rem', lineHeight: '1.4' }}>
-          Giriş güvenliği için kullanmak istediğiniz doğrulama yöntemlerini seçin. Birden fazla seçim yapılması durumunda giriş esnasında her iki kanaldan da doğrulama yapılabilecektir.
+          {t('admin.security.twoFactor.description')}
         </p>
 
         {/* E-Posta Method Row */}
@@ -467,10 +469,10 @@ export default function SecurityTab() {
               </span>
               <div>
                 <label htmlFor="twoFactorEmailCheck" style={{ display: 'block', color: '#E0E6ED', fontSize: '0.95rem', fontWeight: 500, cursor: settings.adminEmail ? 'pointer' : 'default' }}>
-                  E-Posta Doğrulaması
+                  {t('admin.security.twoFactor.emailMethod')}
                 </label>
                 <span style={{ color: settings.adminEmail ? '#A3B3C2' : 'rgba(163, 179, 194, 0.4)', fontSize: '0.85rem' }}>
-                  {settings.adminEmail ? settings.adminEmail : 'E-Posta adresi tanımlanmamış. Aktif etmek için önce e-posta ekleyin.'}
+                  {settings.adminEmail ? settings.adminEmail : t('admin.security.twoFactor.emailNotSet')}
                 </span>
               </div>
             </div>
@@ -493,7 +495,7 @@ export default function SecurityTab() {
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
-              {settings.adminEmail ? 'Düzenle' : 'Ekle'}
+              {settings.adminEmail ? t('admin.security.twoFactor.btnEdit') : t('admin.security.twoFactor.btnAdd')}
             </button>
             {settings.adminEmail && (
               <button
@@ -513,7 +515,7 @@ export default function SecurityTab() {
                 }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                Sil
+                {t('admin.security.twoFactor.btnDelete')}
               </button>
             )}
           </div>
@@ -537,13 +539,13 @@ export default function SecurityTab() {
             }}>
               <h4 style={{ color: '#E0E6ED', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', fontSize: '0.95rem' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                {isDeleting ? 'E-Posta Bilgisini Sil' : 'E-Posta Bilgisini Güncelle'}
+                {isDeleting ? t('admin.security.twoFactor.deleteEmailTitle') : t('admin.security.twoFactor.updateEmailTitle')}
               </h4>
 
               {verificationFlow ? (
                 <div>
                   <p style={{ color: '#A3B3C2', fontSize: '0.85rem', marginBottom: '1rem', lineHeight: '1.4' }}>
-                    Güvenliğiniz için mevcut e-posta adresinize 6 haneli bir doğrulama kodu gönderilmiştir. Lütfen gelen kodu girin.
+                    {t('admin.security.twoFactor.verificationSentEmail')}
                   </p>
                   <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                     <input
@@ -577,7 +579,7 @@ export default function SecurityTab() {
                         cursor: 'pointer'
                       }}
                     >
-                      Onayla ve {isDeleting ? 'Sil' : 'Kaydet'}
+                      {isDeleting ? t('admin.security.twoFactor.btnConfirmDelete') : t('admin.security.twoFactor.btnConfirmSave')}
                     </button>
                   </div>
                 </div>
@@ -586,7 +588,7 @@ export default function SecurityTab() {
                   {!isDeleting && (
                     <div style={{ marginBottom: '1rem' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>
-                        Yeni E-Posta Adresi
+                        {t('admin.security.twoFactor.newEmailLabel')}
                       </label>
                       <input
                         type="text"
@@ -625,7 +627,7 @@ export default function SecurityTab() {
                         opacity: sendingEmail ? 0.7 : 1
                       }}
                     >
-                      {sendingEmail ? 'Kod Gönderiliyor...' : 'Doğrulama Kodu Gönder'}
+                      {sendingEmail ? t('admin.security.twoFactor.btnSending') : t('admin.security.twoFactor.btnSendCode')}
                     </button>
                     <button
                       onClick={() => { setEditingField(null); setVerificationFlow(false); }}
@@ -638,7 +640,7 @@ export default function SecurityTab() {
                         cursor: 'pointer'
                       }}
                     >
-                      Vazgeç
+                      {t('admin.security.twoFactor.btnCancel')}
                     </button>
                   </div>
                 </div>
@@ -679,10 +681,10 @@ export default function SecurityTab() {
               </span>
               <div>
                 <label htmlFor="twoFactorPhoneCheck" style={{ display: 'block', color: '#E0E6ED', fontSize: '0.95rem', fontWeight: 500, cursor: settings.adminPhone ? 'pointer' : 'default' }}>
-                  SMS / Telefon Doğrulaması
+                  {t('admin.security.twoFactor.phoneMethod')}
                 </label>
                 <span style={{ color: settings.adminPhone ? '#A3B3C2' : 'rgba(163, 179, 194, 0.4)', fontSize: '0.85rem' }}>
-                  {settings.adminPhone ? settings.adminPhone : 'Telefon numarası tanımlanmamış. Aktif etmek için önce telefon ekleyin.'}
+                  {settings.adminPhone ? settings.adminPhone : t('admin.security.twoFactor.phoneNotSet')}
                 </span>
               </div>
             </div>
@@ -705,7 +707,7 @@ export default function SecurityTab() {
               }}
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4z"></path></svg>
-              {settings.adminPhone ? 'Düzenle' : 'Ekle'}
+              {settings.adminPhone ? t('admin.security.twoFactor.btnEdit') : t('admin.security.twoFactor.btnAdd')}
             </button>
             {settings.adminPhone && (
               <button
@@ -725,7 +727,7 @@ export default function SecurityTab() {
                 }}
               >
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                Sil
+                {t('admin.security.twoFactor.btnDelete')}
               </button>
             )}
           </div>
@@ -749,13 +751,13 @@ export default function SecurityTab() {
             }}>
               <h4 style={{ color: '#E0E6ED', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem', fontSize: '0.95rem' }}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-                {isDeleting ? 'Telefon Bilgisini Sil' : 'Telefon Bilgisini Güncelle'}
+                {isDeleting ? t('admin.security.twoFactor.deletePhoneTitle') : t('admin.security.twoFactor.updatePhoneTitle')}
               </h4>
 
               {verificationFlow ? (
                 <div>
                   <p style={{ color: '#A3B3C2', fontSize: '0.85rem', marginBottom: '1rem', lineHeight: '1.4' }}>
-                    Güvenliğiniz için mevcut telefon adresinize 6 haneli bir doğrulama kodu gönderilmiştir. Lütfen gelen kodu girin.
+                    {t('admin.security.twoFactor.verificationSentPhone')}
                   </p>
                   <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
                     <input
@@ -789,7 +791,7 @@ export default function SecurityTab() {
                         cursor: 'pointer'
                       }}
                     >
-                      Onayla ve {isDeleting ? 'Sil' : 'Kaydet'}
+                      {isDeleting ? t('admin.security.twoFactor.btnConfirmDelete') : t('admin.security.twoFactor.btnConfirmSave')}
                     </button>
                   </div>
                 </div>
@@ -798,7 +800,7 @@ export default function SecurityTab() {
                   {!isDeleting && (
                     <div style={{ marginBottom: '1rem' }}>
                       <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>
-                        Yeni Telefon Numarası
+                        {t('admin.security.twoFactor.newPhoneLabel')}
                       </label>
                       <input
                         type="text"
@@ -819,7 +821,7 @@ export default function SecurityTab() {
                   )}
                   {isDeleting && (
                     <p style={{ color: '#FF6B6B', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                      Bu işlemi gerçekleştirmek için doğrulama yapılması zorunludur. Mevcut adrese bir doğrulama kodu gönderilecektir.
+                      {t('admin.security.twoFactor.deleteWarning')}
                     </p>
                   )}
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -837,7 +839,7 @@ export default function SecurityTab() {
                         opacity: sendingEmail ? 0.7 : 1
                       }}
                     >
-                      {sendingEmail ? 'Kod Gönderiliyor...' : 'Doğrulama Kodu Gönder'}
+                      {sendingEmail ? t('admin.security.twoFactor.btnSending') : t('admin.security.twoFactor.btnSendCode')}
                     </button>
                     <button
                       onClick={() => { setEditingField(null); setVerificationFlow(false); }}
@@ -850,7 +852,7 @@ export default function SecurityTab() {
                         cursor: 'pointer'
                       }}
                     >
-                      Vazgeç
+                      {t('admin.security.twoFactor.btnCancel')}
                     </button>
                   </div>
                 </div>

@@ -4,6 +4,7 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { useDb } from '@/context/DbContext';
 import { supabase } from '@/lib/supabaseClient';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface GA4Stats {
   activeUsers: number;
@@ -25,6 +26,7 @@ interface GA4Stats {
 
 export default function DashboardTab() {
   const { inbox, visitorLogs, campaigns } = useDb();
+  const { t } = useLanguage();
   const [productCount, setProductCount] = useState(0);
 
   useEffect(() => {
@@ -160,7 +162,7 @@ export default function DashboardTab() {
         setFormStartedCount(body.formStartedCount || 0);
         setFormCompletedCount(body.formCompletedCount || 0);
         setHasFullHistoryLoaded(true);
-        showToast('İstatistikler başarıyla güncellendi.', false);
+        showToast(t('admin.dashboard.alerts.syncSuccess'), false);
       } else {
         if (body.quotaExceeded) {
           setQuotaExceeded(true);
@@ -168,14 +170,14 @@ export default function DashboardTab() {
           setLastUpdated(body.updatedAt);
           setFormStartedCount(body.formStartedCount || 0);
           setFormCompletedCount(body.formCompletedCount || 0);
-          showToast('Günlük kotanız dolmuştur, kotanız yenilenince verileriniz güncellenecektir.', true);
+          showToast(t('admin.dashboard.alerts.quotaExceeded'), true);
         } else {
-          showToast(body.error || 'Güncelleme başarısız oldu.', true);
+          showToast(body.error || t('admin.dashboard.alerts.syncFailed'), true);
         }
       }
     } catch (err: any) {
       console.error('Error syncing GA4:', err);
-      showToast('Bağlantı hatası oluştu.', true);
+      showToast(t('admin.dashboard.alerts.connectionError'), true);
     } finally {
       setSyncing(false);
     }
@@ -204,20 +206,20 @@ export default function DashboardTab() {
   }, [formStartedCount, formCompletedCount]);
 
   const statCards = [
-    { label: 'Toplam Ürün', value: stats.products, color: '#4CAF50', icon: (
+    { label: t('admin.dashboard.totalProducts'), value: stats.products, color: '#4CAF50', icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z" />
         <line x1="3" y1="6" x2="21" y2="6" />
         <path d="M16 10a4 4 0 0 1-8 0" />
       </svg>
     ) },
-    { label: 'Okunmamış Mesaj', value: stats.unreadMessages, color: '#FF9800', icon: (
+    { label: t('admin.dashboard.unreadMessages'), value: stats.unreadMessages, color: '#FF9800', icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FF9800" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
         <polyline points="22,6 12,13 2,6" />
       </svg>
     ) },
-    { label: 'Toplam Ziyaretçi', value: stats.totalVisitors, color: '#2196F3', icon: (
+    { label: t('admin.dashboard.totalVisitors'), value: stats.totalVisitors, color: '#2196F3', icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
         <circle cx="9" cy="7" r="4" />
@@ -225,7 +227,7 @@ export default function DashboardTab() {
         <path d="M16 3.13a4 4 0 0 1 0 7.75" />
       </svg>
     ) },
-    { label: 'Aktif Kampanya', value: stats.campaignsActive, color: '#E91E63', icon: (
+    { label: t('admin.dashboard.activeCampaigns'), value: stats.campaignsActive, color: '#E91E63', icon: (
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#E91E63" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z" />
         <line x1="7" y1="7" x2="7.01" y2="7" />
@@ -439,7 +441,7 @@ export default function DashboardTab() {
     if (filteredDailyData.length === 0) {
       return (
         <div style={{ padding: '4rem 2rem', textAlign: 'center', color: '#A3B3C2', fontSize: '0.9rem' }}>
-          Grafik çizmek için yeterli veri bulunmuyor.
+          {t('admin.dashboard.chartInfo.noData')}
         </div>
       );
     }
@@ -468,7 +470,7 @@ export default function DashboardTab() {
           }}>
             <p style={{ margin: 0, color: '#A3B3C2', marginBottom: '4px', fontSize: '0.75rem' }}>{payload[0].payload.fullDate}</p>
             <p style={{ margin: 0, fontWeight: 600, color: '#D4AF37' }}>
-              Değer: {payload[0].value.toLocaleString('tr-TR')}
+              {t('admin.dashboard.chartInfo.value')} {payload[0].value.toLocaleString('tr-TR')}
             </p>
           </div>
         );
@@ -535,13 +537,13 @@ export default function DashboardTab() {
             letterSpacing: '0.03em'
           }}>
             <div>
-              <span>En Yüksek Değer: </span>
+              <span>{t('admin.dashboard.chartInfo.highest')} </span>
               <strong style={{ color: 'var(--color-accent)' }}>{chartSummary.maxVal.toLocaleString('tr-TR')}</strong>
               {chartSummary.maxDate && <span style={{ opacity: 0.8 }}> ({chartSummary.maxDate})</span>}
             </div>
             <div style={{ width: '1px', backgroundColor: 'rgba(255,255,255,0.08)' }} />
             <div>
-              <span>En Düşük Değer: </span>
+              <span>{t('admin.dashboard.chartInfo.lowest')} </span>
               <strong style={{ color: 'rgba(212, 175, 55, 0.7)' }}>{chartSummary.minVal.toLocaleString('tr-TR')}</strong>
               {chartSummary.minDate && <span style={{ opacity: 0.8 }}> ({chartSummary.minDate})</span>}
             </div>
@@ -588,7 +590,7 @@ export default function DashboardTab() {
           gap: '0.8rem'
         }}>
           <span>⚠️</span>
-          <strong>Günlük kotanız dolmuştur, kotanız yenilenince verileriniz güncellenecektir.</strong>
+          <strong>{t('admin.dashboard.alerts.quotaExceeded')}</strong>
         </div>
       )}
 
@@ -606,11 +608,11 @@ export default function DashboardTab() {
       }}>
         <div>
           <h2 style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-serif)', fontSize: '1.4rem', margin: 0 }}>
-            Lale Perde Yönetim Paneli
+            {t('admin.dashboard.title')}
           </h2>
           {lastUpdated && (
             <span style={{ color: '#A3B3C2', fontSize: '0.75rem', display: 'block', marginTop: '4px' }}>
-              Son Güncelleme: {formatDate(lastUpdated)}
+              {t('admin.dashboard.lastUpdated')} {formatDate(lastUpdated)}
             </span>
           )}
         </div>
@@ -643,7 +645,7 @@ export default function DashboardTab() {
                 <polyline points="7 10 12 15 17 10" />
                 <line x1="12" y1="15" x2="12" y2="3" />
               </svg>
-              <span>Dışa Aktar</span>
+              <span>{t('admin.dashboard.exportBtn')}</span>
               <span style={{ fontSize: '0.6rem', opacity: 0.8 }}>▼</span>
             </button>
             {showExportMenu && (
@@ -709,7 +711,7 @@ export default function DashboardTab() {
                   borderRadius: '50%',
                   animation: 'spin 1s linear infinite'
                 }} />
-                <span>Güncelleniyor...</span>
+                <span>{t('admin.dashboard.syncingBtn')}</span>
               </>
             ) : (
               <>
@@ -717,7 +719,7 @@ export default function DashboardTab() {
                   <path d="M23 4v6h-6" />
                   <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10" />
                 </svg>
-                <span>Verileri Şimdi Güncelle</span>
+                <span>{t('admin.dashboard.syncBtn')}</span>
               </>
             )}
           </button>
@@ -742,7 +744,7 @@ export default function DashboardTab() {
       {/* Database General Stats */}
       <div>
         <h3 style={{ color: '#E0E6ED', fontSize: '1.05rem', marginBottom: '1rem', fontWeight: 500, letterSpacing: '0.03em' }}>
-          Genel Mağaza Verileri
+          {t('admin.dashboard.generalStats')}
         </h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
           {statCards.map((card, idx) => (
@@ -781,7 +783,7 @@ export default function DashboardTab() {
           gap: '1rem'
         }}>
           <h3 style={{ color: '#E0E6ED', fontSize: '1.05rem', margin: 0, fontWeight: 500, letterSpacing: '0.03em' }}>
-            Ziyaretçi ve Etkileşim Analitiği (Son 30 Gün)
+            {t('admin.dashboard.analyticsTitle')}
           </h3>
           
           {/* Toggle View Mode Switch */}
@@ -816,7 +818,7 @@ export default function DashboardTab() {
                 <rect x="14" y="14" width="7" height="7" />
                 <rect x="3" y="14" width="7" height="7" />
               </svg>
-              <span>Kart Görünümü</span>
+              <span>{t('admin.dashboard.cardView')}</span>
             </button>
             <button
               onClick={() => setViewMode('charts')}
@@ -838,14 +840,14 @@ export default function DashboardTab() {
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                 <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
               </svg>
-              <span>Grafik Görünümü</span>
+              <span>{t('admin.dashboard.chartView')}</span>
             </button>
           </div>
         </div>
         
         {loading ? (
           <div style={{ color: '#A3B3C2', fontSize: '0.9rem', padding: '4rem', textAlign: 'center', backgroundColor: '#0F1820', borderRadius: '12px', border: '1px solid rgba(189, 149, 75, 0.15)' }}>
-            Analytics verileri yükleniyor...
+            {t('admin.dashboard.loadingAnalytics')}
           </div>
         ) : (
           <>
@@ -855,14 +857,14 @@ export default function DashboardTab() {
                 {/* Traffic Stats Group */}
                 <div>
                   <h4 style={{ color: '#8E9AA6', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.8rem', fontWeight: 600 }}>
-                    Ziyaretçi Trafik İstatistikleri
+                    {t('admin.dashboard.trafficStatsTitle')}
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
                     
                     {/* Active Users */}
                     <div style={{ backgroundColor: '#0F1820', border: '1px solid rgba(189, 149, 75, 0.15)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Aktif Kullanıcılar</span>
+                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.dashboard.activeUsers')}</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.8 }}>
                           <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                           <circle cx="9" cy="7" r="4" />
@@ -877,7 +879,7 @@ export default function DashboardTab() {
                     {/* Screen Page Views */}
                     <div style={{ backgroundColor: '#0F1820', border: '1px solid rgba(189, 149, 75, 0.15)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sayfa Görüntüleme</span>
+                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.dashboard.pageViews')}</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.8 }}>
                           <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                           <circle cx="12" cy="12" r="3" />
@@ -891,7 +893,7 @@ export default function DashboardTab() {
                     {/* Sessions */}
                     <div style={{ backgroundColor: '#0F1820', border: '1px solid rgba(189, 149, 75, 0.15)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Oturumlar</span>
+                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.dashboard.sessions')}</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.8 }}>
                           <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
                           <line x1="8" y1="21" x2="16" y2="21" />
@@ -909,14 +911,14 @@ export default function DashboardTab() {
                 {/* Conversion & Engagement Group */}
                 <div>
                   <h4 style={{ color: '#8E9AA6', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: '0.8rem', fontWeight: 600 }}>
-                    Kullanıcı Etkileşim & Dönüşüm Analizleri
+                    {t('admin.dashboard.conversionStatsTitle')}
                   </h4>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem' }}>
                     
                     {/* WhatsApp Click Event */}
                     <div style={{ backgroundColor: '#0F1820', border: '1px solid rgba(189, 149, 75, 0.15)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>WhatsApp Tıklamaları</span>
+                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.dashboard.whatsappClicks')}</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4CAF50" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
                         </svg>
@@ -929,7 +931,7 @@ export default function DashboardTab() {
                     {/* Maps Redirections */}
                     <div style={{ backgroundColor: '#0F1820', border: '1px solid rgba(189, 149, 75, 0.15)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Harita Yönlendirmeleri</span>
+                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.dashboard.mapsClicks')}</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2196F3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21" />
                           <line x1="9" y1="3" x2="9" y2="18" />
@@ -944,7 +946,7 @@ export default function DashboardTab() {
                     {/* GA4 Form Submits */}
                     <div style={{ backgroundColor: '#0F1820', border: '1px solid rgba(189, 149, 75, 0.15)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Form Gönderimleri (GA4)</span>
+                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.dashboard.formSubmitsGA4')}</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--color-accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                           <polyline points="14 2 14 8 20 8" />
@@ -960,7 +962,7 @@ export default function DashboardTab() {
                     {/* Form Abandonment Rate */}
                     <div style={{ backgroundColor: '#0F1820', border: '1px solid rgba(189, 149, 75, 0.15)', borderRadius: '12px', padding: '1.5rem', display: 'flex', flexDirection: 'column', gap: '1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Form Terk Etme Oranı</span>
+                        <span style={{ color: '#A3B3C2', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{t('admin.dashboard.formAbandonmentRate')}</span>
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={abandonmentRate > 40 ? '#FF6B6B' : 'var(--color-accent)'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                           <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
                           <line x1="12" y1="9" x2="12" y2="13" />
@@ -971,7 +973,7 @@ export default function DashboardTab() {
                         %{abandonmentRate}
                       </span>
                       <span style={{ color: '#8E9AA6', fontSize: '0.75rem', marginTop: '-6px' }}>
-                        Süreç: {formCompletedCount} / {formStartedCount} Form
+                        {t('admin.dashboard.formProcess')}: {formCompletedCount} / {formStartedCount} Form
                       </span>
                     </div>
 
@@ -995,12 +997,12 @@ export default function DashboardTab() {
                   {/* Metric Tabs */}
                   <div style={{ display: 'flex', justifyContent: 'flex-start', gap: '0.6rem', flexWrap: 'wrap' }}>
                     {[
-                      { key: 'activeUsers', label: 'Aktif Kullanıcılar' },
-                      { key: 'screenPageViews', label: 'Sayfa Görüntüleme' },
-                      { key: 'sessions', label: 'Oturumlar' },
-                      { key: 'whatsappClicks', label: 'WhatsApp Tıklamaları' },
-                      { key: 'mapsClicks', label: 'Harita Yönlendirmeleri' },
-                      { key: 'formSubmits', label: 'Form Gönderimleri' }
+                      { key: 'activeUsers', label: t('admin.dashboard.metrics.activeUsers') },
+                      { key: 'screenPageViews', label: t('admin.dashboard.metrics.screenPageViews') },
+                      { key: 'sessions', label: t('admin.dashboard.metrics.sessions') },
+                      { key: 'whatsappClicks', label: t('admin.dashboard.metrics.whatsappClicks') },
+                      { key: 'mapsClicks', label: t('admin.dashboard.metrics.mapsClicks') },
+                      { key: 'formSubmits', label: t('admin.dashboard.metrics.formSubmits') }
                     ].map(metric => (
                       <button
                         key={metric.key}
@@ -1040,13 +1042,13 @@ export default function DashboardTab() {
                         outline: 'none'
                       }}
                     >
-                      <option value="7days">Son 1 Hafta</option>
-                      <option value="30days">Son 1 Ay</option>
-                      <option value="90days">Son 3 Ay</option>
-                      <option value="180days">Son 6 Ay</option>
-                      <option value="365days">Son 1 Yıl</option>
-                      <option value="5years">Son 5 Yıl</option>
-                      <option value="custom">Özel Tarih Aralığı</option>
+                      <option value="7days">{t('admin.dashboard.dateRanges.days7')}</option>
+                      <option value="30days">{t('admin.dashboard.dateRanges.days30')}</option>
+                      <option value="90days">{t('admin.dashboard.dateRanges.days90')}</option>
+                      <option value="180days">{t('admin.dashboard.dateRanges.days180')}</option>
+                      <option value="365days">{t('admin.dashboard.dateRanges.days365')}</option>
+                      <option value="5years">{t('admin.dashboard.dateRanges.years5')}</option>
+                      <option value="custom">{t('admin.dashboard.dateRanges.custom')}</option>
                     </select>
 
                     {timeRange === 'custom' && (
@@ -1106,7 +1108,7 @@ export default function DashboardTab() {
                       borderRadius: '50%',
                       animation: 'spin 1s linear infinite'
                     }} />
-                    <span>Tarihsel veriler yükleniyor...</span>
+                    <span>{t('admin.dashboard.loadingHistory')}</span>
                   </div>
                 ) : (
                   renderedChart

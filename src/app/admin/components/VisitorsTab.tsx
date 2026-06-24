@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDb } from '@/context/DbContext';
 import { VisitorLog } from '@/context/dbTypes';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface Visitor {
   ipHash: string;
@@ -12,6 +13,7 @@ interface Visitor {
 
 export default function VisitorsTab() {
   const { fetchVisitorLogsPaginated } = useDb();
+  const { t } = useLanguage();
   const [logs, setLogs] = useState<VisitorLog[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -43,7 +45,7 @@ export default function VisitorsTab() {
     const key = log.ip || 'unknown';
     
     // Parse location format safely
-    let formattedCity = log.city || 'Bilinmiyor, TR';
+    let formattedCity = log.city || t('admin.visitors.unknownCity');
     if (!formattedCity.includes('/') && formattedCity.includes(',')) {
       const parts = formattedCity.split(',');
       formattedCity = `${parts[1].trim()} / ${parts[0].trim()}`;
@@ -53,7 +55,7 @@ export default function VisitorsTab() {
       visitorsMap[key] = {
         ipHash: key,
         city: formattedCity,
-        userAgent: log.userAgent || 'Unknown Device',
+        userAgent: log.userAgent || t('admin.visitors.unknown'),
         visitCount: 1,
         lastSeen: log.timestamp
       };
@@ -83,7 +85,7 @@ export default function VisitorsTab() {
         const parts = name.split('/');
         const country = parts[0].trim();
         const city = parts[1].trim();
-        displayName = city === 'UNKNOWN_CITY' ? `Bilinmiyor, ${country}` : `${city}, ${country}`;
+        displayName = city === 'UNKNOWN_CITY' ? `${t('admin.visitors.unknown')}, ${country}` : `${city}, ${country}`;
       }
       return { name: displayName, count };
     })
@@ -109,9 +111,9 @@ export default function VisitorsTab() {
   const paginatedVisitors = filteredVisitors.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const parseUserAgent = (ua: string) => {
-    if (!ua) return 'Bilinmiyor';
+    if (!ua) return t('admin.visitors.unknown');
     
-    let os = 'Bilinmeyen OS';
+    let os = t('admin.visitors.unknownOS');
     if (ua.includes('Windows NT 10.0')) os = 'Windows 10/11';
     else if (ua.includes('Windows NT 6.1')) os = 'Windows 7';
     else if (ua.includes('Windows NT 6.2') || ua.includes('Windows NT 6.3')) os = 'Windows 8';
@@ -120,7 +122,7 @@ export default function VisitorsTab() {
     else if (ua.includes('Macintosh')) os = 'macOS';
     else if (ua.includes('Linux')) os = 'Linux';
     
-    let browser = 'Bilinmeyen Tarayıcı';
+    let browser = t('admin.visitors.unknownBrowser');
     if (ua.includes('Edg/')) browser = 'Edge';
     else if (ua.includes('Chrome/') && !ua.includes('Chromium')) browser = 'Chrome';
     else if (ua.includes('Safari/') && !ua.includes('Chrome/')) browser = 'Safari';
@@ -156,7 +158,7 @@ export default function VisitorsTab() {
         gap: '1rem'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ color: '#E0E6ED', fontWeight: 500, fontSize: '1.1rem' }}>Analitik Paneli</span>
+          <span style={{ color: '#E0E6ED', fontWeight: 500, fontSize: '1.1rem' }}>{t('admin.visitors.panelTitle')}</span>
           <select 
             value={selectedMonth} 
             onChange={(e) => setSelectedMonth(e.target.value)}
@@ -170,9 +172,9 @@ export default function VisitorsTab() {
               cursor: 'pointer'
             }}
           >
-            <option value="2026-06">Haziran 2026</option>
-            <option value="2026-05">Mayıs 2026</option>
-            <option value="2026-04">Nisan 2026</option>
+            <option value="2026-06">{t('admin.dashboard.months.june')} 2026</option>
+            <option value="2026-05">{t('admin.dashboard.months.may')} 2026</option>
+            <option value="2026-04">{t('admin.dashboard.months.april')} 2026</option>
           </select>
         </div>
 
@@ -193,7 +195,7 @@ export default function VisitorsTab() {
           onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
           onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
         >
-          Yenile
+          {t('admin.visitors.refresh')}
         </button>
       </div>
 
@@ -211,7 +213,7 @@ export default function VisitorsTab() {
           gap: '1rem'
         }}>
           <h3 style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-serif)', fontSize: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.8rem', margin: 0 }}>
-            🗺️ En Çok Ziyaret Edilen Şehirler
+            {t('admin.visitors.topCities')}
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem', marginTop: '0.5rem' }}>
             {topCities.map((city, index) => (
@@ -250,7 +252,7 @@ export default function VisitorsTab() {
           gap: '1rem'
         }}>
           <h3 style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-serif)', fontSize: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.8rem', margin: 0 }}>
-            📊 Toplam Sayısal Veriler
+            {t('admin.visitors.totalStats')}
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', height: '100%', alignItems: 'center', minHeight: '220px' }}>
             <div style={{
@@ -264,7 +266,7 @@ export default function VisitorsTab() {
               justifyContent: 'center',
               gap: '0.8rem'
             }}>
-              <span style={{ color: '#A3B3C2', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>TEKİL ZİYARETÇİ</span>
+              <span style={{ color: '#A3B3C2', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('admin.visitors.uniqueVisitors')}</span>
               <span style={{ color: 'var(--color-accent)', fontSize: '2.5rem', fontWeight: 700, fontFamily: 'var(--font-serif)' }}>
                 {uniqueVisitors}
               </span>
@@ -280,7 +282,7 @@ export default function VisitorsTab() {
               justifyContent: 'center',
               gap: '0.8rem'
             }}>
-              <span style={{ color: '#A3B3C2', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>GÖRÜNTÜLENME</span>
+              <span style={{ color: '#A3B3C2', fontSize: '0.8rem', fontWeight: 600, letterSpacing: '0.05em' }}>{t('admin.visitors.totalViews')}</span>
               <span style={{ color: 'var(--color-accent)', fontSize: '2.5rem', fontWeight: 700, fontFamily: 'var(--font-serif)' }}>
                 {totalViews}
               </span>
@@ -294,11 +296,11 @@ export default function VisitorsTab() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
           <h3 style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-serif)', fontSize: '1.5rem', margin: 0 }}>
-            Ziyaretçi Listesi
+            {t('admin.visitors.visitorListTitle')}
           </h3>
           <input
             type="text"
-            placeholder="IP, Şehir veya Ülke Ara..."
+            placeholder={t('admin.visitors.searchPlaceholder')}
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             style={{
@@ -321,17 +323,17 @@ export default function VisitorsTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', color: '#E0E6ED', fontSize: '0.9rem' }}>
             <thead style={{ backgroundColor: 'rgba(189, 149, 75, 0.1)', borderBottom: '1px solid rgba(189, 149, 75, 0.2)' }}>
               <tr>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Ziyaretçi ID (Hash)</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Konum</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Cihaz</th>
-                <th style={{ padding: '1rem', textAlign: 'center' }}>Ziyaret Sayısı</th>
-                <th style={{ padding: '1rem', textAlign: 'center' }}>Son Görülme</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.visitors.table.id')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.visitors.table.location')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.visitors.table.device')}</th>
+                <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.visitors.table.visits')}</th>
+                <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.visitors.table.lastSeen')}</th>
               </tr>
             </thead>
             <tbody>
               {paginatedVisitors.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#A3B3C2' }}>Ziyaretçi kaydı bulunamadı.</td>
+                  <td colSpan={5} style={{ padding: '2rem', textAlign: 'center', color: '#A3B3C2' }}>{t('admin.visitors.emptyList')}</td>
                 </tr>
               ) : (
                 paginatedVisitors.map((visitor, index) => (
@@ -366,7 +368,9 @@ export default function VisitorsTab() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)', backgroundColor: 'rgba(0,0,0,0.1)' }}>
-              <span style={{ fontSize: '0.85rem', color: '#A3B3C2' }}>Sayfa {currentPage} / {totalPages}</span>
+              <span style={{ fontSize: '0.85rem', color: '#A3B3C2' }}>
+                {t('admin.visitors.pageInfo').replace('{current}', currentPage.toString()).replace('{total}', totalPages.toString())}
+              </span>
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
                   disabled={currentPage === 1}
@@ -385,7 +389,7 @@ export default function VisitorsTab() {
                   onMouseOver={(e) => { if (currentPage !== 1) { e.currentTarget.style.backgroundColor = 'var(--color-accent)'; e.currentTarget.style.color = '#0A1118'; } }}
                   onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-accent)'; }}
                 >
-                  Önceki
+                  {t('admin.visitors.prevPage')}
                 </button>
                 <button
                   disabled={currentPage === totalPages}
@@ -404,7 +408,7 @@ export default function VisitorsTab() {
                   onMouseOver={(e) => { if (currentPage !== totalPages) { e.currentTarget.style.backgroundColor = 'var(--color-accent)'; e.currentTarget.style.color = '#0A1118'; } }}
                   onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-accent)'; }}
                 >
-                  Sonraki
+                  {t('admin.visitors.nextPage')}
                 </button>
               </div>
             </div>
@@ -425,12 +429,12 @@ export default function VisitorsTab() {
         lineHeight: '1.5'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontWeight: 600, color: 'var(--color-accent)' }}>
-          🛡️ Veri Saklama ve Gizlilik Politikası (KVKK/GDPR)
+          {t('admin.visitors.gdpr.title')}
         </div>
         <ul style={{ paddingLeft: '1.2rem', margin: 0 }}>
-          <li>Ziyaretçi IP adresleri <strong>HMAC-SHA256</strong> ile şifrelenerek saklanmaktadır. Ham IP tutulmaz.</li>
-          <li><strong>90 gün</strong> boyunca işlem yapmayan ziyaretçi kayıtları sistemden otomatik olarak silinir.</li>
-          <li>Anonimleştirilmiş şehir istatistikleri, analiz amacıyla <strong>24 ay</strong> saklanır.</li>
+          <li dangerouslySetInnerHTML={{ __html: t('admin.visitors.gdpr.item1') }}></li>
+          <li dangerouslySetInnerHTML={{ __html: t('admin.visitors.gdpr.item2') }}></li>
+          <li dangerouslySetInnerHTML={{ __html: t('admin.visitors.gdpr.item3') }}></li>
         </ul>
       </div>
 

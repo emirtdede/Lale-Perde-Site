@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useLanguage } from '@/context/LanguageContext';
 
 interface LoginScreenProps {
   handleLogin: (e: React.FormEvent) => void;
@@ -70,6 +71,7 @@ export default function LoginScreen({
   adminEmail,
   adminPhone
 }: LoginScreenProps) {
+  const { t } = useLanguage();
   const [selectedMethod, setSelectedMethod] = useState<'email' | 'phone' | null>(null);
   const [confirmInput, setConfirmInput] = useState('');
   const [confirmError, setConfirmError] = useState('');
@@ -127,7 +129,6 @@ export default function LoginScreen({
           </div>
         </div>
 
-        {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: '2.5rem' }}>
           <div style={{ 
             fontFamily: "'La Fleur Grande', 'La Fleur', var(--font-serif)", 
@@ -147,7 +148,7 @@ export default function LoginScreen({
             fontWeight: 500,
             textTransform: 'uppercase'
           }}>
-            Yönetim Paneli Girişi
+            {t('admin.login.title')}
           </p>
         </div>
         
@@ -156,7 +157,7 @@ export default function LoginScreen({
             {selectedMethod === null ? (
               <>
                 <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', opacity: 0.8, color: '#A3B3C2', lineHeight: '1.5' }}>
-                  Lütfen doğrulama yöntemini seçin:
+                  {t('admin.login.twoFactorChoiceSubtitle')}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginBottom: '1.5rem' }}>
                   <button 
@@ -185,7 +186,7 @@ export default function LoginScreen({
                       <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                       <polyline points="22,6 12,13 2,6"></polyline>
                     </svg>
-                    E-Posta ile Doğrula
+                    {t('admin.login.sendToEmail')}
                   </button>
 
                   <button 
@@ -213,7 +214,7 @@ export default function LoginScreen({
                     <svg width="20" height="20" fill="none" stroke="var(--color-accent)" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
                       <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
                     </svg>
-                    SMS ile Doğrula
+                    {t('admin.login.sendToPhone')}
                   </button>
                 </div>
               </>
@@ -221,8 +222,8 @@ export default function LoginScreen({
               <div>
                 <p style={{ fontSize: '0.9rem', marginBottom: '1.2rem', opacity: 0.8, color: '#A3B3C2', lineHeight: '1.5' }}>
                   {selectedMethod === 'email' 
-                    ? 'Güvenliğiniz için kayıtlı yönetici e-posta adresinizi girin:' 
-                    : 'Güvenliğiniz için kayıtlı yönetici telefon numaranızı girin:'}
+                    ? t('admin.login.resetSubtitle') 
+                    : t('admin.login.resetSubtitle')}
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '1.5rem' }}>
                   <input
@@ -298,7 +299,7 @@ export default function LoginScreen({
                         fontSize: '0.9rem'
                       }}
                     >
-                      Doğrula ve Kod Gönder
+                      {t('admin.login.sendCodeBtn')}
                     </button>
                   </div>
                 </div>
@@ -324,13 +325,13 @@ export default function LoginScreen({
                 fontSize: '0.9rem'
               }}
             >
-              ← Giriş Ekranına Dön
+              ← {t('admin.login.backToLogin')}
             </button>
           </div>
         ) : twoFactorFlow ? (
           <form onSubmit={handleTwoFactorVerify}>
             <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', opacity: 0.8, color: '#A3B3C2', lineHeight: '1.5' }}>
-              Güvenliğiniz için iki adımlı doğrulama (2FA) aktiftir. 6 haneli doğrulama kodu şuraya gönderildi:
+              {t('admin.login.twoFactorSubtitle')}
               <br />
               <strong style={{ color: 'var(--color-accent)' }}>{twoFactorSentDestination}</strong>
             </p>
@@ -380,7 +381,7 @@ export default function LoginScreen({
                 onMouseOver={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                 onMouseOut={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                KODU DOĞRULA VE GİRİŞ YAP
+                {t('admin.login.twoFactorVerifyBtn')}
               </button>
             </div>
             
@@ -399,18 +400,18 @@ export default function LoginScreen({
                 fontSize: '0.9rem'
               }}
             >
-              ← Giriş Ekranına Dön
+              ← {t('admin.login.backToLogin')}
             </button>
           </form>
         ) : resetFlow ? (
           <div>
             <p style={{ fontSize: '0.9rem', marginBottom: '1.5rem', opacity: 0.8, color: '#A3B3C2' }}>
-              Kayıtlı e-posta veya telefonunuza şifre sıfırlama kodu gönderilecektir.
+              {t('admin.login.resetSubtitle')}
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '1.5rem' }}>
               <input
                 type="text"
-                placeholder="E-posta veya Telefon"
+                placeholder={t('admin.login.contactInfo')}
                 value={resetEmailOrPhone}
                 onChange={(e) => setResetEmailOrPhone(e.target.value)}
                 style={{ 
@@ -443,7 +444,7 @@ export default function LoginScreen({
                 onMouseOver={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                 onMouseOut={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateY(0)'; }}
               >
-                KOD GÖNDER
+                {t('admin.login.sendCodeBtn')}
               </button>
             </div>
 
@@ -451,7 +452,7 @@ export default function LoginScreen({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '1.5rem' }}>
                 <input
                   type="text"
-                  placeholder="Doğrulama Kodu (OTP)"
+                  placeholder={t('admin.login.enterCode')}
                   value={otpInput}
                   onChange={(e) => setOtpInput(e.target.value)}
                   style={{ 
@@ -479,7 +480,7 @@ export default function LoginScreen({
                     letterSpacing: '0.05em'
                   }}
                 >
-                  KODU DOĞRULA
+                  {t('admin.login.verifyBtn')}
                 </button>
               </div>
             )}
@@ -488,7 +489,7 @@ export default function LoginScreen({
               <div style={{ display: 'flex', flexDirection: 'column', gap: '1.2rem', marginBottom: '1.5rem' }}>
                 <input
                   type="password"
-                  placeholder="Yeni Şifre"
+                  placeholder={t('admin.login.newPassword')}
                   value={newPasswordInput}
                   onChange={(e) => setNewPasswordInput(e.target.value)}
                   style={{ 
@@ -516,7 +517,7 @@ export default function LoginScreen({
                     letterSpacing: '0.05em'
                   }}
                 >
-                  ŞİFREYİ DEĞİŞTİR
+                  {t('admin.login.savePasswordBtn')}
                 </button>
               </div>
             )}
@@ -541,14 +542,14 @@ export default function LoginScreen({
                 fontSize: '0.9rem'
               }}
             >
-              ← Giriş Ekranına Dön
+              ← {t('admin.login.backToLogin')}
             </button>
           </div>
         ) : (
           <form onSubmit={handleLogin}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', marginBottom: '2rem' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'rgba(163, 179, 194, 0.8)', letterSpacing: '0.08em', fontWeight: 600 }}>E-Posta / Kullanıcı Adı</label>
+                <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'rgba(163, 179, 194, 0.8)', letterSpacing: '0.08em', fontWeight: 600 }}>{t('admin.login.username')}</label>
                 <input 
                   type="text" 
                   value={usernameInput}
@@ -570,7 +571,7 @@ export default function LoginScreen({
                 />
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'rgba(163, 179, 194, 0.8)', letterSpacing: '0.08em', fontWeight: 600 }}>Şifre</label>
+                <label style={{ fontSize: '0.8rem', textTransform: 'uppercase', color: 'rgba(163, 179, 194, 0.8)', letterSpacing: '0.08em', fontWeight: 600 }}>{t('admin.login.password')}</label>
                 <input 
                   type="password" 
                   value={passwordInput}
@@ -617,7 +618,7 @@ export default function LoginScreen({
               onMouseOver={(e) => { e.currentTarget.style.transform = 'translateY(-1px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(189, 149, 75, 0.35)'; }}
               onMouseOut={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 15px rgba(189, 149, 75, 0.25)'; }}
             >
-              Giriş Yap
+              {t('admin.login.loginBtn')}
             </button>
             
             <button 
@@ -638,7 +639,7 @@ export default function LoginScreen({
               onMouseOver={(e) => e.currentTarget.style.color = '#BD954B'}
               onMouseOut={(e) => e.currentTarget.style.color = 'rgba(189, 149, 75, 0.7)'}
             >
-              Şifremi Unuttum
+              {t('admin.login.forgotPassword')}
             </button>
           </form>
         )}

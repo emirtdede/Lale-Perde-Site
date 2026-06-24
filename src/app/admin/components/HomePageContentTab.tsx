@@ -2,9 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useDb } from '@/context/DbContext';
 import { HomePageContent, Category } from '@/context/dbTypes';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function HomePageContentTab() {
   const { homeContent: dbHomeContent, categories: dbCategories, updateHomeContent } = useDb();
+  const { t } = useLanguage();
   const [content, setContent] = useState<HomePageContent | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [saved, setSaved] = useState(false);
@@ -46,14 +48,14 @@ export default function HomePageContentTab() {
     }
   };
 
-  if (!content) return <div style={{ color: '#E0E6ED' }}>Yükleniyor...</div>;
+  if (!content) return <div style={{ color: '#E0E6ED' }}>{t('admin.homeContent.loading')}</div>;
 
   const renderInputGroup = (title: string, nameTr: keyof HomePageContent, nameEn: keyof HomePageContent, isTextArea = false) => (
     <div style={{ marginBottom: '2rem', backgroundColor: '#0F1820', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.15)' }}>
       <h4 style={{ color: '#E0E6ED', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>{title}</h4>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
         <div>
-          <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>Türkçe (TR)</label>
+          <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>{t('admin.homeContent.langTr')}</label>
           {isTextArea ? (
             <textarea
               name={nameTr}
@@ -73,7 +75,7 @@ export default function HomePageContentTab() {
           )}
         </div>
         <div>
-          <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>İngilizce (EN)</label>
+          <label style={{ display: 'block', fontSize: '0.85rem', color: '#A3B3C2', marginBottom: '0.5rem' }}>{t('admin.homeContent.langEn')}</label>
           {isTextArea ? (
             <textarea
               name={nameEn}
@@ -115,33 +117,32 @@ export default function HomePageContentTab() {
             whiteSpace: 'nowrap'
           }}
         >
-          {saved ? 'Kaydedildi ✓' : 'Değişiklikleri Kaydet'}
+          {saved ? t('admin.homeContent.savedBtn') : t('admin.homeContent.saveBtn')}
         </button>,
         portalTarget
       )}
 
-      {renderInputGroup('Felsefemiz Başlık', 'philosophyTitleTr', 'philosophyTitleEn')}
-      {renderInputGroup('Felsefemiz Açıklama', 'philosophyDescTr', 'philosophyDescEn', true)}
+      {renderInputGroup(t('admin.homeContent.sections.philosophyTitle'), 'philosophyTitleTr', 'philosophyTitleEn')}
+      {renderInputGroup(t('admin.homeContent.sections.philosophyDesc'), 'philosophyDescTr', 'philosophyDescEn', true)}
       
-      {renderInputGroup('Zanaat & Doku Başlık', 'craftTitleTr', 'craftTitleEn')}
-      {renderInputGroup('Zanaat & Doku Açıklama', 'craftDescTr', 'craftDescEn', true)}
+      {renderInputGroup(t('admin.homeContent.sections.craftTitle'), 'craftTitleTr', 'craftTitleEn')}
+      {renderInputGroup(t('admin.homeContent.sections.craftDesc'), 'craftDescTr', 'craftDescEn', true)}
       
-      {renderInputGroup('Koleksiyonlar Başlık', 'collectionsTitleTr', 'collectionsTitleEn')}
-      {renderInputGroup('Koleksiyonlar Açıklama', 'collectionsDescTr', 'collectionsDescEn', true)}
+      {renderInputGroup(t('admin.homeContent.sections.collectionsTitle'), 'collectionsTitleTr', 'collectionsTitleEn')}
+      {renderInputGroup(t('admin.homeContent.sections.collectionsDesc'), 'collectionsDescTr', 'collectionsDescEn', true)}
 
       {/* Featured Categories Selection */}
       <div style={{ marginBottom: '2rem', backgroundColor: '#0F1820', padding: '1.5rem', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.15)' }}>
         <h4 style={{ color: '#E0E6ED', marginBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
-          Anasayfada Gösterilecek Koleksiyonlar
+          {t('admin.homeContent.featured.title')}
         </h4>
         <p style={{ color: '#A3B3C2', fontSize: '0.85rem', marginBottom: '1.2rem' }}>
-          Anasayfadaki &quot;Koleksiyonlarımız&quot; bölümünde hangi kategorilerin gösterileceğini seçin. 
-          Hiçbir kategori seçilmezse tüm aktif kategoriler gösterilir.
+          {t('admin.homeContent.featured.desc')}
         </p>
 
         {activeCategories.length === 0 ? (
           <p style={{ color: '#FF9800', fontSize: '0.9rem' }}>
-            Henüz aktif kategori bulunmuyor. Önce &quot;Kategoriler&quot; sekmesinden kategori ekleyin.
+            {t('admin.homeContent.featured.noActive')}
           </p>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '1rem' }}>
@@ -206,7 +207,7 @@ export default function HomePageContentTab() {
 
         {featuredIds.length > 0 && (
           <p style={{ color: 'var(--color-accent)', fontSize: '0.8rem', marginTop: '1rem', fontWeight: 500 }}>
-            {featuredIds.length} kategori seçili
+            {featuredIds.length} {t('admin.homeContent.featured.selectedCount')}
           </p>
         )}
       </div>

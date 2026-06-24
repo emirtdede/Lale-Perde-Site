@@ -22,6 +22,21 @@ export interface Product {
   status: 'active' | 'draft' | 'archived'; // archived means hidden from client but visible in admin archive
   coverImage?: string;
   displayOrder: number;
+  curtainTypeId?: string;
+  fabricTypeId?: string;
+  mountingTypeIds?: string[];
+}
+
+export interface MountingType {
+  id: string;
+  categoryId: string;
+  curtainTypeId?: string;
+  nameTr: string;
+  nameEn: string;
+  descriptionTr?: string;
+  descriptionEn?: string;
+  displayOrder: number;
+  status: 'active' | 'passive';
 }
 
 export interface Category {
@@ -34,6 +49,27 @@ export interface Category {
   displayOrder: number;
   descriptionTr?: string;
   descriptionEn?: string;
+  slug?: string;
+}
+
+export interface CurtainType {
+  id: string;
+  categoryId: string;
+  nameTr: string;
+  nameEn: string;
+  slug: string;
+  displayOrder: number;
+  status: 'active' | 'passive';
+}
+
+export interface FabricType {
+  id: string;
+  categoryId: string;
+  nameTr: string;
+  nameEn: string;
+  slug: string;
+  displayOrder: number;
+  status: 'active' | 'passive';
 }
 
 export interface SystemSettings {

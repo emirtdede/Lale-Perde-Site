@@ -1,10 +1,16 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 
 const SECRET_KEY = new TextEncoder().encode(
   process.env.JWT_SECRET || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'lale-perde-fallback-secret-key-32chars'
+);
+
+// Create a Supabase client with the Service Role Key to bypass RLS
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 );
 
 export async function POST(request: Request) {
@@ -16,27 +22,27 @@ export async function POST(request: Request) {
     }
 
     // Server-side check
-    const { data: settings, error } = await supabase
-      .from('site_settings')
+    const { data: authRecord, error } = await supabaseAdmin
+      .from('admin_auth')
       .select('admin_username, admin_email, admin_phone, admin_password_hash, two_factor_enabled, two_factor_type')
-      .limit(1)
+      .eq('id', 'main_admin')
       .single();
 
-    if (error || !settings) {
-      return NextResponse.json({ error: 'Sistem ayarları okunamadı' }, { status: 500 });
+    if (error || !authRecord) {
+      return NextResponse.json({ error: 'Güvenlik ayarları okunamadı' }, { status: 500 });
     }
 
-    const isValidUser = (username === settings.admin_username || username === settings.admin_email);
-    const isValidPass = (password === settings.admin_password_hash);
+    const isValidUser = (username === authRecord.admin_username || username === authRecord.admin_email);
+    const isValidPass = (password === authRecord.admin_password_hash);
 
     if (isValidUser && isValidPass) {
       if (preCheck) {
         return NextResponse.json({ 
           success: true, 
-          twoFactorEnabled: settings.two_factor_enabled, 
-          twoFactorType: settings.two_factor_type,
-          adminEmail: settings.admin_email,
-          adminPhone: settings.admin_phone
+          twoFactorEnabled: authRecord.two_factor_enabled, 
+          twoFactorType: authRecord.two_factor_type,
+          adminEmail: authRecord.admin_email,
+          adminPhone: authRecord.admin_phone
         });
       }
 

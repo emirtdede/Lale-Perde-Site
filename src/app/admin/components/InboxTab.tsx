@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from 'react';
 import { useDb } from '@/context/DbContext';
 import { InboxMessage } from '@/context/dbTypes';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function InboxTab() {
   const { fetchInboxPaginated, updateInboxMessage } = useDb();
+  const { t } = useLanguage();
   const [messages, setMessages] = useState<InboxMessage[]>([]);
   const [selectedMessage, setSelectedMessage] = useState<InboxMessage | null>(null);
   const [activeView, setActiveView] = useState<'inbox' | 'archive'>('inbox');
@@ -50,7 +52,7 @@ export default function InboxTab() {
     if (msg) {
       if (!msg.isResolved) {
         setAlert({
-          message: 'Durumu "Bekliyor" olan içerikler çözülmeden arşivlenemez!',
+          message: t('admin.inbox.alerts.cannotArchivePending'),
           type: 'warning'
         });
         setTimeout(() => setAlert(null), 5000);
@@ -62,7 +64,7 @@ export default function InboxTab() {
         setSelectedMessage(null); // Close if archived
       }
       setAlert({
-        message: 'İçerik başarıyla arşivlendi.',
+        message: t('admin.inbox.alerts.archivedSuccess'),
         type: 'success'
       });
       setTimeout(() => setAlert(null), 3000);
@@ -75,7 +77,7 @@ export default function InboxTab() {
       const updatedMsg = { ...msg, isArchived: false };
       await updateInboxMessage(updatedMsg);
       setAlert({
-        message: 'İçerik tekrar gelen kutusuna taşındı.',
+        message: t('admin.inbox.alerts.restoredSuccess'),
         type: 'success'
       });
       setTimeout(() => setAlert(null), 3000);
@@ -139,7 +141,7 @@ export default function InboxTab() {
             border: '1px solid var(--color-accent)'
           }}
         >
-          Gelen Kutusu ({activeMessages.length})
+          {t('admin.inbox.tabs.inbox')} ({activeMessages.length})
         </button>
         <button
           onClick={() => { setActiveView('archive'); setSelectedMessage(null); }}
@@ -155,7 +157,7 @@ export default function InboxTab() {
             border: '1px solid var(--color-accent)'
           }}
         >
-          Arşivlenmiş İletiler ({archivedMessages.length})
+          {t('admin.inbox.tabs.archive')} ({archivedMessages.length})
         </button>
       </div>
 
@@ -165,19 +167,19 @@ export default function InboxTab() {
             <table style={{ width: '100%', borderCollapse: 'collapse', color: '#E0E6ED', fontSize: '0.9rem' }}>
               <thead style={{ backgroundColor: 'rgba(189, 149, 75, 0.1)', borderBottom: '1px solid rgba(189, 149, 75, 0.2)' }}>
                 <tr>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>Durum</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>Gönderen</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>Tür</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>Konu</th>
-                  <th style={{ padding: '1rem', textAlign: 'left' }}>Tarih</th>
-                  <th style={{ padding: '1rem', textAlign: 'center' }}>İşlem</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.inbox.table.status')}</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.inbox.table.sender')}</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.inbox.table.type')}</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.inbox.table.subject')}</th>
+                  <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.inbox.table.date')}</th>
+                  <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.inbox.table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {activeView === 'inbox' ? (
                   paginatedInbox.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#A3B3C2' }}>Gelen kutusu boş.</td>
+                      <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#A3B3C2' }}>{t('admin.inbox.messages.emptyInbox')}</td>
                     </tr>
                   ) : (
                     paginatedInbox.map(msg => (
@@ -193,7 +195,7 @@ export default function InboxTab() {
                       >
                         <td style={{ padding: '1rem' }}>
                           {!msg.isRead && <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#4CAF50', marginRight: '8px' }} />}
-                          {msg.isResolved ? 'Çözüldü' : 'Bekliyor'}
+                          {msg.isResolved ? t('admin.inbox.status.resolved') : t('admin.inbox.status.pending')}
                         </td>
                         <td style={{ padding: '1rem' }}>{msg.name}</td>
                         <td style={{ padding: '1rem' }}>
@@ -204,7 +206,7 @@ export default function InboxTab() {
                             backgroundColor: msg.type === 'appointment' ? 'rgba(189, 149, 75, 0.2)' : 'rgba(33, 150, 243, 0.2)',
                             color: msg.type === 'appointment' ? 'var(--color-accent)' : '#2196F3'
                           }}>
-                            {msg.type === 'appointment' ? 'Randevu' : 'Form'}
+                            {msg.type === 'appointment' ? t('admin.inbox.type.appointment') : t('admin.inbox.type.form')}
                           </span>
                         </td>
                         <td style={{ padding: '1rem' }}>{msg.subject}</td>
@@ -216,7 +218,7 @@ export default function InboxTab() {
                             onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-accent)'; e.currentTarget.style.color = '#0A1118'; }}
                             onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-accent)'; }}
                           >
-                            İncele
+                            {t('admin.inbox.actions.inspect')}
                           </button>
                           <button 
                             onClick={(e) => { e.stopPropagation(); archiveMessage(msg.id); }}
@@ -224,7 +226,7 @@ export default function InboxTab() {
                             onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#FF6B6B'; e.currentTarget.style.color = '#FFF'; }}
                             onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = '#FF6B6B'; }}
                           >
-                            Arşivle
+                            {t('admin.inbox.actions.archive')}
                           </button>
                         </td>
                       </tr>
@@ -233,7 +235,7 @@ export default function InboxTab() {
                 ) : (
                   paginatedArchived.length === 0 ? (
                     <tr>
-                      <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#A3B3C2' }}>Arşivlenmiş öğe bulunamadı.</td>
+                      <td colSpan={6} style={{ padding: '2rem', textAlign: 'center', color: '#A3B3C2' }}>{t('admin.inbox.messages.emptyArchive')}</td>
                     </tr>
                   ) : (
                     paginatedArchived.map(msg => (
@@ -247,7 +249,7 @@ export default function InboxTab() {
                           opacity: 0.85
                         }}
                       >
-                        <td style={{ padding: '1rem' }}>{msg.isResolved ? 'Çözüldü' : 'Bekliyor'}</td>
+                        <td style={{ padding: '1rem' }}>{msg.isResolved ? t('admin.inbox.status.resolved') : t('admin.inbox.status.pending')}</td>
                         <td style={{ padding: '1rem' }}>{msg.name}</td>
                         <td style={{ padding: '1rem' }}>
                           <span style={{ 
@@ -257,7 +259,7 @@ export default function InboxTab() {
                             backgroundColor: msg.type === 'appointment' ? 'rgba(189, 149, 75, 0.2)' : 'rgba(33, 150, 243, 0.2)',
                             color: msg.type === 'appointment' ? 'var(--color-accent)' : '#2196F3'
                           }}>
-                            {msg.type === 'appointment' ? 'Randevu' : 'Form'}
+                            {msg.type === 'appointment' ? t('admin.inbox.type.appointment') : t('admin.inbox.type.form')}
                           </span>
                         </td>
                         <td style={{ padding: '1rem' }}>{msg.subject}</td>
@@ -269,7 +271,7 @@ export default function InboxTab() {
                             onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-accent)'; e.currentTarget.style.color = '#0A1118'; }}
                             onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-accent)'; }}
                           >
-                            İncele
+                            {t('admin.inbox.actions.inspect')}
                           </button>
                           <button 
                             onClick={(e) => { e.stopPropagation(); restoreMessage(msg.id); }}
@@ -277,7 +279,7 @@ export default function InboxTab() {
                             onMouseOver={(e) => { e.currentTarget.style.backgroundColor = 'var(--color-accent)'; e.currentTarget.style.color = '#0A1118'; }}
                             onMouseOut={(e) => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'var(--color-accent)'; }}
                           >
-                            Geri Yükle
+                            {t('admin.inbox.actions.restore')}
                           </button>
                         </td>
                       </tr>
@@ -304,9 +306,9 @@ export default function InboxTab() {
                     fontSize: '0.8rem'
                   }}
                 >
-                  Önceki Sayfa
+                  {t('admin.inbox.actions.prevPage')}
                 </button>
-                <span style={{ fontSize: '0.85rem', color: '#A3B3C2' }}>Sayfa {inboxPage} / {totalInboxPages}</span>
+                <span style={{ fontSize: '0.85rem', color: '#A3B3C2' }}>{t('admin.inbox.actions.page')} {inboxPage} / {totalInboxPages}</span>
                 <button
                   disabled={inboxPage === totalInboxPages}
                   onClick={() => setInboxPage(prev => Math.min(prev + 1, totalInboxPages))}
@@ -321,7 +323,7 @@ export default function InboxTab() {
                     fontSize: '0.8rem'
                   }}
                 >
-                  Sonraki Sayfa
+                  {t('admin.inbox.actions.nextPage')}
                 </button>
               </div>
             )}
@@ -342,9 +344,9 @@ export default function InboxTab() {
                     fontSize: '0.8rem'
                   }}
                 >
-                  Önceki Sayfa
+                  {t('admin.inbox.actions.prevPage')}
                 </button>
-                <span style={{ fontSize: '0.85rem', color: '#A3B3C2' }}>Sayfa {archivePage} / {totalArchivePages}</span>
+                <span style={{ fontSize: '0.85rem', color: '#A3B3C2' }}>{t('admin.inbox.actions.page')} {archivePage} / {totalArchivePages}</span>
                 <button
                   disabled={archivePage === totalArchivePages}
                   onClick={() => setArchivePage(prev => Math.min(prev + 1, totalArchivePages))}
@@ -359,7 +361,7 @@ export default function InboxTab() {
                     fontSize: '0.8rem'
                   }}
                 >
-                  Sonraki Sayfa
+                  {t('admin.inbox.actions.nextPage')}
                 </button>
               </div>
             )}
@@ -370,34 +372,34 @@ export default function InboxTab() {
         {selectedMessage && (
           <div style={{ backgroundColor: '#0F1820', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.3)', padding: '1.5rem', alignSelf: 'start', position: 'sticky', top: '100px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
-              <h3 style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-serif)', fontSize: '1.2rem' }}>Mesaj Detayı</h3>
+              <h3 style={{ color: 'var(--color-accent)', fontFamily: 'var(--font-serif)', fontSize: '1.2rem' }}>{t('admin.inbox.messages.detailTitle')}</h3>
               <button onClick={() => setSelectedMessage(null)} style={{ background: 'none', border: 'none', color: '#A3B3C2', cursor: 'pointer', fontSize: '1.5rem' }}>&times;</button>
             </div>
 
             <div style={{ color: '#E0E6ED', fontSize: '0.9rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
               <div>
-                <strong style={{ color: '#A3B3C2', display: 'block', marginBottom: '0.2rem' }}>Gönderen:</strong>
+                <strong style={{ color: '#A3B3C2', display: 'block', marginBottom: '0.2rem' }}>{t('admin.inbox.messages.sender')}</strong>
                 {selectedMessage.name}
               </div>
               <div>
-                <strong style={{ color: '#A3B3C2', display: 'block', marginBottom: '0.2rem' }}>İletişim:</strong>
+                <strong style={{ color: '#A3B3C2', display: 'block', marginBottom: '0.2rem' }}>{t('admin.inbox.messages.contact')}</strong>
                 {selectedMessage.email} <br />
                 {selectedMessage.phone}
               </div>
               {selectedMessage.type === 'appointment' && (
                 <div style={{ backgroundColor: 'rgba(189, 149, 75, 0.1)', padding: '1rem', borderRadius: '6px', border: '1px solid rgba(189, 149, 75, 0.2)' }}>
-                  <strong style={{ color: 'var(--color-accent)', display: 'block', marginBottom: '0.2rem' }}>Randevu Bilgileri:</strong>
-                  Tarih: {selectedMessage.appointmentDate} <br />
-                  Saat: {selectedMessage.appointmentTime} <br />
-                  Adres: {selectedMessage.address}
+                  <strong style={{ color: 'var(--color-accent)', display: 'block', marginBottom: '0.2rem' }}>{t('admin.inbox.messages.appointmentInfo')}</strong>
+                  {t('admin.inbox.messages.date')} {selectedMessage.appointmentDate} <br />
+                  {t('admin.inbox.messages.time')} {selectedMessage.appointmentTime} <br />
+                  {t('admin.inbox.messages.address')} {selectedMessage.address}
                 </div>
               )}
               <div>
-                <strong style={{ color: '#A3B3C2', display: 'block', marginBottom: '0.2rem' }}>Konu:</strong>
+                <strong style={{ color: '#A3B3C2', display: 'block', marginBottom: '0.2rem' }}>{t('admin.inbox.messages.subject')}</strong>
                 {selectedMessage.subject}
               </div>
               <div>
-                <strong style={{ color: '#A3B3C2', display: 'block', marginBottom: '0.2rem' }}>Mesaj:</strong>
+                <strong style={{ color: '#A3B3C2', display: 'block', marginBottom: '0.2rem' }}>{t('admin.inbox.messages.message')}</strong>
                 <p style={{ backgroundColor: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '6px', lineHeight: '1.5', margin: 0 }}>
                   {selectedMessage.message}
                 </p>
@@ -418,7 +420,7 @@ export default function InboxTab() {
                   fontWeight: 600
                 }}
               >
-                {selectedMessage.isResolved ? 'Çözüldü İşaretini Kaldır' : 'Çözüldü Olarak İşaretle'}
+                {selectedMessage.isResolved ? t('admin.inbox.actions.unmarkResolved') : t('admin.inbox.actions.markResolved')}
               </button>
             </div>
           </div>

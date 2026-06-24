@@ -58,7 +58,7 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
 
   // Wizard state: 1 = Category selection (Usage Area), 2 = Product Selection, 3 = Mechanism / Sub-type Selection, 4 = Width (A) Entry, 5 = Height (B) Entry
   const [step, setStep] = useState<number>(1);
-  const { settings } = useDb();
+  const { settings, mountingTypes, fabricTypes } = useDb();
 
   const categories = React.useMemo(() => {
     return initialCategories
@@ -80,11 +80,99 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
   const [width, setWidth] = useState<number>(300);
   const [height, setHeight] = useState<number>(200);
 
+  // Window width and height in cm for preview estimation
+  const [windowWidth, setWindowWidth] = useState<number>(240);
+  const [windowHeight, setWindowHeight] = useState<number>(180);
+
+  // Toggle info display state
+  const [showInfo, setShowInfo] = useState<boolean>(false);
+
+  // Toggle window visualization display
+  const [showWindow, setShowWindow] = useState<boolean>(true);
+
   // Dragging states for 2D preview
   const [isDraggingWidth, setIsDraggingWidth] = useState(false);
   const [isDraggingHeight, setIsDraggingHeight] = useState(false);
 
+  // Fabric filtering in Step 2
+  const [selectedFabricTypeId, setSelectedFabricTypeId] = useState<string>('all');
+
+  // Local storage state loading
+  const [isLoaded, setIsLoaded] = useState(false);
+
   const containerRef = useRef<HTMLDivElement>(null);
+
+  // Restore state from localStorage on mount
+  useEffect(() => {
+    try {
+      const prodId = searchParams.get('product');
+      if (prodId) {
+        setIsLoaded(true);
+        return;
+      }
+
+      const savedStep = localStorage.getItem('measure_wizard_step');
+      const savedUsage = localStorage.getItem('measure_wizard_usage');
+      const savedCatId = localStorage.getItem('measure_wizard_cat_id');
+      const savedProductId = localStorage.getItem('measure_wizard_product_id');
+      const savedSubtype = localStorage.getItem('measure_wizard_subtype');
+      const savedWidth = localStorage.getItem('measure_wizard_width');
+      const savedHeight = localStorage.getItem('measure_wizard_height');
+      const savedWindowWidth = localStorage.getItem('measure_wizard_window_width');
+      const savedWindowHeight = localStorage.getItem('measure_wizard_window_height');
+      const savedShowWindow = localStorage.getItem('measure_wizard_show_window');
+      const savedFabricTypeId = localStorage.getItem('measure_wizard_fabric_type_id');
+
+      if (savedUsage) setSelectedUsage(savedUsage);
+      if (savedCatId && categories.length > 0) {
+        const cat = categories.find(c => c.id === savedCatId);
+        if (cat) setSelectedCat(cat);
+      }
+      if (savedProductId && products.length > 0) {
+        const prod = products.find(p => p.id === savedProductId);
+        if (prod) setSelectedProduct(prod);
+      }
+      if (savedSubtype) setSelectedSubtype(savedSubtype);
+      if (savedWidth) setWidth(Number(savedWidth));
+      if (savedHeight) setHeight(Number(savedHeight));
+      if (savedWindowWidth) setWindowWidth(Number(savedWindowWidth));
+      if (savedWindowHeight) setWindowHeight(Number(savedWindowHeight));
+      if (savedShowWindow) setShowWindow(savedShowWindow === 'true');
+      if (savedFabricTypeId) setSelectedFabricTypeId(savedFabricTypeId);
+      if (savedStep) setStep(Number(savedStep));
+    } catch (e) {
+      console.error('Failed to load from localStorage', e);
+    }
+    setIsLoaded(true);
+  }, [categories, products, searchParams]);
+
+  // Save to localStorage when state changes
+  useEffect(() => {
+    if (!isLoaded) return;
+    try {
+      localStorage.setItem('measure_wizard_step', String(step));
+      if (selectedUsage) localStorage.setItem('measure_wizard_usage', selectedUsage);
+      else localStorage.removeItem('measure_wizard_usage');
+
+      if (selectedCat) localStorage.setItem('measure_wizard_cat_id', selectedCat.id);
+      else localStorage.removeItem('measure_wizard_cat_id');
+
+      if (selectedProduct) localStorage.setItem('measure_wizard_product_id', selectedProduct.id);
+      else localStorage.removeItem('measure_wizard_product_id');
+
+      if (selectedSubtype) localStorage.setItem('measure_wizard_subtype', selectedSubtype);
+      else localStorage.removeItem('measure_wizard_subtype');
+
+      localStorage.setItem('measure_wizard_width', String(width));
+      localStorage.setItem('measure_wizard_height', String(height));
+      localStorage.setItem('measure_wizard_window_width', String(windowWidth));
+      localStorage.setItem('measure_wizard_window_height', String(windowHeight));
+      localStorage.setItem('measure_wizard_show_window', String(showWindow));
+      localStorage.setItem('measure_wizard_fabric_type_id', selectedFabricTypeId);
+    } catch (e) {
+      console.error('Failed to save to localStorage', e);
+    }
+  }, [step, selectedUsage, selectedCat, selectedProduct, selectedSubtype, width, height, windowWidth, windowHeight, showWindow, selectedFabricTypeId, isLoaded]);
 
   // Load URL parameter pre-selection
   useEffect(() => {
@@ -114,6 +202,38 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
     if (!selectedUsage) return { min_width: 40, max_width: 600, min_height: 60, max_height: 350 };
     return CATEGORY_LIMITS[selectedUsage];
   }, [selectedUsage]);
+
+  // Fabric types for the selected category
+  const categoryFabricTypes = React.useMemo(() => {
+    if (!selectedCat || !fabricTypes) return [];
+    return fabricTypes.filter(f => f.categoryId === selectedCat.id && f.status === 'active');
+  }, [selectedCat, fabricTypes]);
+
+  // Filtered products list for Step 2
+  const filteredProducts = React.useMemo(() => {
+    if (!selectedCat) return [];
+    let list = products.filter(p => p.categoryId === selectedCat.id);
+    if (selectedFabricTypeId !== 'all') {
+      list = list.filter(p => p.fabricTypeId === selectedFabricTypeId);
+    }
+    return list;
+  }, [products, selectedCat, selectedFabricTypeId]);
+
+  // Dynamic mounting types based on selected product and category
+  const productMountingTypes = React.useMemo(() => {
+    if (!selectedProduct || !mountingTypes) return [];
+    const ids = selectedProduct.mountingTypeIds || [];
+    let list = mountingTypes.filter(m => ids.includes(m.id) && m.status === 'active');
+    if (list.length === 0) {
+      list = mountingTypes.filter(m => m.categoryId === selectedProduct.categoryId && m.curtainTypeId === selectedProduct.curtainTypeId && m.status === 'active');
+    }
+    return list.sort((a, b) => (a.displayOrder || 0) - (b.displayOrder || 0));
+  }, [selectedProduct, mountingTypes]);
+
+  // Reset fabric type filter when selected category changes
+  useEffect(() => {
+    setSelectedFabricTypeId('all');
+  }, [selectedCat]);
 
   // Ensure measurements are within category limits when usage area changes
   useEffect(() => {
@@ -175,7 +295,7 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
     const usageLabel = language === 'tr' ? CATEGORY_LIMITS[selectedUsage].label : CATEGORY_LIMITS[selectedUsage].labelEn;
     const subtypeLabel = selectedSubtype || (language === 'tr' ? 'Standart' : 'Standard');
     
-    const text = `Merhaba, ${catName} / ${prodName} ürünü için kendi aldığım ölçülerle fiyat teklifi almak istiyorum. \n\n*BİLGİLER*\nKullanım Alanı: ${usageLabel}\nAlt Tip / Mekanizma: ${subtypeLabel}\n\n*ÖLÇÜLER*\nEn (A): ${width} cm\nBoy (B): ${height} cm\n\nLütfen net fiyat ve keşif için dönüş yapar mısınız?`;
+    const text = `Merhaba, ${catName} / ${prodName} ürünü için kendi aldığım ölçülerle fiyat teklifi almak istiyorum. \n\n*BİLGİLER*\nKullanım Alanı: ${usageLabel}\nAlt Tip / Mekanizma: ${subtypeLabel}\n\n*ÖLÇÜLER*\nPencere Ölçüsü: ${windowWidth}x${windowHeight} cm\nİstenen Perde Ölçüsü: ${width}x${height} cm (En x Boy)\n\nLütfen net fiyat ve keşif için dönüş yapar mısınız?`;
     
     const cleanPhone = settings.whatsappNumber.replace(/\D/g, '');
     const wpUrl = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(text)}`;
@@ -185,31 +305,6 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
   const getStepColor = (currentStep: number) => {
     return step === currentStep ? 'var(--color-accent)' : (step > currentStep ? '#A3B3C2' : '#5C6C7C');
   };
-
-  // Get dynamic subtype options based on product category
-  const subtypeOptions = React.useMemo(() => {
-    if (!selectedCat) return [];
-    const catName = (selectedCat.nameTr || '').toLowerCase();
-    
-    if (catName.includes('tül') || catName.includes('fon')) {
-      return [
-        { id: 'normal_pile', label: 'Normal Pile (1:2.5)', desc: 'Ekonomik ve şık standart görünüm' },
-        { id: 'sik_pile', label: 'Sık Pile (1:3)', desc: 'Zengin ve dolgun duruş' },
-        { id: 'seyrek_pile', label: 'Seyrek Pile (1:2)', desc: 'Minimalist ve hafif dökümlü' }
-      ];
-    } else if (catName.includes('stor') || catName.includes('zebra')) {
-      return [
-        { id: 'manuel_zincir', label: 'Manuel Zincirli', desc: 'Standart mekanizmalı kontrol' },
-        { id: 'motorlu_kumanda', label: 'Motorlu Kumandalı', desc: 'Uzaktan kumanda ile kontrol' },
-        { id: 'akilli_somfy', label: 'Somfy Akıllı Motor', desc: 'Akıllı ev sistemlerine entegre motor' }
-      ];
-    } else {
-      return [
-        { id: 'standart_montaj', label: 'Standart Montaj Aparatı', desc: 'Korniş veya tavan/duvar montaj aparatları dahil' },
-        { id: 'kolay_montaj', label: 'Kolay Montaj (Deliksiz)', desc: 'Pencere kasasına doğrudan sıkıştırmalı geçme' }
-      ];
-    }
-  }, [selectedCat]);
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 2rem 5rem', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '4rem', alignItems: 'start' }}>
@@ -226,25 +321,33 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
         </p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-          <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(1), marginBottom: '0.3rem', fontWeight: 600 }}>ADIM 01</div>
-            <div style={{ fontSize: '1rem', color: step >= 1 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>1. KULLANIM ALANI</div>
+          <div 
+            onClick={() => setStep(1)}
+            style={{ cursor: 'pointer', opacity: step === 1 ? 1 : 0.7, transition: 'opacity 0.2s' }}
+          >
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(1), marginBottom: '0.3rem', fontWeight: 600 }}>{t('wizard.stepLabel')} 01</div>
+            <div style={{ fontSize: '1rem', color: step >= 1 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>1. {t('wizard.step1Name')}</div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(2), marginBottom: '0.3rem', fontWeight: 600 }}>ADIM 02</div>
-            <div style={{ fontSize: '1rem', color: step >= 2 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>2. ÜRÜN SEÇİMİ</div>
+          <div 
+            onClick={() => { if (selectedUsage) setStep(2) }}
+            style={{ cursor: selectedUsage ? 'pointer' : 'not-allowed', opacity: step === 2 ? 1 : 0.7, transition: 'opacity 0.2s' }}
+          >
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(2), marginBottom: '0.3rem', fontWeight: 600 }}>{t('wizard.stepLabel')} 02</div>
+            <div style={{ fontSize: '1rem', color: step >= 2 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>2. {t('wizard.step2Name')}</div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(3), marginBottom: '0.3rem', fontWeight: 600 }}>ADIM 03</div>
-            <div style={{ fontSize: '1rem', color: step >= 3 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>3. MEKANİZMA / TİP</div>
+          <div 
+            onClick={() => { if (selectedProduct) setStep(3) }}
+            style={{ cursor: selectedProduct ? 'pointer' : 'not-allowed', opacity: step === 3 ? 1 : 0.7, transition: 'opacity 0.2s' }}
+          >
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(3), marginBottom: '0.3rem', fontWeight: 600 }}>{t('wizard.stepLabel')} 03</div>
+            <div style={{ fontSize: '1rem', color: step >= 3 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>3. {t('wizard.step3Name')}</div>
           </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(4), marginBottom: '0.3rem', fontWeight: 600 }}>ADIM 04</div>
-            <div style={{ fontSize: '1rem', color: step >= 4 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>4. GENİŞLİK (EN)</div>
-          </div>
-          <div>
-            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(5), marginBottom: '0.3rem', fontWeight: 600 }}>ADIM 05</div>
-            <div style={{ fontSize: '1rem', color: step >= 5 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>5. YÜKSEKLİK (BOY)</div>
+          <div 
+            onClick={() => { if (selectedSubtype) setStep(4) }}
+            style={{ cursor: selectedSubtype ? 'pointer' : 'not-allowed', opacity: step === 4 ? 1 : 0.7, transition: 'opacity 0.2s' }}
+          >
+            <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: getStepColor(4), marginBottom: '0.3rem', fontWeight: 600 }}>{t('wizard.stepLabel')} 04</div>
+            <div style={{ fontSize: '1rem', color: step >= 4 ? 'var(--color-text)' : '#5C6C7C', fontWeight: 500, textTransform: 'uppercase' }}>4. {t('wizard.step4Name')}</div>
           </div>
         </div>
       </aside>
@@ -307,13 +410,6 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
         {/* STEP 2: Product Category & Fabric/Product Selection */}
         {step === 2 && (
           <div>
-            <button 
-              onClick={() => setStep(1)}
-              style={{ background: 'none', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '20px', padding: '0.4rem 1rem', cursor: 'pointer', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}
-            >
-              ← Kullanım Alanına Dön
-            </button>
-
             {!selectedCat ? (
               <div>
                 <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', color: 'var(--color-primary)', marginBottom: '2rem' }}>
@@ -354,25 +450,66 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
               </div>
             ) : (
               <div>
-                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '2rem' }}>
-                  <button 
-                    onClick={() => setSelectedCat(null)}
-                    style={{ background: 'none', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '20px', padding: '0.3rem 0.8rem', cursor: 'pointer', fontSize: '0.8rem' }}
-                  >
-                    ← Tür Seçimine Dön
-                  </button>
+                <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
                   <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', color: 'var(--color-primary)', margin: 0 }}>
                     {language === 'tr' ? selectedCat.nameTr : selectedCat.nameEn}
                   </h2>
+                  <button 
+                    onClick={() => setSelectedCat(null)}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-accent)', textDecoration: 'underline', cursor: 'pointer', fontSize: '0.85rem' }}
+                  >
+                    {language === 'tr' ? '(Farklı Bir Tür Seç)' : '(Select Different Type)'}
+                  </button>
                 </div>
 
-                {products.filter(p => p.categoryId === selectedCat.id).length === 0 ? (
+                {/* Fabric Type Filter Selection */}
+                {categoryFabricTypes.length > 0 && (
+                  <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap', marginBottom: '2rem', paddingBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                    <button
+                      onClick={() => setSelectedFabricTypeId('all')}
+                      style={{
+                        background: selectedFabricTypeId === 'all' ? 'var(--color-accent)' : 'transparent',
+                        color: selectedFabricTypeId === 'all' ? '#000' : '#A3B3C2',
+                        border: selectedFabricTypeId === 'all' ? '1px solid var(--color-accent)' : '1px solid rgba(255,255,255,0.15)',
+                        padding: '0.5rem 1.2rem',
+                        borderRadius: '20px',
+                        cursor: 'pointer',
+                        fontSize: '0.85rem',
+                        fontWeight: 600,
+                        transition: 'all 0.2s'
+                      }}
+                    >
+                      {language === 'tr' ? 'Tümü' : 'All'}
+                    </button>
+                    {categoryFabricTypes.map(ft => (
+                      <button
+                        key={ft.id}
+                        onClick={() => setSelectedFabricTypeId(ft.id)}
+                        style={{
+                          background: selectedFabricTypeId === ft.id ? 'var(--color-accent)' : 'transparent',
+                          color: selectedFabricTypeId === ft.id ? '#000' : '#A3B3C2',
+                          border: selectedFabricTypeId === ft.id ? '1px solid var(--color-accent)' : '1px solid rgba(255,255,255,0.15)',
+                          padding: '0.5rem 1.2rem',
+                          borderRadius: '20px',
+                          cursor: 'pointer',
+                          fontSize: '0.85rem',
+                          fontWeight: 600,
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        {language === 'tr' ? ft.nameTr : ft.nameEn}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {filteredProducts.length === 0 ? (
                   <div style={{ textAlign: 'center', padding: '4rem', opacity: 0.7 }}>
-                    {language === 'tr' ? 'Bu kategoride henüz ürün bulunmuyor.' : 'No products found.'}
+                    {language === 'tr' ? 'Seçtiğiniz kumaş türüne uygun ürün bulunmuyor.' : 'No products match the selected fabric type.'}
                   </div>
                 ) : (
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '2rem' }}>
-                    {products.filter(p => p.categoryId === selectedCat.id).map(prod => (
+                    {filteredProducts.map(prod => (
                       <div 
                         key={prod.id} 
                         style={{ 
@@ -421,419 +558,580 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
         {/* STEP 3: Sub-type / Mechanism Selection */}
         {step === 3 && selectedProduct && (
           <div>
-            <button 
-              onClick={() => setStep(2)}
-              style={{ background: 'none', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '20px', padding: '0.4rem 1rem', cursor: 'pointer', marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}
-            >
-              ← Ürün Seçimine Dön
-            </button>
-
             <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2rem', color: 'var(--color-primary)', marginBottom: '1rem' }}>
-              {language === 'tr' ? 'Dikim / Mekanizma Seçimi' : 'Mechanism & Pleat Selection'}
+              {language === 'tr' ? 'Montaj Tipi Seçimi' : 'Mounting Type Selection'}
             </h2>
             <p style={{ opacity: 0.8, fontSize: '0.95rem', marginBottom: '2.5rem' }}>
               {language === 'tr' 
-                ? 'Perdenizin dikim şeklini veya çalışma mekanizmasını özelleştirin.' 
-                : 'Customize the pleating style or operating mechanism for your curtain.'}
+                ? 'Perdeniz için en uygun montaj tipini seçin.' 
+                : 'Select the most suitable mounting type for your curtain.'}
             </p>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
-              {subtypeOptions.map(opt => (
-                <div 
-                  key={opt.id}
-                  style={{
-                    backgroundColor: 'var(--color-card-bg)',
-                    borderRadius: '12px',
-                    padding: '2rem 1.5rem',
-                    cursor: 'pointer',
-                    border: selectedSubtype === opt.label ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
-                    transition: 'all 0.3s ease',
-                  }}
-                  onMouseOver={(e) => {
-                    if (selectedSubtype !== opt.label) e.currentTarget.style.borderColor = 'rgba(189, 149, 75, 0.5)';
-                  }}
-                  onMouseOut={(e) => {
-                    if (selectedSubtype !== opt.label) e.currentTarget.style.borderColor = 'var(--color-border)';
-                  }}
-                  onClick={() => {
-                    setSelectedSubtype(opt.label);
-                    setStep(4);
-                  }}
-                >
-                  <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', color: 'var(--color-text)', margin: '0 0 0.8rem' }}>
-                    {opt.label}
-                  </h3>
-                  <p style={{ fontSize: '0.9rem', opacity: 0.7, margin: 0, lineHeight: 1.5 }}>
-                    {opt.desc}
-                  </p>
+              {productMountingTypes.map(opt => {
+                const labelStr = language === 'tr' ? opt.nameTr : (opt.nameEn || opt.nameTr);
+                const descStr = language === 'tr' ? opt.descriptionTr : (opt.descriptionEn || opt.descriptionTr);
+                return (
+                  <div 
+                    key={opt.id}
+                    style={{
+                      backgroundColor: 'var(--color-card-bg)',
+                      borderRadius: '12px',
+                      padding: '2rem 1.5rem',
+                      cursor: 'pointer',
+                      border: selectedSubtype === labelStr ? '2px solid var(--color-accent)' : '1px solid var(--color-border)',
+                      transition: 'all 0.3s ease',
+                    }}
+                    onMouseOver={(e) => {
+                      if (selectedSubtype !== labelStr) e.currentTarget.style.borderColor = 'rgba(189, 149, 75, 0.5)';
+                    }}
+                    onMouseOut={(e) => {
+                      if (selectedSubtype !== labelStr) e.currentTarget.style.borderColor = 'var(--color-border)';
+                    }}
+                    onClick={() => {
+                      setSelectedSubtype(labelStr);
+                      setStep(4);
+                    }}
+                  >
+                    <h3 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.4rem', color: 'var(--color-text)', margin: '0 0 0.8rem' }}>
+                      {labelStr}
+                    </h3>
+                    {descStr && (
+                      <p style={{ fontSize: '0.9rem', opacity: 0.7, margin: 0, lineHeight: 1.5 }}>
+                        {descStr}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+              {productMountingTypes.length === 0 && (
+                <div style={{ color: '#A3B3C2', gridColumn: 'span 3', textAlign: 'center', padding: '3rem', opacity: 0.7 }}>
+                  {language === 'tr' ? 'Bu ürün için tanımlanmış montaj tipi bulunamadı.' : 'No mounting types found for this product.'}
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
 
-        {/* STEP 4 & 5: Interactive Sizing Form */}
-        {(step === 4 || step === 5) && selectedProduct && selectedUsage && (
-          <div>
-            <div style={{ display: 'flex', justifyContent: 'center', position: 'relative', marginBottom: '2rem' }}>
-              <button 
-                onClick={() => setStep(step - 1)}
-                style={{ position: 'absolute', left: 0, top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '20px', padding: '0.4rem 1rem', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', fontWeight: 600 }}
-              >
-                ← {language === 'tr' ? 'Geri Dön' : 'Go Back'}
-              </button>
+        {/* STEP 4: Interactive Sizing & Preview Form */}
+        {step === 4 && selectedProduct && selectedUsage && (() => {
+          const maxLimitWidth = limits.max_width;
+          const maxLimitHeight = limits.max_height;
 
-              <div style={{ textAlign: 'center' }}>
-                <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--color-accent)', fontWeight: 600 }}>
-                  {language === 'tr' ? selectedProduct.categoryTr : selectedProduct.categoryEn}
+          const WindowIcon = () => (
+            <svg width="18" height="18" fill="none" stroke="var(--color-accent)" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
+              <rect x="3" y="3" width="18" height="18" rx="2" />
+              <line x1="12" y1="3" x2="12" y2="21" />
+              <line x1="3" y1="12" x2="21" y2="12" />
+            </svg>
+          );
+
+          const RulerIcon = () => (
+            <svg width="18" height="18" fill="none" stroke="var(--color-accent)" strokeWidth="2" viewBox="0 0 24 24" style={{ display: 'inline-block' }}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M19 4v16M5 4v16M5 12h14M5 8h6M5 16h6M13 8h6M13 16h6" />
+            </svg>
+          );
+
+          const usageLabel = language === 'tr' ? CATEGORY_LIMITS[selectedUsage].label : CATEGORY_LIMITS[selectedUsage].labelEn;
+          const productLabel = language === 'tr' ? selectedProduct.nameTr : selectedProduct.nameEn;
+          const subtypeLabel = selectedSubtype || '';
+          const breadcrumbTitle = [usageLabel, productLabel, subtypeLabel].filter(Boolean).join(' > ');
+
+          // Curtain sizing percentages relative to max limits (scaled to 78% to leave room for labels/handles)
+          const curtainWidthPercent = Math.max(20, Math.min(90, (width / maxLimitWidth) * 78));
+          const curtainHeightPercent = Math.max(20, Math.min(90, (height / maxLimitHeight) * 78));
+
+          // Window sizing percentages relative to max limits
+          const windowWidthPercent = Math.max(15, Math.min(90, (windowWidth / maxLimitWidth) * 78));
+          const windowHeightPercent = Math.max(15, Math.min(90, (windowHeight / maxLimitHeight) * 78));
+
+          return (
+            <div>
+              {/* Clickable Breadcrumbs selection title */}
+              <div style={{ marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.9rem', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                <span 
+                  onClick={() => setStep(1)} 
+                  style={{ color: 'var(--color-accent)', cursor: 'pointer', transition: 'opacity 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
+                  onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                  title={language === 'tr' ? 'Kullanım Alanı Adımına Git' : 'Go to Usage Area Step'}
+                >
+                  {usageLabel}
                 </span>
-                <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.5rem', color: 'var(--color-text)', margin: '0.3rem 0 0' }}>
-                  {language === 'tr' ? selectedProduct.nameTr : selectedProduct.nameEn}
-                </h2>
+                <span style={{ color: '#5C6C7C' }}>&gt;</span>
+                <span 
+                  onClick={() => setStep(2)} 
+                  style={{ color: 'var(--color-accent)', cursor: 'pointer', transition: 'opacity 0.2s' }}
+                  onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
+                  onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                  title={language === 'tr' ? 'Ürün Seçimi Adımına Git' : 'Go to Product Selection Step'}
+                >
+                  {productLabel}
+                </span>
+                {subtypeLabel && (
+                  <>
+                    <span style={{ color: '#5C6C7C' }}>&gt;</span>
+                    <span 
+                      onClick={() => setStep(3)} 
+                      style={{ color: 'var(--color-accent)', cursor: 'pointer', transition: 'opacity 0.2s' }}
+                      onMouseOver={(e) => e.currentTarget.style.opacity = '0.7'}
+                      onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+                      title={language === 'tr' ? 'Mekanizma Adımına Git' : 'Go to Mechanism Step'}
+                    >
+                      {subtypeLabel}
+                    </span>
+                  </>
+                )}
               </div>
-            </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '2.5rem', alignItems: 'start' }}>
-              
-              {/* LEFT: 2D Interactive Preview */}
-              <div 
-                ref={containerRef}
-                style={{ 
-                  position: 'relative', 
-                  backgroundColor: '#0a111a', 
-                  borderRadius: '12px', 
-                  border: '1px solid var(--color-border)',
-                  height: '500px', 
-                  display: 'flex',
-                  justifyContent: 'center',
-                  alignItems: 'center',
-                  touchAction: 'none',
-                  overflow: 'hidden'
-                }}
-              >
-                {/* Window Background (centered behind curtain) */}
-                <div style={{
-                  position: 'absolute',
-                  width: '240px',
-                  height: '220px',
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  border: '6px solid #162435',
-                  borderRadius: '4px',
-                  backgroundColor: '#a3c6e4',
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gridTemplateRows: '1fr 1fr',
-                  gap: '4px',
-                  zIndex: 1,
-                  boxShadow: '0 4px 20px rgba(0,0,0,0.4)'
-                }}>
-                  <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
-                  <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
-                  <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
-                  <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
-                </div>
-
-                {/* Semi-transparent Wavy Curtain */}
-                <div style={{
-                  position: 'absolute',
-                  width: `${Math.max(30, ((width - limits.min_width) / (limits.max_width - limits.min_width || 1)) * 60 + 30)}%`,
-                  height: `${Math.max(30, ((height - limits.min_height) / (limits.max_height - limits.min_height || 1)) * 60 + 30)}%`,
-                  left: '50%',
-                  top: '50%',
-                  transform: 'translate(-50%, -50%)',
-                  background: 'repeating-linear-gradient(90deg, rgba(245, 245, 247, 0.6) 0px, rgba(255, 255, 255, 0.8) 12px, rgba(245, 245, 247, 0.6) 24px, rgba(200, 200, 200, 0.3) 30px, rgba(245, 245, 247, 0.6) 36px)',
-                  border: '1px solid rgba(255,255,255,0.2)',
-                  boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
-                  zIndex: 2,
-                  transition: isDraggingWidth || isDraggingHeight ? 'none' : 'all 0.3s ease-out'
-                }}>
-                  {/* Width dashed line and arrows (A) */}
-                  <div style={{
-                    position: 'absolute',
-                    top: '-25px',
-                    left: '0',
-                    right: '0',
-                    height: '2px',
-                    borderTop: '2px dashed #BD954B',
+              {/* Grid aligning heights between columns */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1.25fr 380px', gap: '2.5rem', alignItems: 'stretch' }}>
+                
+                {/* LEFT: 2D Interactive Preview */}
+                <div 
+                  ref={containerRef}
+                  style={{ 
+                    position: 'relative', 
+                    backgroundColor: '#0a111a', 
+                    borderRadius: '12px', 
+                    border: '1px solid var(--color-border)',
+                    height: '100%', 
+                    minHeight: '520px', 
                     display: 'flex',
-                    alignItems: 'center',
                     justifyContent: 'center',
-                  }}>
-                    {/* Left Arrow */}
+                    alignItems: 'center',
+                    touchAction: 'none',
+                    overflow: 'visible'
+                  }}
+                >
+                  {/* Window Background (centered behind curtain, dynamically sized, conditionally rendered) */}
+                  {showWindow && (
                     <div style={{
                       position: 'absolute',
-                      left: '0',
-                      top: '-5px',
-                      borderTop: '5px transparent solid',
-                      borderBottom: '5px transparent solid',
-                      borderRight: '7px solid #BD954B',
-                    }} />
-                    {/* Right Arrow */}
-                    <div style={{
-                      position: 'absolute',
-                      right: '0',
-                      top: '-5px',
-                      borderTop: '5px transparent solid',
-                      borderBottom: '5px transparent solid',
-                      borderLeft: '7px solid #BD954B',
-                    }} />
-                    {/* Width Label A */}
-                    <div style={{
-                      backgroundColor: '#0F172A',
-                      color: '#BD954B',
-                      padding: '2px 8px',
+                      width: `${windowWidthPercent}%`,
+                      height: `${windowHeightPercent}%`,
+                      left: '50%',
+                      top: '50%',
+                      transform: 'translate(-50%, -50%)',
+                      border: '6px solid #162435',
                       borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      border: '1px solid #BD954B',
-                      transform: 'translateY(-1px)',
-                      whiteSpace: 'nowrap'
+                      backgroundColor: '#a3c6e4',
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gridTemplateRows: '1fr 1fr',
+                      gap: '4px',
+                      zIndex: 1,
+                      boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                      transition: isDraggingWidth || isDraggingHeight ? 'none' : 'all 0.3s ease-out'
                     }}>
-                      A: {width} cm
+                      <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
+                      <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
+                      <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
+                      <div style={{ backgroundColor: '#a5c4dd', opacity: 0.95 }} />
                     </div>
-                  </div>
+                  )}
 
-                  {/* Height dashed line and arrows (B) */}
+                  {/* Semi-transparent Wavy Curtain */}
                   <div style={{
                     position: 'absolute',
-                    top: '0',
-                    bottom: '0',
-                    right: '-25px',
-                    width: '2px',
-                    borderLeft: '2px dashed #BD954B',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    width: `${curtainWidthPercent}%`,
+                    height: `${curtainHeightPercent}%`,
+                    left: '50%',
+                    top: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    background: 'repeating-linear-gradient(90deg, rgba(245, 245, 247, 0.6) 0px, rgba(255, 255, 255, 0.8) 12px, rgba(245, 245, 247, 0.6) 24px, rgba(200, 200, 200, 0.3) 30px, rgba(245, 245, 247, 0.6) 36px)',
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: '0 8px 32px rgba(0,0,0,0.4)',
+                    zIndex: 2,
+                    transition: isDraggingWidth || isDraggingHeight ? 'none' : 'all 0.3s ease-out'
                   }}>
-                    {/* Top Arrow */}
+                    {/* Width dashed line and arrows (A) */}
+                    <div style={{
+                      position: 'absolute',
+                      top: '-25px',
+                      left: '0',
+                      right: '0',
+                      height: '2px',
+                      borderTop: '2px dashed #BD954B',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}>
+                      {/* Left Arrow */}
+                      <div style={{
+                        position: 'absolute',
+                        left: '0',
+                        top: '-5px',
+                        borderTop: '5px transparent solid',
+                        borderBottom: '5px transparent solid',
+                        borderRight: '7px solid #BD954B',
+                      }} />
+                      {/* Right Arrow */}
+                      <div style={{
+                        position: 'absolute',
+                        right: '0',
+                        top: '-5px',
+                        borderTop: '5px transparent solid',
+                        borderBottom: '5px transparent solid',
+                        borderLeft: '7px solid #BD954B',
+                      }} />
+                      {/* Width Label A */}
+                      <div style={{
+                        backgroundColor: '#0F172A',
+                        color: '#BD954B',
+                        padding: '2px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        border: '1px solid #BD954B',
+                        transform: 'translateY(-1px)',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        A: {width} cm
+                      </div>
+                    </div>
+
+                    {/* Height dashed line and arrows (B) */}
                     <div style={{
                       position: 'absolute',
                       top: '0',
-                      left: '-5px',
-                      borderLeft: '5px transparent solid',
-                      borderRight: '5px transparent solid',
-                      borderBottom: '7px solid #BD954B',
-                    }} />
-                    {/* Bottom Arrow */}
-                    <div style={{
-                      position: 'absolute',
                       bottom: '0',
-                      left: '-5px',
-                      borderLeft: '5px transparent solid',
-                      borderRight: '5px transparent solid',
-                      borderTop: '7px solid #BD954B',
-                    }} />
-                    {/* Height Label B */}
-                    <div style={{
-                      position: 'absolute',
-                      backgroundColor: '#0F172A',
-                      color: '#BD954B',
-                      padding: '4px 6px',
-                      borderRadius: '4px',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      border: '1px solid #BD954B',
+                      right: '-25px',
+                      width: '2px',
+                      borderLeft: '2px dashed #BD954B',
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      textAlign: 'center',
-                      lineHeight: '1.1',
-                      left: '10px',
-                      whiteSpace: 'nowrap'
                     }}>
-                      <span>B:</span>
-                      <span>{height}</span>
-                      <span>cm</span>
+                      {/* Top Arrow */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '0',
+                        left: '-5px',
+                        borderLeft: '5px transparent solid',
+                        borderRight: '5px transparent solid',
+                        borderBottom: '7px solid #BD954B',
+                      }} />
+                      {/* Bottom Arrow */}
+                      <div style={{
+                        position: 'absolute',
+                        bottom: '0',
+                        left: '-5px',
+                        borderLeft: '5px transparent solid',
+                        borderRight: '5px transparent solid',
+                        borderTop: '7px solid #BD954B',
+                      }} />
+                      {/* Height Label B */}
+                      <div style={{
+                        position: 'absolute',
+                        backgroundColor: '#0F172A',
+                        color: '#BD954B',
+                        padding: '4px 6px',
+                        borderRadius: '4px',
+                        fontSize: '0.75rem',
+                        fontWeight: 600,
+                        border: '1px solid #BD954B',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        textAlign: 'center',
+                        lineHeight: '1.1',
+                        left: '10px',
+                        whiteSpace: 'nowrap'
+                      }}>
+                        <span>B:</span>
+                        <span>{height}</span>
+                        <span>cm</span>
+                      </div>
+                    </div>
+
+                    {/* Drag Handle - Width (Top Right) */}
+                    <div 
+                      onPointerDown={(e) => { e.preventDefault(); setIsDraggingWidth(true); }}
+                      style={{
+                        position: 'absolute',
+                        top: '-10px',
+                        right: '-10px',
+                        width: '24px',
+                        height: '24px',
+                        cursor: 'ew-resize',
+                        zIndex: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <div style={{ width: '16px', height: '16px', backgroundColor: '#BD954B', border: '2px solid #FFF', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
+                    </div>
+
+                    {/* Drag Handle - Height (Bottom Right) */}
+                    <div 
+                      onPointerDown={(e) => { e.preventDefault(); setIsDraggingHeight(true); }}
+                      style={{
+                        position: 'absolute',
+                        bottom: '-10px',
+                        right: '-10px',
+                        width: '24px',
+                        height: '24px',
+                        cursor: 'ns-resize',
+                        zIndex: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <div style={{ width: '16px', height: '16px', backgroundColor: '#BD954B', border: '2px solid #FFF', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
                     </div>
                   </div>
 
-                  {/* Drag Handle - Width (Top Right) */}
-                  <div 
-                    onPointerDown={(e) => { e.preventDefault(); setIsDraggingWidth(true); }}
-                    style={{
+                  {/* Info Icon Dialog Overlay (Bottom Left interactive tooltip) */}
+                  {showInfo && (
+                    <div style={{
                       position: 'absolute',
-                      top: '-10px',
-                      right: '-10px',
-                      width: '24px',
-                      height: '24px',
-                      cursor: 'ew-resize',
-                      zIndex: 10,
+                      bottom: '45px',
+                      left: '15px',
+                      backgroundColor: 'rgba(10, 17, 26, 0.95)',
+                      border: '1px solid var(--color-accent)',
+                      color: '#E0E6ED',
+                      padding: '1.2rem',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem',
+                      maxWidth: '300px',
+                      zIndex: 20,
+                      boxShadow: '0 8px 32px rgba(0,0,0,0.6)',
+                      lineHeight: '1.5',
+                      backdropFilter: 'blur(8px)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                        <span style={{ fontWeight: 600, color: 'var(--color-accent)' }}>
+                          {language === 'tr' ? '💡 Nasıl Kullanılır?' : '💡 How to Use?'}
+                        </span>
+                        <span 
+                          onClick={() => setShowInfo(false)} 
+                          style={{ cursor: 'pointer', opacity: 0.5, fontSize: '1.1rem' }}
+                        >
+                          ×
+                        </span>
+                      </div>
+                      {language === 'tr' 
+                        ? 'Perde boyutlarını değiştirmek için sağ üst veya sağ alttaki turuncu yuvarlakları sürükleyebilir, ya da sağdaki panelden doğrudan değerleri girebilirsiniz. Pencere ölçülerini değiştirerek perdenin pencerede nasıl duracağını simüle edebilirsiniz.'
+                        : 'You can drag the orange circles at the top-right or bottom-right to change curtain dimensions, or enter them directly in the panel on the right. Modify window dimensions to simulate how the curtain fits.'}
+                    </div>
+                  )}
+
+                   {/* Info Icon (Bottom Left - Trigger button) */}
+                  <div 
+                    onClick={() => setShowInfo(!showInfo)}
+                    style={{ 
+                      position: 'absolute', 
+                      bottom: '15px', 
+                      left: '15px', 
+                      backgroundColor: showInfo ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.05)',
+                      color: showInfo ? '#000' : 'var(--color-accent)',
+                      border: '1px solid var(--color-accent)',
+                      borderRadius: '50%',
+                      width: '32px',
+                      height: '32px',
                       display: 'flex',
                       alignItems: 'center',
-                      justifyContent: 'center'
+                      justifyContent: 'center',
+                      cursor: 'pointer', 
+                      zIndex: 25, 
+                      transition: 'all 0.3s ease',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
                     }}
+                    title={language === 'tr' ? 'Yardım & İpuçları' : 'Help & Tips'}
                   >
-                    <div style={{ width: '16px', height: '16px', backgroundColor: '#BD954B', border: '2px solid #FFF', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
-                  </div>
-
-                  {/* Drag Handle - Height (Bottom Right) */}
-                  <div 
-                    onPointerDown={(e) => { e.preventDefault(); setIsDraggingHeight(true); }}
-                    style={{
-                      position: 'absolute',
-                      bottom: '-10px',
-                      right: '-10px',
-                      width: '24px',
-                      height: '24px',
-                      cursor: 'ns-resize',
-                      zIndex: 10,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}
-                  >
-                    <div style={{ width: '16px', height: '16px', backgroundColor: '#BD954B', border: '2px solid #FFF', borderRadius: '50%', boxShadow: '0 2px 4px rgba(0,0,0,0.3)' }} />
+                    <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z" />
+                    </svg>
                   </div>
                 </div>
 
-                {/* Info Icon (Bottom Left) */}
-                <div style={{ position: 'absolute', bottom: '15px', left: '15px', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', zIndex: 3 }}>
-                  <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="16" x2="12" y2="12"></line>
-                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
-                  </svg>
-                </div>
-              </div>
-
-              {/* RIGHT: Specs & Input Fields */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                
-                {/* How to measure guide hint */}
-                <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
-                  <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'flex-start' }}>
-                    <div style={{ color: 'var(--color-accent)', marginTop: '2px' }}>
-                      <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                    </div>
-                    <div>
-                      <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: 'var(--color-text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                        {language === 'tr' ? 'PROFESYONEL İPUCU' : 'PROFESSIONAL TIP'}
-                      </h4>
-                      <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.8, lineHeight: 1.6 }}>
-                        {language === 'tr' 
-                          ? 'Perde siparişi ederken pencerenizin değil, korniş ya da rayınızın genişliğini (En) ölçün. Boy ölçüsü için ise kornişten perdenin bitmesini istediğiniz yere kadar dikey ölçü alın.' 
-                          : 'When ordering curtains, measure the width of your cornice or track, not your window. For height, measure vertically from the cornice to where you want the curtain to end.'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Sizing Input Panel */}
-                <div style={{ backgroundColor: 'var(--color-card-bg)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--color-border)' }}>
+                {/* RIGHT: Specs & Input Fields */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
                   
-                  {step === 4 ? (
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', fontWeight: 600 }}>
-                        {language === 'tr' ? 'RAY GENİŞLİĞİ (A) - CM' : 'RAY WIDTH (A) - CM'}
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <input 
-                          type="number" 
-                          value={width} 
-                          onChange={(e) => setWidth(Number(e.target.value))}
-                          style={{ width: '100%', padding: '1rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '4px', fontSize: '1.2rem', outline: 'none' }}
-                        />
-                        <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.9rem' }}>cm</span>
+                  {/* How to measure guide hint */}
+                  <div style={{ padding: '1.5rem', backgroundColor: 'var(--color-card-bg)', border: '1px solid var(--color-border)', borderRadius: '8px' }}>
+                    <div style={{ display: 'flex', gap: '0.8rem', alignItems: 'flex-start' }}>
+                      <div style={{ color: 'var(--color-accent)', marginTop: '2px' }}>
+                        <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                      </div>
+                      <div>
+                        <h4 style={{ margin: '0 0 0.5rem', fontSize: '0.85rem', color: 'var(--color-text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                          {language === 'tr' ? 'PROFESYONEL İPUCU' : 'PROFESSIONAL TIP'}
+                        </h4>
+                        <p style={{ margin: 0, fontSize: '0.85rem', opacity: 0.8, lineHeight: 1.6 }}>
+                          {language === 'tr' 
+                            ? 'Perde siparişi ederken pencerenizin değil, korniş ya da rayınızın genişliğini (En) ölçün. Boy ölçüsü için ise kornişten perdenin bitmesini istediğiniz yere kadar dikey ölçü alın.' 
+                            : 'When ordering curtains, measure the width of your cornice or track, not your window. For height, measure vertically from the cornice to where you want the curtain to end.'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Sizing Input Panel */}
+                  <div style={{ backgroundColor: 'var(--color-card-bg)', padding: '1.5rem', borderRadius: '8px', border: '1px solid var(--color-border)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                    
+                    {/* Window Size Section */}
+                    <div>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.8rem' }}>
+                        <h4 style={{ margin: 0, fontSize: '0.85rem', color: '#A3B3C2', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                          <WindowIcon />
+                          {language === 'tr' ? 'PENCERE ÖLÇÜLERİ' : 'WINDOW DIMENSIONS'}
+                        </h4>
+                        
+                        <div 
+                          onClick={() => setShowWindow(!showWindow)}
+                          style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}
+                        >
+                          <input 
+                            type="checkbox" 
+                            checked={showWindow} 
+                            onChange={() => {}} 
+                            style={{ accentColor: 'var(--color-accent)', cursor: 'pointer' }} 
+                          />
+                          <span style={{ fontSize: '0.75rem', color: '#A3B3C2', userSelect: 'none', fontWeight: 500 }}>
+                            {language === 'tr' ? 'Pencereyi Göster' : 'Show Window'}
+                          </span>
+                        </div>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.7rem', color: '#A3B3C2', marginBottom: '0.3rem', textTransform: 'uppercase' }}>
+                            {language === 'tr' ? 'Genişlik (En)' : 'Width'}
+                          </label>
+                          <div style={{ position: 'relative' }}>
+                            <input 
+                              type="number" 
+                              value={windowWidth} 
+                              onChange={(e) => setWindowWidth(Number(e.target.value))}
+                              style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '4px', fontSize: '1rem', outline: 'none' }}
+                            />
+                            <span style={{ position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.8rem' }}>cm</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.7rem', color: '#A3B3C2', marginBottom: '0.3rem', textTransform: 'uppercase' }}>
+                            {language === 'tr' ? 'Yükseklik (Boy)' : 'Height'}
+                          </label>
+                          <div style={{ position: 'relative' }}>
+                            <input 
+                              type="number" 
+                              value={windowHeight} 
+                              onChange={(e) => setWindowHeight(Number(e.target.value))}
+                              style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '4px', fontSize: '1rem', outline: 'none' }}
+                            />
+                            <span style={{ position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.8rem' }}>cm</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <hr style={{ border: 'none', borderTop: '1px solid var(--color-border)', margin: 0 }} />
+
+                    {/* Curtain Size Section */}
+                    <div>
+                      <h4 style={{ margin: '0 0 0.8rem 0', fontSize: '0.85rem', color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <RulerIcon />
+                        {language === 'tr' ? 'İSTENEN PERDE ÖLÇÜLERİ' : 'REQUESTED CURTAIN SIZES'}
+                      </h4>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--color-accent)', marginBottom: '0.3rem', textTransform: 'uppercase' }}>
+                            {language === 'tr' ? 'Genişlik (En) (A)' : 'Width (A)'}
+                          </label>
+                          <div style={{ position: 'relative' }}>
+                            <input 
+                              type="number" 
+                              value={width} 
+                              onChange={(e) => setWidth(Number(e.target.value))}
+                              style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '4px', fontSize: '1rem', outline: 'none' }}
+                            />
+                            <span style={{ position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.8rem' }}>cm</span>
+                          </div>
+                        </div>
+                        
+                        <div>
+                          <label style={{ display: 'block', fontSize: '0.7rem', color: 'var(--color-accent)', marginBottom: '0.3rem', textTransform: 'uppercase' }}>
+                            {language === 'tr' ? 'Yükseklik (Boy) (B)' : 'Height (B)'}
+                          </label>
+                          <div style={{ position: 'relative' }}>
+                            <input 
+                              type="number" 
+                              value={height} 
+                              onChange={(e) => setHeight(Number(e.target.value))}
+                              style={{ width: '100%', padding: '0.8rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '4px', fontSize: '1rem', outline: 'none' }}
+                            />
+                            <span style={{ position: 'absolute', right: '0.8rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.8rem' }}>cm</span>
+                          </div>
+                        </div>
                       </div>
 
                       {/* Width Limit Warnings */}
                       {(width < limits.min_width || width > limits.max_width) && (
-                        <div style={{ color: '#FF4C4C', fontSize: '0.85rem', marginTop: '0.8rem', fontWeight: 500 }}>
+                        <div style={{ color: '#FF4C4C', fontSize: '0.8rem', marginTop: '0.8rem', fontWeight: 500 }}>
                           {language === 'tr'
-                            ? `${CATEGORY_LIMITS[selectedUsage].label} kategorisi için genişlik en az ${limits.min_width} cm, en fazla ${limits.max_width} cm olmalıdır.`
-                            : `Width must be between ${limits.min_width} cm and ${limits.max_width} cm for ${CATEGORY_LIMITS[selectedUsage].labelEn}.`}
+                            ? `Genişlik en az ${limits.min_width} cm, en fazla ${limits.max_width} cm olmalıdır.`
+                            : `Width must be between ${limits.min_width} cm and ${limits.max_width} cm.`}
                         </div>
                       )}
-
-                      <button 
-                        disabled={width < limits.min_width || width > limits.max_width}
-                        onClick={() => setStep(5)}
-                        style={{ 
-                          width: '100%', 
-                          marginTop: '1.5rem',
-                          padding: '1rem', 
-                          backgroundColor: (width < limits.min_width || width > limits.max_width) ? 'rgba(189, 149, 75, 0.3)' : 'var(--color-accent)', 
-                          color: '#FFF', 
-                          border: 'none', 
-                          borderRadius: '8px', 
-                          fontSize: '1.1rem', 
-                          fontWeight: 600, 
-                          cursor: (width < limits.min_width || width > limits.max_width) ? 'not-allowed' : 'pointer',
-                          transition: 'all 0.2s' 
-                        }}
-                      >
-                        {language === 'tr' ? 'Devam Et' : 'Continue'}
-                      </button>
-                    </div>
-                  ) : (
-                    <div style={{ marginBottom: '1.5rem' }}>
-                      <label style={{ display: 'block', fontSize: '0.75rem', color: 'var(--color-accent)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', fontWeight: 600 }}>
-                        {language === 'tr' ? 'PERDE YÜKSEKLİĞİ (B) - CM' : 'CURTAIN HEIGHT (B) - CM'}
-                      </label>
-                      <div style={{ position: 'relative' }}>
-                        <input 
-                          type="number" 
-                          value={height} 
-                          onChange={(e) => setHeight(Number(e.target.value))}
-                          style={{ width: '100%', padding: '1rem', backgroundColor: 'var(--color-bg)', border: '1px solid var(--color-border)', color: 'var(--color-text)', borderRadius: '4px', fontSize: '1.2rem', outline: 'none' }}
-                        />
-                        <span style={{ position: 'absolute', right: '1rem', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, fontSize: '0.9rem' }}>cm</span>
-                      </div>
 
                       {/* Height Limit Warnings */}
                       {(height < limits.min_height || height > limits.max_height) && (
-                        <div style={{ color: '#FF4C4C', fontSize: '0.85rem', marginTop: '0.8rem', fontWeight: 500 }}>
+                        <div style={{ color: '#FF4C4C', fontSize: '0.8rem', marginTop: '0.8rem', fontWeight: 500 }}>
                           {language === 'tr'
-                            ? `${CATEGORY_LIMITS[selectedUsage].label} kategorisi için yükseklik en az ${limits.min_height} cm, en fazla ${limits.max_height} cm olmalıdır.`
-                            : `Height must be between ${limits.min_height} cm and ${limits.max_height} cm for ${CATEGORY_LIMITS[selectedUsage].labelEn}.`}
+                            ? `Yükseklik en az ${limits.min_height} cm, en fazla ${limits.max_height} cm olmalıdır.`
+                            : `Height must be between ${limits.min_height} cm and ${limits.max_height} cm.`}
                         </div>
                       )}
-
-                      <button 
-                        disabled={height < limits.min_height || height > limits.max_height}
-                        onClick={handleWhatsAppQuote}
-                        style={{ 
-                          width: '100%', 
-                          marginTop: '1.5rem',
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          gap: '0.8rem', 
-                          padding: '1rem', 
-                          backgroundColor: (height < limits.min_height || height > limits.max_height) ? '#1E6B38' : '#25D366', 
-                          color: '#FFF', 
-                          border: 'none', 
-                          borderRadius: '8px', 
-                          fontSize: '1.1rem', 
-                          fontWeight: 600, 
-                          cursor: (height < limits.min_height || height > limits.max_height) ? 'not-allowed' : 'pointer',
-                          transition: 'transform 0.2s' 
-                        }}
-                        onMouseOver={(e) => {
-                          if (height >= limits.min_height && height <= limits.max_height) {
-                            e.currentTarget.style.transform = 'scale(1.02)';
-                          }
-                        }}
-                        onMouseOut={(e) => {
-                          e.currentTarget.style.transform = 'scale(1)';
-                        }}
-                      >
-                        <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
-                          <path d="M12.031 2C6.49 2 2 6.48 2 12.01c0 1.77.46 3.49 1.34 5.01L2 22l5.12-1.34c1.47.8 3.12 1.22 4.9 1.22 5.54 0 10.03-4.48 10.03-10.01C22.05 6.48 17.56 2 12.03 2zm4.8 13.86c-.27.76-1.34 1.39-1.85 1.49-.46.09-.94.13-2.93-.68-2.54-1.04-4.18-3.62-4.31-3.79-.12-.17-.99-1.32-.99-2.51 0-1.2.62-1.78.84-2.03.22-.25.47-.31.62-.31.15 0 .31 0 .44.01.14 0 .32-.05.5.38.18.43.62 1.51.68 1.63.06.12.1.26.02.43-.08.17-.12.28-.25.43-.12.15-.26.33-.37.45-.12.13-.25.27-.11.51.14.24.63 1.03 1.36 1.68.93.83 1.72 1.09 1.97 1.21.25.12.39.1.53-.06.14-.17.62-.72.79-.97.17-.25.34-.21.58-.12.24.09 1.51.71 1.77.84.26.13.43.19.49.3.06.11.06.66-.21 1.42z"/>
-                        </svg>
-                        {language === 'tr' ? "WhatsApp'tan Teklif Al" : "Get Quote via WhatsApp"}
-                      </button>
                     </div>
-                  )}
+
+                    {/* WhatsApp Action Button */}
+                    <button 
+                      disabled={width < limits.min_width || width > limits.max_width || height < limits.min_height || height > limits.max_height}
+                      onClick={handleWhatsAppQuote}
+                      style={{ 
+                        width: '100%', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        gap: '0.8rem', 
+                        padding: '1rem', 
+                        backgroundColor: (width < limits.min_width || width > limits.max_width || height < limits.min_height || height > limits.max_height) ? '#1E6B38' : '#25D366', 
+                        color: '#FFF', 
+                        border: 'none', 
+                        borderRadius: '8px', 
+                        fontSize: '1.1rem', 
+                        fontWeight: 600, 
+                        cursor: (width < limits.min_width || width > limits.max_width || height < limits.min_height || height > limits.max_height) ? 'not-allowed' : 'pointer',
+                        transition: 'transform 0.2s' 
+                      }}
+                      onMouseOver={(e) => {
+                        if (width >= limits.min_width && width <= limits.max_width && height >= limits.min_height && height <= limits.max_height) {
+                          e.currentTarget.style.transform = 'scale(1.02)';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'scale(1)';
+                      }}
+                    >
+                      <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M12.031 2C6.49 2 2 6.48 2 12.01c0 1.77.46 3.49 1.34 5.01L2 22l5.12-1.34c1.47.8 3.12 1.22 4.9 1.22 5.54 0 10.03-4.48 10.03-10.01C22.05 6.48 17.56 2 12.03 2zm4.8 13.86c-.27.76-1.34 1.39-1.85 1.49-.46.09-.94.13-2.93-.68-2.54-1.04-4.18-3.62-4.31-3.79-.12-.17-.99-1.32-.99-2.51 0-1.2.62-1.78.84-2.03.22-.25.47-.31.62-.31.15 0 .31 0 .44.01.14 0 .32-.05.5.38.18.43.62 1.51.68 1.63.06.12.1.26.02.43-.08.17-.12.28-.25.43-.12.15-.26.33-.37.45-.12.13-.25.27-.11.51.14.24.63 1.03 1.36 1.68.93.83 1.72 1.09 1.97 1.21.25.12.39.1.53-.06.14-.17.62-.72.79-.97.17-.25.34-.21.58-.12.24.09 1.51.71 1.77.84.26.13.43.19.49.3.06.11.06.66-.21 1.42z"/>
+                      </svg>
+                      {language === 'tr' ? "WhatsApp'tan Teklif Al" : "Get Quote via WhatsApp"}
+                    </button>
+                  </div>
 
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
     </div>
   );

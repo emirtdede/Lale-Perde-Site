@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useDb } from '@/context/DbContext';
 import { GuideItem } from '@/context/dbTypes';
+import { useLanguage } from '@/context/LanguageContext';
 
 const EditIcon = () => (
   <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -22,6 +23,7 @@ interface ImageCropModalProps {
 }
 
 const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, onCrop, onCancel }) => {
+  const { t } = useLanguage();
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -147,10 +149,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, onCrop, onCan
         boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
       }}>
         <h3 style={{ color: '#E0E6ED', fontFamily: 'var(--font-serif)', fontSize: '1.4rem', marginBottom: '0.5rem', textAlign: 'center' }}>
-          Görseli Kırp ve Dönüştür
+          {t('admin.guides.crop.title')}
         </h3>
         <p style={{ color: '#A3B3C2', fontSize: '0.85rem', marginBottom: '1rem', textAlign: 'center' }}>
-          Görseli sürükleyerek hizalayın. Zoom kaydırıcı ile boyutu ayarlayın.
+          {t('admin.guides.crop.info')}
         </p>
 
         {/* Cropper Viewport Container */}
@@ -234,7 +236,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, onCrop, onCan
             onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
             onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
           >
-            Kırp & Kaydet
+            {t('admin.guides.crop.saveBtn')}
           </button>
           <button 
             onClick={onCancel}
@@ -251,7 +253,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, onCrop, onCan
             onMouseOver={(e) => { e.currentTarget.style.color = '#FFF'; e.currentTarget.style.borderColor = '#FFF'; }}
             onMouseOut={(e) => { e.currentTarget.style.color = '#A3B3C2'; e.currentTarget.style.borderColor = '#A3B3C2'; }}
           >
-            İptal
+            {t('admin.guides.crop.cancelBtn')}
           </button>
         </div>
       </div>
@@ -261,6 +263,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, onCrop, onCan
 
 export default function GuidesTab() {
   const { guides: dbGuides, addGuide, updateGuide, deleteGuide } = useDb();
+  const { t } = useLanguage();
   const [guides, setGuides] = useState<GuideItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<GuideItem>>({});
@@ -336,7 +339,7 @@ export default function GuidesTab() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Bu rehberi silmek istediğinize emin misiniz?')) return;
+    if (!window.confirm(t('admin.guides.alerts.confirmDelete'))) return;
     await deleteGuide(id);
   };
 
@@ -369,7 +372,7 @@ export default function GuidesTab() {
       setCropQueue([url]);
     } catch (err) {
       console.error('Error reading file:', err);
-      alert('Dosya okunurken bir hata oluştu.');
+      alert(t('admin.guides.alerts.fileReadError'));
     } finally {
       setIsConverting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -409,7 +412,7 @@ export default function GuidesTab() {
           onClick={handleAddNew}
           style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
         >
-          + Yeni Rehber Ekle
+          {t('admin.guides.addNew')}
         </button>,
         portalTarget
       )}
@@ -417,13 +420,13 @@ export default function GuidesTab() {
       {editingId ? (
         <div style={{ backgroundColor: '#0F1820', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.3)', padding: '2rem', marginBottom: '2rem' }}>
           <h3 style={{ color: '#FFF', marginBottom: '1.5rem', fontSize: '1.2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-            {isAddingNew ? 'Yeni Rehber Ekle' : 'Rehber Düzenle'}
+            {isAddingNew ? t('admin.guides.addNewTitle') : t('admin.guides.editTitle')}
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
             {/* Image Upload Area */}
             <div>
-              <label style={labelStyle}>Rehber Kapak Görseli (16:9)</label>
+              <label style={labelStyle}>{t('admin.guides.coverImageLabel')}</label>
               <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
                 <div style={{
                   width: '180px', height: '90px',
@@ -434,7 +437,7 @@ export default function GuidesTab() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   color: '#A3B3C2', fontSize: '0.8rem'
                 }}>
-                  {!editForm.image && 'Görsel Yok'}
+                  {!editForm.image && t('admin.guides.noImage')}
                 </div>
                 <button
                   onClick={() => fileInputRef.current?.click()}
@@ -444,7 +447,7 @@ export default function GuidesTab() {
                     borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
                   }}
                 >
-                  {isConverting ? 'Yükleniyor...' : 'Görsel Seç'}
+                  {isConverting ? t('admin.guides.uploading') : t('admin.guides.selectImage')}
                 </button>
                 {editForm.image && (
                   <button
@@ -455,7 +458,7 @@ export default function GuidesTab() {
                       borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'
                     }}
                   >
-                    Kaldır
+                    {t('admin.guides.removeImage')}
                   </button>
                 )}
               </div>
@@ -470,58 +473,58 @@ export default function GuidesTab() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               <div>
-                <label style={labelStyle}>Başlık (TR) *</label>
-                <input type="text" name="titleTr" value={editForm.titleTr || ''} onChange={handleChange} style={inputStyle} placeholder="Ör: Doğru Perde Ölçüsü Nasıl Alınır?" />
+                <label style={labelStyle}>{t('admin.guides.titleTr')}</label>
+                <input type="text" name="titleTr" value={editForm.titleTr || ''} onChange={handleChange} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Başlık (EN) *</label>
-                <input type="text" name="titleEn" value={editForm.titleEn || ''} onChange={handleChange} style={inputStyle} placeholder="Eg: How to Measure Curtains Correctly?" />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
-              <div>
-                <label style={labelStyle}>Özet (TR) *</label>
-                <textarea name="summaryTr" value={editForm.summaryTr || ''} onChange={handleChange} rows={2} style={inputStyle} placeholder="Pencereniz için kusursuz ölçü alma rehberi..." />
-              </div>
-              <div>
-                <label style={labelStyle}>Özet (EN) *</label>
-                <textarea name="summaryEn" value={editForm.summaryEn || ''} onChange={handleChange} rows={2} style={inputStyle} placeholder="Perfect measurement guide for your window..." />
+                <label style={labelStyle}>{t('admin.guides.titleEn')}</label>
+                <input type="text" name="titleEn" value={editForm.titleEn || ''} onChange={handleChange} style={inputStyle} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
               <div>
-                <label style={labelStyle}>İçerik (TR)</label>
-                <textarea name="contentTr" value={editForm.contentTr || ''} onChange={handleChange} rows={6} style={inputStyle} placeholder="Rehber detaylı içeriği (Türkçe)..." />
+                <label style={labelStyle}>{t('admin.guides.summaryTr')}</label>
+                <textarea name="summaryTr" value={editForm.summaryTr || ''} onChange={handleChange} rows={2} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>İçerik (EN)</label>
-                <textarea name="contentEn" value={editForm.contentEn || ''} onChange={handleChange} rows={6} style={inputStyle} placeholder="Guide detailed content (English)..." />
+                <label style={labelStyle}>{t('admin.guides.summaryEn')}</label>
+                <textarea name="summaryEn" value={editForm.summaryEn || ''} onChange={handleChange} rows={2} style={inputStyle} />
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem' }}>
+              <div>
+                <label style={labelStyle}>{t('admin.guides.contentTr')}</label>
+                <textarea name="contentTr" value={editForm.contentTr || ''} onChange={handleChange} rows={6} style={inputStyle} />
+              </div>
+              <div>
+                <label style={labelStyle}>{t('admin.guides.contentEn')}</label>
+                <textarea name="contentEn" value={editForm.contentEn || ''} onChange={handleChange} rows={6} style={inputStyle} />
               </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1.5rem' }}>
               <div>
-                <label style={labelStyle}>Yayın Tarihi</label>
+                <label style={labelStyle}>{t('admin.guides.publishDate')}</label>
                 <input type="date" name="date" value={editForm.date || ''} onChange={handleChange} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Sıralama</label>
+                <label style={labelStyle}>{t('admin.guides.displayOrder')}</label>
                 <input type="number" name="displayOrder" value={editForm.displayOrder || 1} onChange={(e) => setEditForm({...editForm, displayOrder: parseInt(e.target.value, 10) || 1})} style={inputStyle} min={1} />
               </div>
               <div>
-                <label style={labelStyle}>Durum</label>
+                <label style={labelStyle}>{t('admin.guides.status')}</label>
                 <select name="status" value={editForm.status || 'active'} onChange={handleChange} style={inputStyle}>
-                  <option value="active">Aktif</option>
-                  <option value="passive">Pasif</option>
+                  <option value="active">{t('admin.guides.statusActive')}</option>
+                  <option value="passive">{t('admin.guides.statusPassive')}</option>
                 </select>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '1rem', marginTop: '1.5rem' }}>
-              <button onClick={handleSave} style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>Kaydet</button>
-              <button onClick={handleCancel} style={{ background: 'transparent', color: '#A3B3C2', border: '1px solid #A3B3C2', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer' }}>İptal</button>
+              <button onClick={handleSave} style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>{t('admin.guides.save')}</button>
+              <button onClick={handleCancel} style={{ background: 'transparent', color: '#A3B3C2', border: '1px solid #A3B3C2', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer' }}>{t('admin.guides.cancel')}</button>
             </div>
           </div>
         </div>
@@ -531,16 +534,16 @@ export default function GuidesTab() {
             <thead style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(189, 149, 75, 0.2)' }}>
               <tr>
                 <th style={{ padding: '1rem', width: '40px' }}></th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Görsel</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Rehber Başlığı</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Tarih</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Durum</th>
-                <th style={{ padding: '1rem', textAlign: 'right' }}>İşlemler</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.guides.table.image')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.guides.table.title')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.guides.table.date')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.guides.table.status')}</th>
+                <th style={{ padding: '1rem', textAlign: 'right' }}>{t('admin.guides.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {guides.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center' }}>Rehber bulunamadı.</td></tr>
+                <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center' }}>{t('admin.guides.table.noData')}</td></tr>
               ) : (
                 guides.map((guide, idx) => (
                   <tr 
@@ -584,13 +587,13 @@ export default function GuidesTab() {
                         backgroundColor: guide.status === 'active' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 152, 0, 0.1)', 
                         color: guide.status === 'active' ? '#4CAF50' : '#FF9800' 
                       }}>
-                        {guide.status === 'active' ? 'Yayında' : 'Pasif'}
+                        {guide.status === 'active' ? t('admin.guides.statusPublished') : t('admin.guides.statusPassive')}
                       </span>
                     </td>
                     <td style={{ padding: '1rem', textAlign: 'right' }}>
                       <button
                         onClick={() => handleEdit(guide)}
-                        title="Düzenle"
+                        title={t('admin.guides.edit')}
                         style={{
                           background: 'none',
                           border: '1px solid rgba(189, 149, 75, 0.3)',
@@ -612,7 +615,7 @@ export default function GuidesTab() {
 
                       <button
                         onClick={() => handleDelete(guide.id)}
-                        title="Sil"
+                        title={t('admin.guides.delete')}
                         style={{
                           background: 'none',
                           border: '1px solid rgba(255, 75, 75, 0.3)',

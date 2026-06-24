@@ -7,7 +7,10 @@ import {
   GuideItem,
   Campaign,
   InboxMessage,
-  VisitorLog
+  VisitorLog,
+  CurtainType,
+  FabricType,
+  MountingType
 } from './dbTypes';
 
 export const mapCategoryFromDb = (cat: any): Category => ({
@@ -20,6 +23,7 @@ export const mapCategoryFromDb = (cat: any): Category => ({
   displayOrder: cat.display_order,
   descriptionTr: cat.description_tr,
   descriptionEn: cat.description_en,
+  slug: cat.slug,
 });
 
 export const mapCategoryToDb = (cat: any) => ({
@@ -32,6 +36,71 @@ export const mapCategoryToDb = (cat: any) => ({
   display_order: cat.displayOrder,
   description_tr: cat.descriptionTr,
   description_en: cat.descriptionEn,
+  slug: cat.slug,
+});
+
+export const mapCurtainTypeFromDb = (c: any): CurtainType => ({
+  id: c.id,
+  categoryId: c.category_id,
+  nameTr: c.name_tr,
+  nameEn: c.name_en,
+  slug: c.slug,
+  displayOrder: c.display_order,
+  status: c.status,
+});
+
+export const mapCurtainTypeToDb = (c: CurtainType) => ({
+  id: c.id,
+  category_id: c.categoryId,
+  name_tr: c.nameTr,
+  name_en: c.nameEn,
+  slug: c.slug,
+  display_order: c.displayOrder,
+  status: c.status,
+});
+
+export const mapFabricTypeFromDb = (f: any): FabricType => ({
+  id: f.id,
+  categoryId: f.category_id,
+  nameTr: f.name_tr,
+  nameEn: f.name_en,
+  slug: f.slug,
+  displayOrder: f.display_order,
+  status: f.status,
+});
+
+export const mapFabricTypeToDb = (f: FabricType) => ({
+  id: f.id,
+  category_id: f.categoryId,
+  name_tr: f.nameTr,
+  name_en: f.nameEn,
+  slug: f.slug,
+  display_order: f.displayOrder,
+  status: f.status,
+});
+
+export const mapMountingTypeFromDb = (m: any): MountingType => ({
+  id: m.id,
+  categoryId: m.category_id,
+  curtainTypeId: m.curtain_type_id,
+  nameTr: m.name_tr,
+  nameEn: m.name_en,
+  descriptionTr: m.description_tr,
+  descriptionEn: m.description_en,
+  displayOrder: m.display_order,
+  status: m.status,
+});
+
+export const mapMountingTypeToDb = (m: MountingType) => ({
+  id: m.id,
+  category_id: m.categoryId,
+  curtain_type_id: m.curtainTypeId,
+  name_tr: m.nameTr,
+  name_en: m.nameEn,
+  description_tr: m.descriptionTr,
+  description_en: m.descriptionEn,
+  display_order: m.displayOrder,
+  status: m.status,
 });
 
 export const mapProductFromDb = (p: any): Product => ({
@@ -56,6 +125,9 @@ export const mapProductFromDb = (p: any): Product => ({
   displayOrder: p.display_order,
   createdAt: p.created_at,
   updatedAt: p.updated_at,
+  curtainTypeId: p.curtain_type_id,
+  fabricTypeId: p.fabric_type_id,
+  mountingTypeIds: p.mounting_type_ids || [],
 });
 
 export const mapProductToDb = (p: any) => ({
@@ -80,6 +152,9 @@ export const mapProductToDb = (p: any) => ({
   display_order: p.displayOrder,
   created_at: p.createdAt,
   updated_at: p.updatedAt,
+  curtain_type_id: p.curtainTypeId,
+  fabric_type_id: p.fabricTypeId,
+  mounting_type_ids: p.mountingTypeIds || [],
 });
 
 export const mapSettingsFromDb = (s: any): SystemSettings => ({

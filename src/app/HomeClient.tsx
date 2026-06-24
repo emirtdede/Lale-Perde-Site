@@ -361,7 +361,7 @@ export default function HomeClient({
               >
                 <CategoryImageSlideshow images={cat.images} fallbackImage={cat.image} alt={language === 'tr' ? cat.nameTr : cat.nameEn} />
                 <div className="collection-info">
-                  <span className="collection-num">Koleksiyon 0{idx + 1}</span>
+                  <span className="collection-num">{t('collections.collectionNum')} 0{idx + 1}</span>
                   <h3 className="collection-name">{language === 'tr' ? cat.nameTr : cat.nameEn}</h3>
                   <p className="collection-desc">
                     {language === 'tr' ? cat.descriptionTr : cat.descriptionEn}

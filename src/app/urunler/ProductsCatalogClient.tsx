@@ -4,14 +4,16 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { useLanguage } from '../../context/LanguageContext';
-import { Product, Category } from '../../context/dbTypes';
+import { Product, Category, CurtainType, FabricType } from '../../context/dbTypes';
 
 interface ProductsCatalogClientProps {
   initialProducts: Product[];
   initialCategories: Category[];
+  initialCurtainTypes: CurtainType[];
+  initialFabricTypes: FabricType[];
 }
 
-function ProductsCatalogContent({ initialProducts, initialCategories }: ProductsCatalogClientProps) {
+function ProductsCatalogContent({ initialProducts, initialCategories, initialCurtainTypes, initialFabricTypes }: ProductsCatalogClientProps) {
   const { t, language } = useLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -28,23 +30,40 @@ function ProductsCatalogContent({ initialProducts, initialCategories }: Products
   
   // Filter states
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [selectedColor, setSelectedColor] = useState<string>('all');
+  const [selectedCurtain, setSelectedCurtain] = useState<string>('all');
   const [selectedFabric, setSelectedFabric] = useState<string>('all');
+  const [selectedColor, setSelectedColor] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [sortBy, setSortBy] = useState<string>('order');
+  
+  // Accordion state
+  const [isCurtainAccordionOpen, setIsCurtainAccordionOpen] = useState(true);
+  const [isFabricAccordionOpen, setIsFabricAccordionOpen] = useState(true);
 
   // Sync state with URL search params
   useEffect(() => {
     const catParam = searchParams.get('category');
+    const curParam = searchParams.get('curtain');
+    const fabParam = searchParams.get('fabric');
     const searchParam = searchParams.get('search');
 
-    if (catParam) {
-      setSelectedCategory(catParam);
-    }
-    if (searchParam) {
-      setSearchQuery(searchParam);
-    }
+    if (catParam) setSelectedCategory(catParam);
+    if (curParam) setSelectedCurtain(curParam);
+    if (fabParam) setSelectedFabric(fabParam);
+    if (searchParam) setSearchQuery(searchParam);
   }, [searchParams]);
+
+  const updateUrl = (key: string, value: string) => {
+    const current = new URLSearchParams(Array.from(searchParams.entries()));
+    if (value === 'all' || !value) {
+      current.delete(key);
+    } else {
+      current.set(key, value);
+    }
+    const search = current.toString();
+    const query = search ? `?${search}` : '';
+    router.push(`/urunler${query}`, { scroll: false });
+  };
 
   // Extract unique colors & fabrics for filter options
   const uniqueColorsMap = new Map<string, string>();
@@ -61,29 +80,25 @@ function ProductsCatalogContent({ initialProducts, initialCategories }: Products
     hex
   }));
 
-  const allFabrics = Array.from(
-    new Set(
-      products.map(p => language === 'tr' ? p.fabricTypeTr : p.fabricTypeEn)
-    )
-  );
+  const activeCurtainTypes = initialCurtainTypes.filter(c => c.status === 'active' && c.categoryId === selectedCategory);
+  const activeFabricTypes = initialFabricTypes.filter(f => f.status === 'active' && f.categoryId === selectedCategory);
 
   // Filter & Sort logic
   const filteredProducts = products.filter(product => {
     const matchCategory = selectedCategory === 'all' || product.categoryId === selectedCategory;
+    const matchCurtain = selectedCurtain === 'all' || product.curtainTypeId === selectedCurtain;
+    const matchFabric = selectedFabric === 'all' || product.fabricTypeId === selectedFabric;
     
     const matchColor = selectedColor === 'all' || product.colors.some(c => 
       (language === 'tr' ? c.nameTr : c.nameEn) === selectedColor
     );
     
-    const matchFabric = selectedFabric === 'all' || 
-      (language === 'tr' ? product.fabricTypeTr : product.fabricTypeEn) === selectedFabric;
-
     const nameToSearch = (language === 'tr' ? product.nameTr : product.nameEn).toLowerCase();
     const descToSearch = (language === 'tr' ? product.descriptionTr : product.descriptionEn).toLowerCase();
     const query = searchQuery.toLowerCase().trim();
     const matchSearch = query === '' || nameToSearch.includes(query) || descToSearch.includes(query);
 
-    return matchCategory && matchColor && matchFabric && matchSearch;
+    return matchCategory && matchCurtain && matchFabric && matchColor && matchSearch;
   }).sort((a, b) => {
     if (sortBy === 'order') {
       return (a.displayOrder || 0) - (b.displayOrder || 0);
@@ -154,7 +169,10 @@ function ProductsCatalogContent({ initialProducts, initialCategories }: Products
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                updateUrl('search', e.target.value);
+              }}
               placeholder={t('nav.searchPlaceholder')}
               style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'transparent', color: 'var(--color-text)' }}
             />
@@ -163,11 +181,19 @@ function ProductsCatalogContent({ initialProducts, initialCategories }: Products
           {/* Category Filter */}
           <div style={{ marginBottom: '1.5rem' }}>
             <label style={{ display: 'block', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', color: 'var(--color-accent)' }}>
-              {t('catalog.category')}
+              {t('catalog.sector')}
             </label>
             <select
               value={selectedCategory}
-              onChange={(e) => setSelectedCategory(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedCategory(val);
+                setSelectedCurtain('all'); // reset sub filters
+                setSelectedFabric('all');
+                updateUrl('category', val);
+                updateUrl('curtain', 'all');
+                updateUrl('fabric', 'all');
+              }}
               style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'var(--color-card-bg)', color: 'var(--color-text)' }}
             >
               <option value="all">{t('catalog.all')}</option>
@@ -179,22 +205,66 @@ function ProductsCatalogContent({ initialProducts, initialCategories }: Products
             </select>
           </div>
 
-          {/* Fabric Type Filter */}
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.5rem', color: 'var(--color-accent)' }}>
-              {t('catalog.fabricType')}
-            </label>
-            <select
-              value={selectedFabric}
-              onChange={(e) => setSelectedFabric(e.target.value)}
-              style={{ width: '100%', padding: '0.6rem', border: '1px solid var(--color-border)', borderRadius: '4px', background: 'var(--color-card-bg)', color: 'var(--color-text)' }}
-            >
-              <option value="all">{t('catalog.all')}</option>
-              {allFabrics.map(fabric => (
-                <option key={fabric} value={fabric}>{fabric}</option>
-              ))}
-            </select>
-          </div>
+          {/* Dynamic Accordions for Curtain & Fabric Types */}
+          {selectedCategory !== 'all' && (
+            <div style={{ padding: '1rem', backgroundColor: 'var(--color-card-bg)', borderRadius: '6px', border: '1px solid var(--color-border)', marginBottom: '1.5rem' }}>
+              
+              {/* Curtain Types Accordion */}
+              {activeCurtainTypes.length > 0 && (
+                <div style={{ marginBottom: '1rem' }}>
+                  <div 
+                    onClick={() => setIsCurtainAccordionOpen(!isCurtainAccordionOpen)}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                  >
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)' }}>Perde Çeşitleri</span>
+                    <span style={{ color: 'var(--color-accent)' }}>{isCurtainAccordionOpen ? '−' : '+'}</span>
+                  </div>
+                  {isCurtainAccordionOpen && (
+                    <div style={{ paddingTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer', color: selectedCurtain === 'all' ? 'var(--color-accent)' : '#A3B3C2' }}>
+                        <input type="radio" checked={selectedCurtain === 'all'} onChange={() => { setSelectedCurtain('all'); updateUrl('curtain', 'all'); }} style={{ accentColor: 'var(--color-accent)' }} />
+                        Tümü
+                      </label>
+                      {activeCurtainTypes.map(c => (
+                        <label key={c.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer', color: selectedCurtain === c.id ? 'var(--color-accent)' : '#A3B3C2' }}>
+                          <input type="radio" checked={selectedCurtain === c.id} onChange={() => { setSelectedCurtain(c.id); updateUrl('curtain', c.id); }} style={{ accentColor: 'var(--color-accent)' }} />
+                          {language === 'tr' ? c.nameTr : c.nameEn}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Fabric Types Accordion */}
+              {activeFabricTypes.length > 0 && (
+                <div>
+                  <div 
+                    onClick={() => setIsFabricAccordionOpen(!isFabricAccordionOpen)}
+                    style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', paddingBottom: '0.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}
+                  >
+                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--color-text)' }}>Kumaş Türleri</span>
+                    <span style={{ color: 'var(--color-accent)' }}>{isFabricAccordionOpen ? '−' : '+'}</span>
+                  </div>
+                  {isFabricAccordionOpen && (
+                    <div style={{ paddingTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer', color: selectedFabric === 'all' ? 'var(--color-accent)' : '#A3B3C2' }}>
+                        <input type="radio" checked={selectedFabric === 'all'} onChange={() => { setSelectedFabric('all'); updateUrl('fabric', 'all'); }} style={{ accentColor: 'var(--color-accent)' }} />
+                        Tümü
+                      </label>
+                      {activeFabricTypes.map(f => (
+                        <label key={f.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.8rem', cursor: 'pointer', color: selectedFabric === f.id ? 'var(--color-accent)' : '#A3B3C2' }}>
+                          <input type="radio" checked={selectedFabric === f.id} onChange={() => { setSelectedFabric(f.id); updateUrl('fabric', f.id); }} style={{ accentColor: 'var(--color-accent)' }} />
+                          {language === 'tr' ? f.nameTr : f.nameEn}
+                        </label>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+            </div>
+          )}
 
           {/* Color Filter */}
           <div style={{ marginBottom: '0.5rem' }}>

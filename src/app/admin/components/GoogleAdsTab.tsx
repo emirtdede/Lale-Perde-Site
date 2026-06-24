@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useDb } from '@/context/DbContext';
+import { useLanguage } from '@/context/LanguageContext';
 
 export default function GoogleAdsTab() {
   const { settings, updateSettings } = useDb();
+  const { t } = useLanguage();
   const [googleAdsId, setGoogleAdsId] = useState('');
   const [labelWhatsapp, setLabelWhatsapp] = useState('');
   const [labelContact, setLabelContact] = useState('');
@@ -25,7 +27,7 @@ export default function GoogleAdsTab() {
     const trimmedId = googleAdsId.trim();
 
     if (trimmedId !== '' && !trimmedId.startsWith('AW-')) {
-      setError('Geçersiz format! Google Ads ID "AW-" ile başlamalıdır (Örn: AW-123456789).');
+      setError(t('admin.googleAds.errors.invalidFormat'));
       return;
     }
 
@@ -41,7 +43,7 @@ export default function GoogleAdsTab() {
         setSuccess(true);
         setTimeout(() => setSuccess(false), 3000);
       } else {
-        setError('Ayarlar kaydedilirken veritabanı hatası oluştu.');
+        setError(t('admin.googleAds.errors.dbError'));
       }
     }
   };
@@ -103,19 +105,19 @@ export default function GoogleAdsTab() {
             paddingBottom: '0.8rem'
           }}
         >
-          Google Ads Entegrasyonu
+          {t('admin.googleAds.title')}
         </h3>
         
         <form onSubmit={handleSave} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           {/* Ana Conversion ID */}
           <div>
             <label htmlFor="googleAdsIdInput" style={labelStyle}>
-              Google Ads Dönüşüm Kimliği (Conversion ID)
+              {t('admin.googleAds.fields.conversionId')}
             </label>
             <input
               id="googleAdsIdInput"
               type="text"
-              placeholder="Örn: AW-123456789"
+              placeholder={t('admin.googleAds.fields.conversionIdPlaceholder')}
               value={googleAdsId}
               onChange={(e) => {
                 setGoogleAdsId(e.target.value);
@@ -126,7 +128,7 @@ export default function GoogleAdsTab() {
               onBlur={handleBlur}
             />
             <p style={helpTextStyle}>
-              Google Ads panelinizden aldığınız &lsquo;AW-123456789&rsquo; formatındaki dönüşüm kimliğini giriniz.
+              {t('admin.googleAds.fields.conversionIdHelp')}
             </p>
           </div>
 
@@ -149,13 +151,12 @@ export default function GoogleAdsTab() {
               letterSpacing: '0.1em',
               whiteSpace: 'nowrap'
             }}>
-              Özel Dönüşüm Etiketleri (Opsiyonel)
+              {t('admin.googleAds.fields.customLabelsTitle')}
             </span>
           </div>
 
           <p style={{ fontSize: '0.8rem', color: '#A3B3C2', lineHeight: '1.5', marginTop: '0.25rem' }}>
-            Google Ads&apos;te oluşturduğunuz özel dönüşüm işlemlerinin etiketlerini girerek, siteniz üzerindeki belirli kullanıcı
-            eylemlerini otomatik olarak izleyebilirsiniz. Bu alanlar opsiyoneldir; boş bırakırsanız dönüşüm takibi yapılmaz.
+            {t('admin.googleAds.fields.customLabelsDesc')}
           </p>
 
           {/* WhatsApp Conversion Label */}
@@ -165,13 +166,13 @@ export default function GoogleAdsTab() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#25D366" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
                 </svg>
-                WhatsApp Dönüşüm Etiketi
+                {t('admin.googleAds.fields.whatsappLabel')}
               </span>
             </label>
             <input
               id="labelWhatsappInput"
               type="text"
-              placeholder="Örn: AbCd-EfGhIjKl"
+              placeholder={t('admin.googleAds.fields.whatsappPlaceholder')}
               value={labelWhatsapp}
               onChange={(e) => {
                 setLabelWhatsapp(e.target.value);
@@ -182,8 +183,7 @@ export default function GoogleAdsTab() {
               onBlur={handleBlur}
             />
             <p style={helpTextStyle}>
-              Google Ads panelindeki WhatsApp dönüşüm işleminize ait &lsquo;/&rsquo; işaretinden sonraki kısmı girin.
-              Örneğin, dönüşüm etiketi &lsquo;AW-123456789/AbCd-EfGhIjKl&rsquo; ise sadece &lsquo;AbCd-EfGhIjKl&rsquo; kısmını yazmanız yeterlidir.
+              {t('admin.googleAds.fields.whatsappHelp')}
             </p>
           </div>
 
@@ -195,13 +195,13 @@ export default function GoogleAdsTab() {
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
                   <polyline points="22,6 12,13 2,6"></polyline>
                 </svg>
-                Form / İletişim Dönüşüm Etiketi
+                {t('admin.googleAds.fields.contactLabel')}
               </span>
             </label>
             <input
               id="labelContactInput"
               type="text"
-              placeholder="Örn: XyZw-MnOpQrSt"
+              placeholder={t('admin.googleAds.fields.contactPlaceholder')}
               value={labelContact}
               onChange={(e) => {
                 setLabelContact(e.target.value);
@@ -212,8 +212,7 @@ export default function GoogleAdsTab() {
               onBlur={handleBlur}
             />
             <p style={helpTextStyle}>
-              Google Ads panelindeki form/iletişim dönüşüm işleminize ait &lsquo;/&rsquo; işaretinden sonraki kısmı girin.
-              Bu etiket iletişim formu veya ölçü formu gönderimleri için kullanılır.
+              {t('admin.googleAds.fields.contactHelp')}
             </p>
           </div>
 
@@ -243,7 +242,7 @@ export default function GoogleAdsTab() {
                 border: '1px solid rgba(76, 175, 80, 0.2)' 
               }}
             >
-              ✓ Google Ads ayarları başarıyla güncellendi.
+              ✓ {t('admin.googleAds.success')}
             </div>
           )}
 
@@ -263,7 +262,7 @@ export default function GoogleAdsTab() {
             onMouseOver={(e) => e.currentTarget.style.background = '#C5A030'}
             onMouseOut={(e) => e.currentTarget.style.background = '#D4AF37'}
           >
-            Değişiklikleri Kaydet
+            {t('admin.googleAds.saveBtn')}
           </button>
         </form>
       </div>

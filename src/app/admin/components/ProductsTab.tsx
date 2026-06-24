@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useDb } from '@/context/DbContext';
 import { Product, Category } from '@/context/dbTypes';
+import { useLanguage } from '@/context/LanguageContext';
 
 const TrashIcon = ({ size = 16 }: { size?: number }) => (
   <svg width={size} height={size} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -46,6 +47,7 @@ interface ImageCropModalProps {
 }
 
 const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, type, onCrop, onCancel }) => {
+  const { t } = useLanguage();
   const [zoom, setZoom] = useState(1);
   const [offset, setOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -172,10 +174,10 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, type, onCrop,
         boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
       }}>
         <h3 style={{ color: '#E0E6ED', fontFamily: 'var(--font-serif)', fontSize: '1.4rem', marginBottom: '0.5rem', textAlign: 'center' }}>
-          {type === 'cover' ? 'Kapak Görselini Kırp ve Dönüştür (3:4)' : 'Detay Görselini Kırp ve Dönüştür (4:3)'}
+          {type === 'cover' ? t('admin.products.crop.titleCover') : t('admin.products.crop.titleDetail')}
         </h3>
         <p style={{ color: '#A3B3C2', fontSize: '0.85rem', marginBottom: '1rem', textAlign: 'center' }}>
-          Görseli sürükleyerek hizalayın. Zoom kaydırıcı ile boyutu ayarlayın.
+          {t('admin.products.crop.info')}
         </p>
 
         {/* Cropper Viewport Container */}
@@ -259,7 +261,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, type, onCrop,
             onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
             onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
           >
-            Kırp & Kaydet
+            {t('admin.products.crop.saveBtn')}
           </button>
           <button
             onClick={onCancel}
@@ -276,7 +278,7 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, type, onCrop,
             onMouseOver={(e) => { e.currentTarget.style.color = '#FFF'; e.currentTarget.style.borderColor = '#FFF'; }}
             onMouseOut={(e) => { e.currentTarget.style.color = '#A3B3C2'; e.currentTarget.style.borderColor = '#A3B3C2'; }}
           >
-            İptal
+            {t('admin.products.crop.cancelBtn')}
           </button>
         </div>
       </div>
@@ -402,7 +404,8 @@ const getNearestColor = (hex: string) => {
 };
 
 export default function ProductsTab() {
-  const { fetchProductsPaginated, categories: dbCategories, addProduct, updateProduct, deleteProduct } = useDb();
+  const { fetchProductsPaginated, categories: dbCategories, addProduct, updateProduct, deleteProduct, curtainTypes, fabricTypes, mountingTypes } = useDb();
+  const { t } = useLanguage();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -472,7 +475,7 @@ export default function ProductsTab() {
 
   const handleAddColor = () => {
     if (!newColorTr.trim() || !newColorEn.trim()) {
-      alert('Lütfen renk adlarını Türkçe ve İngilizce olarak doldurun.');
+      alert(t('admin.products.alerts.fillColorNames'));
       return;
     }
     const colorObj = {
@@ -545,7 +548,29 @@ export default function ProductsTab() {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setEditForm({ ...editForm, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    if (name === 'curtainTypeId') {
+      setEditForm(prev => ({ ...prev, curtainTypeId: value, mountingTypeIds: [] }));
+    } else if (name === 'categoryId') {
+      setEditForm(prev => ({ ...prev, categoryId: value, curtainTypeId: '', mountingTypeIds: [] }));
+    } else {
+      setEditForm({ ...editForm, [name]: value });
+    }
+  };
+
+  const handleMountingTypeToggle = (id: string) => {
+    const currentIds = editForm.mountingTypeIds || [];
+    if (currentIds.includes(id)) {
+      setEditForm(prev => ({
+        ...prev,
+        mountingTypeIds: currentIds.filter(x => x !== id)
+      }));
+    } else {
+      setEditForm(prev => ({
+        ...prev,
+        mountingTypeIds: [...currentIds, id]
+      }));
+    }
   };
 
   const fileToDataUrl = (file: File): Promise<string> => {
@@ -571,7 +596,7 @@ export default function ProductsTab() {
       setCropQueue(prev => [...prev, ...items]);
     } catch (err) {
       console.error('Error reading files:', err);
-      alert('Dosyalar okunurken bir hata oluştu.');
+      alert(t('admin.products.alerts.fileReadError'));
     } finally {
       setIsConverting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -634,7 +659,7 @@ export default function ProductsTab() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm('Bu ürünü silmek istediğinize emin misiniz?')) {
+    if (confirm(t('admin.products.alerts.confirmDelete'))) {
       await deleteProduct(id);
     }
   };
@@ -646,7 +671,7 @@ export default function ProductsTab() {
           onClick={handleAddNew}
           style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.6rem 1.5rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600, whiteSpace: 'nowrap' }}
         >
-          + Yeni Ürün Ekle
+          {t('admin.products.addNew')}
         </button>,
         portalTarget
       )}
@@ -654,46 +679,110 @@ export default function ProductsTab() {
       {editingId ? (
         <div style={{ backgroundColor: '#0F1820', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.3)', padding: '2rem', marginBottom: '2rem' }}>
           <h3 style={{ color: '#FFF', marginBottom: '1.5rem', fontSize: '1.2rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '0.5rem' }}>
-            {isAddingNew ? 'Yeni Ürün Ekle' : 'Ürün Düzenle'}
+            {isAddingNew ? t('admin.products.addNewTitle') : t('admin.products.editTitle')}
           </h3>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1.5rem', marginBottom: '1.5rem' }}>
             <div>
-              <label style={labelStyle}>Ürün Adı (TR)</label>
+              <label style={labelStyle}>{t('admin.products.nameTr')}</label>
               <input type="text" name="nameTr" value={editForm.nameTr || ''} onChange={handleChange} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Ürün Adı (EN)</label>
+              <label style={labelStyle}>{t('admin.products.nameEn')}</label>
               <input type="text" name="nameEn" value={editForm.nameEn || ''} onChange={handleChange} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Kategori</label>
+              <label style={labelStyle}>{t('admin.products.parentSector')}</label>
               <select name="categoryId" value={editForm.categoryId || ''} onChange={handleChange} style={inputStyle}>
+                <option value="">{t('admin.products.select')}</option>
                 {categories.map(c => (
                   <option key={c.id} value={c.id}>{c.nameTr}</option>
                 ))}
               </select>
             </div>
+            
             <div>
-              <label style={labelStyle}>Durum</label>
-              <select name="status" value={editForm.status || 'active'} onChange={handleChange} style={inputStyle}>
-                <option value="active">Aktif (Yayında)</option>
-                <option value="draft">Taslak</option>
-                <option value="archived">Arşivlendi</option>
+              <label style={labelStyle}>{t('admin.products.parentCurtain')}</label>
+              <select 
+                name="curtainTypeId" 
+                value={editForm.curtainTypeId || ''} 
+                onChange={handleChange} 
+                style={inputStyle}
+                disabled={!editForm.categoryId}
+              >
+                <option value="">{editForm.categoryId ? t('admin.products.select') : t('admin.products.selectSectorFirst')}</option>
+                {curtainTypes?.filter(c => c.categoryId === editForm.categoryId).map(c => (
+                  <option key={c.id} value={c.id}>{c.nameTr}</option>
+                ))}
               </select>
             </div>
+
+            <div>
+              <label style={labelStyle}>{t('admin.products.parentFabric')}</label>
+              <select 
+                name="fabricTypeId" 
+                value={editForm.fabricTypeId || ''} 
+                onChange={handleChange} 
+                style={inputStyle}
+                disabled={!editForm.categoryId}
+              >
+                <option value="">{editForm.categoryId ? t('admin.products.select') : t('admin.products.selectSectorFirst')}</option>
+                {fabricTypes?.filter(f => f.categoryId === editForm.categoryId).map(f => (
+                  <option key={f.id} value={f.id}>{f.nameTr}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label style={labelStyle}>{t('admin.products.status')}</label>
+              <select name="status" value={editForm.status || 'active'} onChange={handleChange} style={inputStyle}>
+                <option value="active">{t('admin.products.statusActive')}</option>
+                <option value="draft">{t('admin.products.statusDraft')}</option>
+                <option value="archived">{t('admin.products.statusArchived')}</option>
+              </select>
+            </div>
+            {/* Mounting Types Checklist */}
+            <div style={{ gridColumn: 'span 2', border: '1px solid rgba(189,149,75,0.2)', padding: '1.5rem', borderRadius: '6px', backgroundColor: 'rgba(15,24,32,0.4)', marginBottom: '1rem' }}>
+              <label style={{ ...labelStyle, fontSize: '0.95rem', fontWeight: 600, color: '#FFF', marginBottom: '1rem' }}>{t('admin.products.mountingTypesLabel')}</label>
+              {!editForm.categoryId ? (
+                <p style={{ color: '#A3B3C2', fontSize: '0.9rem', margin: 0, fontStyle: 'italic' }}>{t('admin.products.mountingTypesSectorWarning')}</p>
+              ) : !editForm.curtainTypeId ? (
+                <p style={{ color: '#A3B3C2', fontSize: '0.9rem', margin: 0, fontStyle: 'italic' }}>{t('admin.products.mountingTypesCurtainWarning')}</p>
+              ) : (
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem' }}>
+                  {mountingTypes?.filter(m => m.categoryId === editForm.categoryId && m.curtainTypeId === editForm.curtainTypeId && m.status === 'active').map(m => {
+                    const isChecked = (editForm.mountingTypeIds || []).includes(m.id);
+                    return (
+                      <label key={m.id} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#E0E6ED', cursor: 'pointer', fontSize: '0.9rem' }}>
+                        <input
+                          type="checkbox"
+                          checked={isChecked}
+                          onChange={() => handleMountingTypeToggle(m.id)}
+                          style={{ accentColor: 'var(--color-accent)', width: '16px', height: '16px', cursor: 'pointer' }}
+                        />
+                        <span>{m.nameTr}</span>
+                      </label>
+                    );
+                  })}
+                  {mountingTypes?.filter(m => m.categoryId === editForm.categoryId && m.curtainTypeId === editForm.curtainTypeId && m.status === 'active').length === 0 && (
+                    <p style={{ color: '#A3B3C2', fontSize: '0.9rem', margin: 0, gridColumn: 'span 3', fontStyle: 'italic' }}>{t('admin.products.mountingTypesNoData')}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Açıklama (TR)</label>
+              <label style={labelStyle}>{t('admin.products.descTr')}</label>
               <textarea name="descriptionTr" value={editForm.descriptionTr || ''} onChange={handleChange} rows={3} style={inputStyle} />
             </div>
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Açıklama (EN)</label>
+              <label style={labelStyle}>{t('admin.products.descEn')}</label>
               <textarea name="descriptionEn" value={editForm.descriptionEn || ''} onChange={handleChange} rows={3} style={inputStyle} />
             </div>
 
             {/* Color Palette Management */}
             <div style={{ gridColumn: 'span 2', border: '1px solid rgba(189,149,75,0.2)', padding: '1.5rem', borderRadius: '6px', backgroundColor: 'rgba(15,24,32,0.4)', marginBottom: '1rem' }}>
-              <label style={{ ...labelStyle, fontSize: '0.95rem', fontWeight: 600, color: '#FFF', marginBottom: '1rem' }}>Ürün Renk Paleti Yönetimi</label>
+              <label style={{ ...labelStyle, fontSize: '0.95rem', fontWeight: 600, color: '#FFF', marginBottom: '1rem' }}>{t('admin.products.colorsLabel')}</label>
 
               {/* Existing colors list */}
               <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
@@ -705,21 +794,21 @@ export default function ProductsTab() {
                       type="button"
                       onClick={() => handleRemoveColor(idx)}
                       style={{ background: 'none', border: 'none', color: '#FF6B6B', cursor: 'pointer', padding: '0 0.2rem', display: 'flex', alignItems: 'center', fontWeight: 'bold' }}
-                      title="Rengi Sil"
+                      title={t('admin.products.colorsDelete')}
                     >
                       ×
                     </button>
                   </div>
                 ))}
                 {(editForm.colors || []).length === 0 && (
-                  <span style={{ color: '#A3B3C2', fontSize: '0.85rem', fontStyle: 'italic' }}>Henüz renk eklenmemiş.</span>
+                  <span style={{ color: '#A3B3C2', fontSize: '0.85rem', fontStyle: 'italic' }}>{t('admin.products.colorsNoData')}</span>
                 )}
               </div>
 
               {/* Add color form */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1.5fr 1fr auto', gap: '1rem', alignItems: 'end' }}>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: '0.75rem', marginBottom: '0.3rem' }}>Renk Adı (TR)</label>
+                  <label style={{ ...labelStyle, fontSize: '0.75rem', marginBottom: '0.3rem' }}>{t('admin.products.colorNameTr')}</label>
                   <input
                     type="text"
                     value={newColorTr}
@@ -729,7 +818,7 @@ export default function ProductsTab() {
                   />
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: '0.75rem', marginBottom: '0.3rem' }}>Renk Adı (EN)</label>
+                  <label style={{ ...labelStyle, fontSize: '0.75rem', marginBottom: '0.3rem' }}>{t('admin.products.colorNameEn')}</label>
                   <input
                     type="text"
                     value={newColorEn}
@@ -739,7 +828,7 @@ export default function ProductsTab() {
                   />
                 </div>
                 <div>
-                  <label style={{ ...labelStyle, fontSize: '0.75rem', marginBottom: '0.3rem' }}>Hex Kodu / Seçici</label>
+                  <label style={{ ...labelStyle, fontSize: '0.75rem', marginBottom: '0.3rem' }}>{t('admin.products.colorHex')}</label>
                   <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center' }}>
                     <input
                       type="color"
@@ -764,14 +853,14 @@ export default function ProductsTab() {
                     borderRadius: '4px', cursor: 'pointer', fontWeight: 600, height: '36px', display: 'flex', alignItems: 'center'
                   }}
                 >
-                  Renk Ekle
+                  {t('admin.products.colorAddBtn')}
                 </button>
               </div>
             </div>
 
             {/* Cover Image Upload */}
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Ürün Kapak Görseli (3:4 Oranında Kırpılır)</label>
+              <label style={labelStyle}>{t('admin.products.coverImageLabel')}</label>
               <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', marginBottom: '1rem' }}>
                 <div style={{
                   width: '90px', height: '120px',
@@ -783,7 +872,7 @@ export default function ProductsTab() {
                   color: '#A3B3C2', fontSize: '0.8rem',
                   flexShrink: 0
                 }}>
-                  {!editForm.coverImage && 'Görsel Yok'}
+                  {!editForm.coverImage && t('admin.products.coverNoImage')}
                 </div>
                 <button
                   type="button"
@@ -794,7 +883,7 @@ export default function ProductsTab() {
                     borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
                   }}
                 >
-                  Kapak Seç
+                  {t('admin.products.coverSelect')}
                 </button>
                 {editForm.coverImage && (
                   <button
@@ -806,7 +895,7 @@ export default function ProductsTab() {
                       borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'
                     }}
                   >
-                    Kaldır
+                    {t('admin.products.coverRemove')}
                   </button>
                 )}
               </div>
@@ -821,7 +910,7 @@ export default function ProductsTab() {
 
             {/* Multiple Image Uploads */}
             <div style={{ gridColumn: 'span 2' }}>
-              <label style={labelStyle}>Ürün Sayfası Detay Görselleri (4:3 Oranında Kırpılır)</label>
+              <label style={labelStyle}>{t('admin.products.detailImagesLabel')}</label>
               <div style={{ display: 'flex', gap: '0.8rem', flexWrap: 'wrap', marginBottom: '0.8rem' }}>
                 {(editForm.images || []).map((img, idx) => (
                   <div key={idx} style={{ position: 'relative', width: '90px', height: '90px', borderRadius: '6px', overflow: 'hidden', border: '1px solid rgba(189,149,75,0.2)' }}>
@@ -863,13 +952,13 @@ export default function ProductsTab() {
                   onMouseOut={(e) => e.currentTarget.style.borderColor = 'rgba(189,149,75,0.4)'}
                 >
                   {isConverting ? (
-                    <span style={{ color: 'var(--color-accent)', fontSize: '0.7rem', textAlign: 'center' }}>Dönüştürülüyor...</span>
+                    <span style={{ color: 'var(--color-accent)', fontSize: '0.7rem', textAlign: 'center' }}>{t('admin.products.converting')}</span>
                   ) : (
                     <div style={{ textAlign: 'center', color: '#A3B3C2', fontSize: '0.7rem' }}>
                       <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24" style={{ display: 'block', margin: '0 auto 0.2rem' }}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                       </svg>
-                      Ekle
+                      {t('admin.products.addBtn')}
                     </div>
                   )}
                 </div>
@@ -883,17 +972,17 @@ export default function ProductsTab() {
                 style={{ display: 'none' }}
               />
               <p style={{ color: '#A3B3C2', fontSize: '0.8rem', margin: 0 }}>
-                Birden fazla görsel seçebilirsiniz. Görseller otomatik olarak .webp formatına dönüştürülür. Sınır yoktur.
+                {t('admin.products.detailImagesInfo')}
               </p>
             </div>
           </div>
 
           <div style={{ display: 'flex', gap: '1rem', marginTop: '2rem', alignItems: 'center' }}>
-            <button onClick={handleSave} style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>Kaydet</button>
-            <button onClick={handleCancel} style={{ background: 'transparent', color: '#A3B3C2', border: '1px solid #A3B3C2', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer' }}>İptal</button>
+            <button onClick={handleSave} style={{ background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer', fontWeight: 600 }}>{t('admin.products.save')}</button>
+            <button onClick={handleCancel} style={{ background: 'transparent', color: '#A3B3C2', border: '1px solid #A3B3C2', padding: '0.8rem 2rem', borderRadius: '4px', cursor: 'pointer' }}>{t('admin.products.cancel')}</button>
             {saveSuccess && (
               <span style={{ color: '#4CAF50', fontSize: '0.9rem', fontWeight: 600, marginLeft: '1rem' }}>
-                ✓ Değişiklikler Kaydedildi!
+                {t('admin.products.saveSuccess')}
               </span>
             )}
           </div>
@@ -903,17 +992,17 @@ export default function ProductsTab() {
           <table style={{ width: '100%', borderCollapse: 'collapse', color: '#E0E6ED', fontSize: '0.9rem' }}>
             <thead style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(189, 149, 75, 0.2)' }}>
               <tr>
-                <th style={{ padding: '1rem', width: '40px' }}></th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Görsel</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Ürün Adı</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Kategori</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Durum</th>
-                <th style={{ padding: '1rem', textAlign: 'right' }}>İşlemler</th>
+                <th style={{ padding: '1rem', textAlign: 'center', width: '80px' }}>Sırala</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.products.table.image')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.products.table.name')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.products.table.category')}</th>
+                <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.products.table.status')}</th>
+                <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.products.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {products.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center' }}>Ürün bulunamadı.</td></tr>
+                <tr><td colSpan={6} style={{ padding: '2rem', textAlign: 'center' }}>{t('admin.products.table.noData')}</td></tr>
               ) : (
                 products.map((product, idx) => (
                   <tr
@@ -928,7 +1017,7 @@ export default function ProductsTab() {
                     onDragOver={(e) => handleDragOver(e, idx)}
                     onDrop={(e) => handleDrop(e, idx)}
                   >
-                    <td style={{ padding: '1rem', color: 'rgba(189, 149, 75, 0.6)', cursor: editingId ? 'default' : 'grab', userSelect: 'none', textAlign: 'center' }}>
+                    <td style={{ padding: '1rem', color: 'rgba(189, 149, 75, 0.6)', cursor: editingId ? 'default' : 'grab', userSelect: 'none', textAlign: 'center', fontSize: '1.2rem' }} title="Sürükle bırak ile sırala">
                       ☰
                     </td>
                     <td style={{ padding: '1rem' }}>
@@ -936,53 +1025,54 @@ export default function ProductsTab() {
                     </td>
                     <td style={{ padding: '1rem', fontWeight: 500 }}>{product.nameTr}</td>
                     <td style={{ padding: '1rem' }}>{product.categoryTr}</td>
-                    <td style={{ padding: '1rem' }}>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
                       <span style={{ padding: '0.2rem 0.5rem', borderRadius: '4px', fontSize: '0.75rem', backgroundColor: product.status === 'active' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 152, 0, 0.1)', color: product.status === 'active' ? '#4CAF50' : '#FF9800' }}>
-                        {product.status === 'active' ? 'Yayında' : product.status === 'draft' ? 'Taslak' : 'Arşiv'}
+                        {product.status === 'active' ? t('admin.products.statusActive') : product.status === 'draft' ? t('admin.products.statusDraft') : t('admin.products.statusArchived')}
                       </span>
                     </td>
-                    <td style={{ padding: '1rem', textAlign: 'right' }}>
-                      <button
-                        onClick={() => handleEdit(product)}
-                        title="Düzenle"
-                        style={{
-                          background: 'none',
-                          border: '1px solid rgba(189, 149, 75, 0.3)',
-                          color: 'var(--color-accent)',
-                          padding: '0.35rem 0.5rem',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: '0.5rem',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(189,149,75,0.1)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(189,149,75,0.3)'; }}
-                      >
-                        <EditIcon />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(product.id)}
-                        title="Sil"
-                        style={{
-                          background: 'none',
-                          border: '1px solid rgba(255, 75, 75, 0.3)',
-                          color: '#FF6B6B',
-                          padding: '0.35rem 0.5rem',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,75,75,0.1)'; e.currentTarget.style.borderColor = '#FF6B6B'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(255,75,75,0.3)'; }}
-                      >
-                        <TrashIcon />
-                      </button>
+                    <td style={{ padding: '1rem', textAlign: 'center' }}>
+                      <div style={{ display: 'inline-flex', flexDirection: 'row', gap: '0.4rem', width: 'auto' }}>
+                        <button
+                          onClick={() => handleEdit(product)}
+                          title={t('admin.products.editTitle')}
+                          style={{
+                            background: 'rgba(189, 149, 75, 0.1)',
+                            border: '1px solid rgba(189, 149, 75, 0.3)',
+                            color: 'var(--color-accent)',
+                            padding: '0.4rem',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(189,149,75,0.2)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(189, 149, 75, 0.1)'; e.currentTarget.style.borderColor = 'rgba(189,149,75,0.3)'; }}
+                        >
+                          <EditIcon />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(product.id)}
+                          title={t('admin.products.table.actions')}
+                          style={{
+                            background: 'rgba(255, 75, 75, 0.1)',
+                            border: '1px solid rgba(255, 75, 75, 0.3)',
+                            color: '#FF6B6B',
+                            padding: '0.4rem',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s',
+                          }}
+                          onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,75,75,0.2)'; e.currentTarget.style.borderColor = '#FF6B6B'; }}
+                          onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255, 75, 75, 0.1)'; e.currentTarget.style.borderColor = 'rgba(255,75,75,0.3)'; }}
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useDb } from '@/context/DbContext';
 import { Campaign, SystemSettings } from '@/context/dbTypes';
+import { useLanguage } from '@/context/LanguageContext';
 
 const emptyCampaign: Omit<Campaign, 'id'> = {
   titleTr: '',
@@ -16,6 +17,7 @@ const emptyCampaign: Omit<Campaign, 'id'> = {
 
 export default function CampaignsTab() {
   const { campaigns: dbCampaigns, settings: dbSettings, updateSettings, addCampaign, updateCampaign, deleteCampaign } = useDb();
+  const { t } = useLanguage();
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [savedBanner, setSavedBanner] = useState(false);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -159,7 +161,7 @@ export default function CampaignsTab() {
       {/* Campaigns List */}
       <div style={{ backgroundColor: '#0F1820', borderRadius: '8px', border: '1px solid rgba(189, 149, 75, 0.15)', padding: '2rem' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '1rem' }}>
-          <h3 style={{ color: '#E0E6ED' }}>Kampanyalar</h3>
+          <h3 style={{ color: '#E0E6ED' }}>{t('admin.campaigns.title')}</h3>
           <button 
             onClick={handleOpenCreate}
             style={{ 
@@ -177,7 +179,7 @@ export default function CampaignsTab() {
             }}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Yeni Kampanya
+            {t('admin.campaigns.newBtn')}
           </button>
         </div>
 
@@ -185,8 +187,8 @@ export default function CampaignsTab() {
         {campaigns.length === 0 ? (
           !showForm ? (
             <div style={{ textAlign: 'center', padding: '3rem', color: '#A3B3C2' }}>
-              <p style={{ fontSize: '0.95rem', marginBottom: '0.5rem' }}>Henüz kampanya oluşturulmamış.</p>
-              <p style={{ fontSize: '0.8rem' }}>Yukarıdaki "Yeni Kampanya" butonunu kullanarak başlayın.</p>
+              <p style={{ fontSize: '0.95rem', marginBottom: '0.5rem' }}>{t('admin.campaigns.noData')}</p>
+              <p style={{ fontSize: '0.8rem' }}>{t('admin.campaigns.noDataHint')}</p>
             </div>
           ) : null
         ) : (
@@ -194,13 +196,13 @@ export default function CampaignsTab() {
             <thead style={{ backgroundColor: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(189, 149, 75, 0.2)' }}>
               <tr>
                 <th style={{ padding: '1rem', width: '40px' }}></th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Durum</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Kampanya Adı</th>
-                <th style={{ padding: '1rem', textAlign: 'center' }}>Sıra</th>
-                <th style={{ padding: '1rem', textAlign: 'center' }}>Süre (Sn)</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Başlangıç</th>
-                <th style={{ padding: '1rem', textAlign: 'left' }}>Bitiş</th>
-                <th style={{ padding: '1rem', textAlign: 'right' }}>İşlemler</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.campaigns.table.status')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.campaigns.table.name')}</th>
+                <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.campaigns.table.order')}</th>
+                <th style={{ padding: '1rem', textAlign: 'center' }}>{t('admin.campaigns.table.duration')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.campaigns.table.start')}</th>
+                <th style={{ padding: '1rem', textAlign: 'left' }}>{t('admin.campaigns.table.end')}</th>
+                <th style={{ padding: '1rem', textAlign: 'right' }}>{t('admin.campaigns.table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -234,7 +236,7 @@ export default function CampaignsTab() {
                          transition: 'all 0.2s'
                        }}
                     >
-                      {camp.isActive ? 'Aktif' : 'Pasif'}
+                      {camp.isActive ? t('admin.campaigns.statusActive') : t('admin.campaigns.statusPassive')}
                     </button>
                   </td>
                   <td style={{ padding: '1rem' }}>
@@ -249,7 +251,7 @@ export default function CampaignsTab() {
                     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
                       <button
                         onClick={() => handleOpenEdit(camp)}
-                        title="Düzenle"
+                        title={t('admin.campaigns.edit')}
                         style={{
                           background: 'rgba(189, 149, 75, 0.1)',
                           color: 'var(--color-accent)',
@@ -280,7 +282,7 @@ export default function CampaignsTab() {
                               cursor: 'pointer',
                             }}
                           >
-                            Evet, Sil
+                            {t('admin.campaigns.confirmDelete')}
                           </button>
                           <button
                             onClick={() => setDeleteConfirmId(null)}
@@ -294,13 +296,13 @@ export default function CampaignsTab() {
                               cursor: 'pointer',
                             }}
                           >
-                            İptal
+                            {t('admin.campaigns.cancelDelete')}
                           </button>
                         </div>
                       ) : (
                         <button
                           onClick={() => setDeleteConfirmId(camp.id)}
-                          title="Sil"
+                          title={t('admin.campaigns.delete')}
                           style={{
                             background: 'rgba(255, 75, 75, 0.08)',
                             color: '#FF6B6B',
@@ -341,42 +343,42 @@ export default function CampaignsTab() {
               padding: '1.5rem',
             }}>
               <h4 style={{ color: '#E0E6ED', marginBottom: '1rem', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '0.5rem' }}>
-                {editingCampaign ? 'Kampanya Düzenle' : 'Yeni Kampanya Oluştur'}
+                {editingCampaign ? t('admin.campaigns.formTitleEdit') : t('admin.campaigns.formTitleAdd')}
               </h4>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={labelStyle}>Kampanya Adı (TR) *</label>
-                  <input type="text" value={formData.titleTr} onChange={(e) => setFormData({ ...formData, titleTr: e.target.value })} placeholder="Yaz Koleksiyonu İndirimi" style={inputStyle} />
+                  <label style={labelStyle}>{t('admin.campaigns.nameTr')}</label>
+                  <input type="text" value={formData.titleTr} onChange={(e) => setFormData({ ...formData, titleTr: e.target.value })} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Kampanya Adı (EN)</label>
-                  <input type="text" value={formData.titleEn} onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })} placeholder="Summer Collection Discount" style={inputStyle} />
+                  <label style={labelStyle}>{t('admin.campaigns.nameEn')}</label>
+                  <input type="text" value={formData.titleEn} onChange={(e) => setFormData({ ...formData, titleEn: e.target.value })} style={inputStyle} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={labelStyle}>Açıklama (TR)</label>
-                  <input type="text" value={formData.descriptionTr} onChange={(e) => setFormData({ ...formData, descriptionTr: e.target.value })} placeholder="Tüm ürünlerde %20 indirim!" style={inputStyle} />
+                  <label style={labelStyle}>{t('admin.campaigns.descTr')}</label>
+                  <input type="text" value={formData.descriptionTr} onChange={(e) => setFormData({ ...formData, descriptionTr: e.target.value })} style={inputStyle} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Açıklama (EN)</label>
-                  <input type="text" value={formData.descriptionEn} onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })} placeholder="20% off on all products!" style={inputStyle} />
+                  <label style={labelStyle}>{t('admin.campaigns.descEn')}</label>
+                  <input type="text" value={formData.descriptionEn} onChange={(e) => setFormData({ ...formData, descriptionEn: e.target.value })} style={inputStyle} />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '1rem', marginBottom: '1rem' }}>
                 <div>
-                  <label style={labelStyle}>Başlangıç Tarihi</label>
+                  <label style={labelStyle}>{t('admin.campaigns.startDate')}</label>
                   <input type="date" value={formData.startDate} onChange={(e) => setFormData({ ...formData, startDate: e.target.value })} style={{ ...inputStyle, colorScheme: 'dark' }} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Bitiş Tarihi</label>
+                  <label style={labelStyle}>{t('admin.campaigns.endDate')}</label>
                   <input type="date" value={formData.endDate} onChange={(e) => setFormData({ ...formData, endDate: e.target.value })} style={{ ...inputStyle, colorScheme: 'dark' }} />
                 </div>
                 <div>
-                  <label style={labelStyle}>Geçiş Süresi (Saniye)</label>
+                  <label style={labelStyle}>{t('admin.campaigns.durationSec')}</label>
                   <input 
                     type="number" 
                     min="2" 
@@ -390,7 +392,7 @@ export default function CampaignsTab() {
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginBottom: '1.5rem' }}>
                 <div>
-                  <label style={labelStyle}>Sıralama (Sıra)</label>
+                  <label style={labelStyle}>{t('admin.campaigns.displayOrder')}</label>
                   <input 
                     type="number" 
                     min="1" 
@@ -407,7 +409,7 @@ export default function CampaignsTab() {
                       onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} 
                       style={{ accentColor: '#BD954B', width: '16px', height: '16px' }}
                     />
-                    Aktif (Yayında)
+                    {t('admin.campaigns.statusLabel')}
                   </label>
                 </div>
               </div>
@@ -427,7 +429,7 @@ export default function CampaignsTab() {
                     opacity: saving || !formData.titleTr.trim() ? 0.6 : 1,
                   }}
                 >
-                  {saving ? 'Kaydediliyor...' : editingCampaign ? 'Güncelle' : 'Oluştur'}
+                  {saving ? t('admin.campaigns.saving') : editingCampaign ? t('admin.campaigns.update') : t('admin.campaigns.save')}
                 </button>
                 <button
                   onClick={handleCancel}
@@ -440,7 +442,7 @@ export default function CampaignsTab() {
                     cursor: 'pointer',
                   }}
                 >
-                  Vazgeç
+                  {t('admin.campaigns.cancel')}
                 </button>
               </div>
             </div>

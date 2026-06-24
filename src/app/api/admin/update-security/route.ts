@@ -1,5 +1,11 @@
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabaseClient';
+import { createClient } from '@supabase/supabase-js';
+
+// Create a Supabase client with the Service Role Key to bypass RLS
+const supabaseAdmin = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+);
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
 
@@ -22,20 +28,20 @@ export async function POST(request: Request) {
     const { action, currentPassword, newPassword, adminEmail, adminPhone, twoFactorEnabled, twoFactorType, adminUsername } = body;
 
     // Get current secure settings to verify password
-    const { data: settings, error: fetchError } = await supabase
-      .from('site_settings')
+    const { data: authRecord, error: fetchError } = await supabaseAdmin
+      .from('admin_auth')
       .select('id, admin_password_hash')
-      .limit(1)
+      .eq('id', 'main_admin')
       .single();
 
-    if (fetchError || !settings) {
+    if (fetchError || !authRecord) {
       return NextResponse.json({ error: 'Sistem hatası' }, { status: 500 });
     }
 
     const updates: any = {};
 
     if (action === 'change_password') {
-      if (currentPassword !== settings.admin_password_hash) {
+      if (currentPassword !== authRecord.admin_password_hash) {
         return NextResponse.json({ error: 'Mevcut şifre hatalı' }, { status: 400 });
       }
       if (!newPassword || newPassword.length < 6) {
@@ -52,10 +58,10 @@ export async function POST(request: Request) {
     }
 
     if (Object.keys(updates).length > 0) {
-      const { error: updateError } = await supabase
-        .from('site_settings')
+      const { error: updateError } = await supabaseAdmin
+        .from('admin_auth')
         .update(updates)
-        .eq('id', settings.id);
+        .eq('id', authRecord.id);
 
       if (updateError) {
         return NextResponse.json({ error: 'Güncelleme başarısız oldu' }, { status: 500 });
