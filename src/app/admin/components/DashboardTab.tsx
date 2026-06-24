@@ -97,39 +97,46 @@ export default function DashboardTab() {
     };
   };
 
-  const fetchGA4Cache = async () => {
-    try {
-      setLoading(true);
-      const res = await fetch('/api/analytics/sync');
-      if (res.ok) {
-        const body = await res.json();
-        if (body.success && body.data) {
-          setGa4Data(parseGA4Data(body.data));
-          setLastUpdated(body.updatedAt);
-          setQuotaExceeded(body.quotaExceeded || false);
-          setFormStartedCount(body.formStartedCount || 0);
-          setFormCompletedCount(body.formCompletedCount || 0);
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching GA4 cache:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
+    const controller = new AbortController();
+    const fetchGA4Cache = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch('/api/analytics/sync', { signal: controller.signal });
+        if (res.ok) {
+          const body = await res.json();
+          if (body.success && body.data) {
+            setGa4Data(parseGA4Data(body.data));
+            setLastUpdated(body.updatedAt);
+            setQuotaExceeded(body.quotaExceeded || false);
+            setFormStartedCount(body.formStartedCount || 0);
+            setFormCompletedCount(body.formCompletedCount || 0);
+          }
+        }
+      } catch (err: any) {
+        if (err.name !== 'AbortError') {
+          console.error('Error fetching GA4 cache:', err);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
     fetchGA4Cache();
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   // Lazy load history when date range is expanded
   useEffect(() => {
     const isHistoricalRange = ['90days', '180days', '365days', '5years', 'custom'].includes(timeRange);
     if (isHistoricalRange && !hasFullHistoryLoaded && !loadingHistory) {
+      const controller = new AbortController();
       const loadFullHistory = async () => {
         try {
           setLoadingHistory(true);
-          const res = await fetch('/api/analytics/sync?range=full');
+          const res = await fetch('/api/analytics/sync?range=full', { signal: controller.signal });
           if (res.ok) {
             const body = await res.json();
             if (body.success && body.data) {
@@ -137,13 +144,18 @@ export default function DashboardTab() {
               setHasFullHistoryLoaded(true);
             }
           }
-        } catch (err) {
-          console.error('Error fetching full GA4 history:', err);
+        } catch (err: any) {
+          if (err.name !== 'AbortError') {
+            console.error('Error fetching full GA4 history:', err);
+          }
         } finally {
           setLoadingHistory(false);
         }
       };
       loadFullHistory();
+      return () => {
+        controller.abort();
+      };
     }
   }, [timeRange, hasFullHistoryLoaded, loadingHistory]);
 
