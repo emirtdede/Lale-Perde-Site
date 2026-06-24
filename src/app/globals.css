@@ -639,8 +639,12 @@ section {
 }
 
 .collection-name {
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-bottom: 0.8rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
 }
 
 .collection-desc {
