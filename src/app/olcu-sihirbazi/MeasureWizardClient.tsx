@@ -1167,13 +1167,5 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
 }
 
 export default function MeasureWizardClient(props: MeasureWizardClientProps) {
-  return (
-    <Suspense fallback={
-      <div style={{ display: 'flex', justifyContent: 'center', padding: '10rem 0' }}>
-        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(189, 149, 75, 0.2)', borderTopColor: '#BD954B', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-      </div>
-    }>
-      <MeasureWizardContent {...props} />
-    </Suspense>
-  );
+  return <MeasureWizardContent {...props} />;
 }

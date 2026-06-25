@@ -227,26 +227,26 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   }, []);
 
   // LAZY FETCHES
-  const fetchServicesLazy = async () => {
+  const fetchServicesLazy = useCallback(async () => {
     if (servicesFetched) return;
     const { data } = await supabase.from('services').select('*');
     if (data) setServices(data.map(mapServiceFromDb));
     setServicesFetched(true);
-  };
+  }, [servicesFetched]);
 
-  const fetchGuidesLazy = async () => {
+  const fetchGuidesLazy = useCallback(async () => {
     if (guidesFetched) return;
     const { data } = await supabase.from('guides').select('*');
     if (data) setGuides(data.map(mapGuideFromDb));
     setGuidesFetched(true);
-  };
+  }, [guidesFetched]);
 
-  const fetchCampaignsLazy = async () => {
+  const fetchCampaignsLazy = useCallback(async () => {
     if (campaignsFetched) return;
     const { data } = await supabase.from('campaigns').select('*');
     if (data) setCampaigns(data.map(mapCampaignFromDb).sort((a, b) => (a.displayOrder || 1) - (b.displayOrder || 1)));
     setCampaignsFetched(true);
-  };
+  }, [campaignsFetched]);
 
   // PAGINATION FETCHES
   const fetchProductsPaginated = async (page: number, limit: number = 50) => {

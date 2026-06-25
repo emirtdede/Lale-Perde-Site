@@ -15,16 +15,20 @@ interface LanguageContextProps {
 const LanguageContext = createContext<LanguageContextProps | undefined>(undefined);
 
 export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>(() => {
-    if (typeof window !== 'undefined') {
-      const savedLang = localStorage.getItem('lale_perde_lang') as Language;
-      if (savedLang === 'tr' || savedLang === 'en') return savedLang;
-    }
-    return 'tr';
-  });
+  const [language, setLanguage] = useState<Language>('tr');
 
-  const setLanguage = (lang: Language) => {
-    setLanguageState(lang);
+  React.useEffect(() => {
+    const savedLang = localStorage.getItem('lale_perde_lang') as Language;
+    if (savedLang === 'tr' || savedLang === 'en') {
+      setLanguage(savedLang);
+    } else {
+      const browserLang = navigator.language.startsWith('en') ? 'en' : 'tr';
+      setLanguage(browserLang);
+    }
+  }, []);
+
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang);
     localStorage.setItem('lale_perde_lang', lang);
   };
 
@@ -45,7 +49,7 @@ export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   };
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   );

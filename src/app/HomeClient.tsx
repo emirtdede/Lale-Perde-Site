@@ -11,7 +11,9 @@ import { submitContactForm } from './actions/contactActions';
 
 const CategoryImageSlideshow = ({ images, fallbackImage, alt }: { images?: string[], fallbackImage: string, alt: string }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
-  const slideImages = images && images.length > 0 ? images : [fallbackImage];
+  const slideImages = React.useMemo(() => {
+    return images && images.length > 0 ? images : [fallbackImage];
+  }, [images, fallbackImage]);
 
   useEffect(() => {
     if (slideImages.length <= 1) return;

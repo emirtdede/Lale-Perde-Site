@@ -176,12 +176,12 @@ export const Header: React.FC = () => {
         </Link>
 
         {!pathname?.startsWith('/admin') && (
-          <nav>
-            <Link href="/urunler" className={pathname?.startsWith('/urunler') ? 'active' : ''}>{t('nav.products')}</Link>
-            <Link href="/hizmetler" className={pathname === '/hizmetler' ? 'active' : ''}>{t('nav.services')}</Link>
-            <Link href="/rehber" className={pathname?.startsWith('/rehber') ? 'active' : ''}>{t('nav.guide')}</Link>
-            <Link href="/olcu-sihirbazi" className={pathname === '/olcu-sihirbazi' ? 'active' : ''}>{t('nav.wizard')}</Link>
-            <Link href="/iletisim" className={pathname === '/iletisim' ? 'active' : ''}>{t('nav.contact')}</Link>
+          <nav suppressHydrationWarning>
+            <Link suppressHydrationWarning href="/urunler" className={pathname?.startsWith('/urunler') ? 'active' : ''}>{t('nav.products')}</Link>
+            <Link suppressHydrationWarning href="/hizmetler" className={pathname === '/hizmetler' ? 'active' : ''}>{t('nav.services')}</Link>
+            <Link suppressHydrationWarning href="/rehber" className={pathname?.startsWith('/rehber') ? 'active' : ''}>{t('nav.guide')}</Link>
+            <Link suppressHydrationWarning href="/olcu-sihirbazi" className={pathname === '/olcu-sihirbazi' ? 'active' : ''}>{t('nav.wizard')}</Link>
+            <Link suppressHydrationWarning href="/iletisim" className={pathname === '/iletisim' ? 'active' : ''}>{t('nav.contact')}</Link>
           </nav>
         )}
 
@@ -212,6 +212,7 @@ export const Header: React.FC = () => {
             className="lang-switch-btn" 
             onClick={() => setLanguage(language === 'tr' ? 'en' : 'tr')}
             title="Language"
+            suppressHydrationWarning
           >
             {language === 'tr' ? 'EN' : 'TR'}
           </button>

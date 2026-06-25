@@ -94,16 +94,16 @@ import GoogleAdsTracker from './GoogleAdsTracker';
 
 export const Providers: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <DbProvider>
-      <GoogleAdsProvider>
-        <LanguageProvider>
+    <LanguageProvider>
+      <DbProvider>
+        <GoogleAdsProvider>
           <ThemeProvider>
             <VisitorTracker />
             <GoogleAdsTracker />
             {children}
           </ThemeProvider>
-        </LanguageProvider>
-      </GoogleAdsProvider>
-    </DbProvider>
+        </GoogleAdsProvider>
+      </DbProvider>
+    </LanguageProvider>
   );
 };

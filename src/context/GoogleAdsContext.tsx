@@ -82,8 +82,13 @@ export function GoogleAdsProvider({ children }: { children: React.ReactNode }) {
     [config]
   );
 
+  const contextValue = React.useMemo(
+    () => ({ config, trackConversion, isReady }),
+    [config, trackConversion, isReady]
+  );
+
   return (
-    <GoogleAdsContext.Provider value={{ config, trackConversion, isReady }}>
+    <GoogleAdsContext.Provider value={contextValue}>
       {children}
     </GoogleAdsContext.Provider>
   );
