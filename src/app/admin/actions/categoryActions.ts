@@ -6,7 +6,9 @@ import { supabaseAdmin, verifyAdminSession } from './utils';
 export async function addCategoryAction(data: any) {
   try {
     await verifyAdminSession();
-    const { data: result, error } = await supabaseAdmin.from('categories').insert([data]).select();
+    const { name_tr, name_en, image, images, status, display_order, description_tr, description_en, slug } = data || {};
+    const safeData = { name_tr, name_en, image, images, status, display_order, description_tr, description_en, slug };
+    const { data: result, error } = await supabaseAdmin.from('categories').insert([safeData]).select();
     if (error) return { error: error.message };
     return { data: result };
   } catch (err: any) {
@@ -16,8 +18,11 @@ export async function addCategoryAction(data: any) {
 
 export async function updateCategoryAction(id: string, data: any) {
   try {
+    if (typeof id !== 'string' || !id) throw new Error('Geçersiz ID.');
     await verifyAdminSession();
-    const { data: result, error } = await supabaseAdmin.from('categories').update(data).eq('id', id).select();
+    const { name_tr, name_en, image, images, status, display_order, description_tr, description_en, slug } = data || {};
+    const safeData = { name_tr, name_en, image, images, status, display_order, description_tr, description_en, slug };
+    const { data: result, error } = await supabaseAdmin.from('categories').update(safeData).eq('id', id).select();
     if (error) return { error: error.message };
     return { data: result };
   } catch (err: any) {
@@ -27,6 +32,7 @@ export async function updateCategoryAction(id: string, data: any) {
 
 export async function deleteCategoryAction(id: string) {
   try {
+    if (typeof id !== 'string' || !id) throw new Error('Geçersiz ID.');
     await verifyAdminSession();
     const { error } = await supabaseAdmin.from('categories').delete().eq('id', id);
     if (error) return { error: error.message };
@@ -40,7 +46,9 @@ export async function deleteCategoryAction(id: string) {
 export async function addCurtainTypeAction(data: any) {
   try {
     await verifyAdminSession();
-    const { data: result, error } = await supabaseAdmin.from('curtain_types').insert([data]).select();
+    const { category_id, name_tr, name_en, slug, display_order, status } = data || {};
+    const safeData = { category_id, name_tr, name_en, slug, display_order, status };
+    const { data: result, error } = await supabaseAdmin.from('curtain_types').insert([safeData]).select();
     if (error) return { error: error.message };
     return { data: result };
   } catch (err: any) {
@@ -50,8 +58,11 @@ export async function addCurtainTypeAction(data: any) {
 
 export async function updateCurtainTypeAction(id: string, data: any) {
   try {
+    if (typeof id !== 'string' || !id) throw new Error('Geçersiz ID.');
     await verifyAdminSession();
-    const { data: result, error } = await supabaseAdmin.from('curtain_types').update(data).eq('id', id).select();
+    const { category_id, name_tr, name_en, slug, display_order, status } = data || {};
+    const safeData = { category_id, name_tr, name_en, slug, display_order, status };
+    const { data: result, error } = await supabaseAdmin.from('curtain_types').update(safeData).eq('id', id).select();
     if (error) return { error: error.message };
     return { data: result };
   } catch (err: any) {
@@ -61,6 +72,7 @@ export async function updateCurtainTypeAction(id: string, data: any) {
 
 export async function deleteCurtainTypeAction(id: string) {
   try {
+    if (typeof id !== 'string' || !id) throw new Error('Geçersiz ID.');
     await verifyAdminSession();
     const { error } = await supabaseAdmin.from('curtain_types').delete().eq('id', id);
     if (error) return { error: error.message };
@@ -74,7 +86,9 @@ export async function deleteCurtainTypeAction(id: string) {
 export async function addFabricTypeAction(data: any) {
   try {
     await verifyAdminSession();
-    const { data: result, error } = await supabaseAdmin.from('fabric_types').insert([data]).select();
+    const { category_id, name_tr, name_en, slug, display_order, status } = data || {};
+    const safeData = { category_id, name_tr, name_en, slug, display_order, status };
+    const { data: result, error } = await supabaseAdmin.from('fabric_types').insert([safeData]).select();
     if (error) return { error: error.message };
     return { data: result };
   } catch (err: any) {
@@ -84,8 +98,11 @@ export async function addFabricTypeAction(data: any) {
 
 export async function updateFabricTypeAction(id: string, data: any) {
   try {
+    if (typeof id !== 'string' || !id) throw new Error('Geçersiz ID.');
     await verifyAdminSession();
-    const { data: result, error } = await supabaseAdmin.from('fabric_types').update(data).eq('id', id).select();
+    const { category_id, name_tr, name_en, slug, display_order, status } = data || {};
+    const safeData = { category_id, name_tr, name_en, slug, display_order, status };
+    const { data: result, error } = await supabaseAdmin.from('fabric_types').update(safeData).eq('id', id).select();
     if (error) return { error: error.message };
     return { data: result };
   } catch (err: any) {
@@ -95,6 +112,7 @@ export async function updateFabricTypeAction(id: string, data: any) {
 
 export async function deleteFabricTypeAction(id: string) {
   try {
+    if (typeof id !== 'string' || !id) throw new Error('Geçersiz ID.');
     await verifyAdminSession();
     const { error } = await supabaseAdmin.from('fabric_types').delete().eq('id', id);
     if (error) return { error: error.message };
@@ -108,7 +126,9 @@ export async function deleteFabricTypeAction(id: string) {
 export async function addMountingTypeAction(data: any) {
   try {
     await verifyAdminSession();
-    const { data: result, error } = await supabaseAdmin.from('mounting_types').insert([data]).select();
+    const { category_id, curtain_type_id, name_tr, name_en, description_tr, description_en, display_order, status } = data || {};
+    const safeData = { category_id, curtain_type_id, name_tr, name_en, description_tr, description_en, display_order, status };
+    const { data: result, error } = await supabaseAdmin.from('mounting_types').insert([safeData]).select();
     if (error) return { error: error.message };
     return { data: result };
   } catch (err: any) {
@@ -118,8 +138,11 @@ export async function addMountingTypeAction(data: any) {
 
 export async function updateMountingTypeAction(id: string, data: any) {
   try {
+    if (typeof id !== 'string' || !id) throw new Error('Geçersiz ID.');
     await verifyAdminSession();
-    const { data: result, error } = await supabaseAdmin.from('mounting_types').update(data).eq('id', id).select();
+    const { category_id, curtain_type_id, name_tr, name_en, description_tr, description_en, display_order, status } = data || {};
+    const safeData = { category_id, curtain_type_id, name_tr, name_en, description_tr, description_en, display_order, status };
+    const { data: result, error } = await supabaseAdmin.from('mounting_types').update(safeData).eq('id', id).select();
     if (error) return { error: error.message };
     return { data: result };
   } catch (err: any) {
@@ -129,6 +152,7 @@ export async function updateMountingTypeAction(id: string, data: any) {
 
 export async function deleteMountingTypeAction(id: string) {
   try {
+    if (typeof id !== 'string' || !id) throw new Error('Geçersiz ID.');
     await verifyAdminSession();
     const { error } = await supabaseAdmin.from('mounting_types').delete().eq('id', id);
     if (error) return { error: error.message };

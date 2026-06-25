@@ -7,6 +7,11 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
+function escapeHtml(str: string): string {
+  if (typeof str !== 'string') return '';
+  return str.replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 export async function submitContactForm(formData: {
   name: string;
   email: string;
@@ -29,11 +34,11 @@ export async function submitContactForm(formData: {
     const insertData = {
       id,
       type,
-      name: formData.name,
+      name: escapeHtml(formData.name),
       email: formData.email,
       phone: formData.phone || '',
-      subject: formData.subject || 'Yeni İletişim Formu Mesajı',
-      message: formData.message,
+      subject: escapeHtml(formData.subject || 'Yeni İletişim Formu Mesajı'),
+      message: escapeHtml(formData.message),
       date: new Date().toISOString(),
       is_read: false,
       is_resolved: false,
