@@ -18,8 +18,13 @@ export const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const { settings, campaigns, incrementSearchLog, fetchCampaignsLazy } = useDb();
+  const { settings: _settings, campaigns, incrementSearchLog, fetchCampaignsLazy } = useDb();
   const searchInputRef = React.useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     fetchCampaignsLazy?.();
@@ -200,7 +205,7 @@ export const Header: React.FC = () => {
           </form>
 
           <button className="theme-toggle-btn" onClick={toggleTheme} title="Tema Değiştir">
-            {theme === 'light' ? '☾' : '☼'}
+            {!mounted ? '☾' : (theme === 'light' ? '☾' : '☼')}
           </button>
 
           <button 

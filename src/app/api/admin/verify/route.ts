@@ -6,12 +6,15 @@ import { createClient } from '@supabase/supabase-js';
 // Create a Supabase client with the Service Role Key to bypass RLS
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
-  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-const SECRET_KEY = new TextEncoder().encode(
-  process.env.JWT_SECRET || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'lale-perde-fallback-secret-key-32chars'
-);
+const getSecretKey = () => {
+  if (!process.env.JWT_SECRET) {
+    throw new Error("FATAL ERROR: JWT_SECRET ortam değişkeni eksik! Sistem güvenliği için durduruldu.");
+  }
+  return new TextEncoder().encode(process.env.JWT_SECRET);
+};
 
 export async function GET() {
   const cookieStore = await cookies();
@@ -22,7 +25,7 @@ export async function GET() {
   }
 
   try {
-    await jwtVerify(token.value, SECRET_KEY);
+    await jwtVerify(token.value, getSecretKey());
     
     // Fetch secure settings
     const { data: authRecord } = await supabaseAdmin

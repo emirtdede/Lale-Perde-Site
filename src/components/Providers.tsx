@@ -11,7 +11,7 @@ const VisitorTracker: React.FC = () => {
 
   useEffect(() => {
     let currentLogId = '';
-    let startTime = Date.now();
+    const startTime = Date.now();
 
     const handleUnload = () => {
       if (currentLogId) {
@@ -22,13 +22,13 @@ const VisitorTracker: React.FC = () => {
     };
 
     const logVisitor = async () => {
-      let localVisitorStr = localStorage.getItem('lale_perde_client_visitor');
+      const localVisitorStr = localStorage.getItem('lale_perde_client_visitor');
       let localVisitor;
       
       if (localVisitorStr) {
         try {
           localVisitor = JSON.parse(localVisitorStr);
-        } catch (e) {
+        } catch (_e) {
           localVisitor = null;
         }
       }

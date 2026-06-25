@@ -31,7 +31,7 @@ export default function ReturnPage() {
         <>
           <h1 className="section-title" style={{ fontSize: '2.5rem', marginBottom: '2rem', textAlign: 'left' }}>Return, Cancellation & Exchange Conditions</h1>
           <p style={{ opacity: 0.9, marginBottom: '1.5rem' }}>
-            Since almost all products manufactured by Lale Perde are custom sewn/produced with individual measurements for our customers' windows, rules different from standard return procedures apply in accordance with legal regulations.
+            Since almost all products manufactured by Lale Perde are custom sewn/produced with individual measurements for our customers&apos; windows, rules different from standard return procedures apply in accordance with legal regulations.
           </p>
           <h3 style={{ color: 'var(--color-accent)', marginTop: '2rem', marginBottom: '0.8rem', fontSize: '1.3rem' }}>1. Return Conditions for Custom Sized Products</h3>
           <p style={{ opacity: 0.85, marginBottom: '1rem' }}>
@@ -39,7 +39,7 @@ export default function ReturnPage() {
           </p>
           <h3 style={{ color: 'var(--color-accent)', marginTop: '2rem', marginBottom: '0.8rem', fontSize: '1.3rem' }}>2. Faulty Dimensions or Defective Production</h3>
           <p style={{ opacity: 0.85, marginBottom: '1rem' }}>
-            If any height/width error, fabric defect, or sewing flaw arising from Lale Perde measurement or production team is detected; it is our company's responsibility to adjust, re-sew, or replace the product. In such cases, modification and logistics costs belong entirely to the seller.
+            If any height/width error, fabric defect, or sewing flaw arising from Lale Perde measurement or production team is detected; it is our company&apos;s responsibility to adjust, re-sew, or replace the product. In such cases, modification and logistics costs belong entirely to the seller.
           </p>
           <h3 style={{ color: 'var(--color-accent)', marginTop: '2rem', marginBottom: '0.8rem', fontSize: '1.3rem' }}>3. Cancellation Policy</h3>
           <p style={{ opacity: 0.85, marginBottom: '1rem' }}>

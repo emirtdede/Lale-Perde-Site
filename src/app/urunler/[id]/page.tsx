@@ -35,8 +35,27 @@ export async function generateMetadata(
     title: `${product.nameTr} | Lale Perde`,
     description: product.descriptionTr || 'Lale Perde özel tasarım perde koleksiyonu.',
     openGraph: {
-      images: product.coverImage ? [product.coverImage] : product.images,
-    }
+      title: `${product.nameTr} | Lale Perde`,
+      description: product.descriptionTr || 'Lale Perde özel tasarım perde koleksiyonu.',
+      url: `https://laleperde.com/urunler/${id}`,
+      siteName: 'Lale Perde',
+      images: [
+        {
+          url: product.coverImage || (product.images.length > 0 ? product.images[0] : '/assets/logo.png'),
+          width: 1200,
+          height: 630,
+          alt: product.nameTr,
+        },
+      ],
+      locale: 'tr_TR',
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${product.nameTr} | Lale Perde`,
+      description: product.descriptionTr || 'Lale Perde özel tasarım perde koleksiyonu.',
+      images: [product.coverImage || (product.images.length > 0 ? product.images[0] : '/assets/logo.png')],
+    },
   };
 }
 

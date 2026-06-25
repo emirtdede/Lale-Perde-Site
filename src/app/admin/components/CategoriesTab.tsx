@@ -319,7 +319,13 @@ export default function CategoriesTab() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [portalTarget, setPortalTarget] = useState<Element | null>(null);
   const [cropQueue, setCropQueue] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+
+  const showError = (msg: string) => {
+    setError(msg);
+    setTimeout(() => setError(null), 4000);
+  };
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -424,7 +430,7 @@ export default function CategoriesTab() {
       setCropQueue(prev => [...prev, ...urls]);
     } catch (err) {
       console.warn('Error reading files:', err);
-      alert('Dosyalar okunurken bir hata oluştu.');
+      showError('Dosyalar okunurken bir hata oluştu.');
     } finally {
       setIsConverting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -441,7 +447,7 @@ export default function CategoriesTab() {
       }));
     } catch (e) {
       console.warn(e);
-      alert('Dosya yüklenemedi.');
+      showError('Dosya yüklenemedi.');
     } finally {
       setIsConverting(false);
       setCropQueue(prev => prev.slice(1));
@@ -460,7 +466,7 @@ export default function CategoriesTab() {
 
   const handleSave = async () => {
     if (!editForm.id || !editForm.nameTr || !editForm.nameEn) {
-      alert(t('admin.categories.alerts.fillNames'));
+      showError(t('admin.categories.alerts.fillNames'));
       return;
     }
 
@@ -478,7 +484,7 @@ export default function CategoriesTab() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm(t('admin.categories.alerts.confirmDelete'))) {
+    if (window.confirm(t('admin.categories.alerts.confirmDelete'))) {
       await deleteCategory(id);
     }
   };

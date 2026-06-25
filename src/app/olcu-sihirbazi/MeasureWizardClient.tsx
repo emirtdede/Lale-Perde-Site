@@ -104,11 +104,17 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  const hasRestored = useRef(false);
+  const hasInitializedProduct = useRef(false);
+
   // Restore state from localStorage on mount
   useEffect(() => {
+    if (hasRestored.current) return;
+
     try {
       const prodId = searchParams.get('product');
       if (prodId) {
+        hasRestored.current = true;
         setIsLoaded(true);
         return;
       }
@@ -145,6 +151,7 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
     } catch (e) {
       console.warn('Failed to load from localStorage', e);
     }
+    hasRestored.current = true;
     setIsLoaded(true);
   }, [categories, products, searchParams]);
 
@@ -179,11 +186,15 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
   // Load URL parameter pre-selection
   useEffect(() => {
     const prodId = searchParams.get('product');
-    if (prodId && products.length > 0 && categories.length > 0) {
+    if (!prodId) return;
+    if (hasInitializedProduct.current) return;
+
+    if (products.length > 0 && categories.length > 0) {
       const matchedProd = products.find(p => p.id === prodId);
       if (matchedProd) {
         const matchedCat = categories.find(c => c.id === matchedProd.categoryId);
         if (matchedCat) {
+          hasInitializedProduct.current = true;
           setSelectedUsage("ev"); // default usage to ev
           setSelectedCat(matchedCat);
           setSelectedProduct(matchedProd);
@@ -304,13 +315,25 @@ function MeasureWizardContent({ initialProducts, initialCategories }: MeasureWiz
     
     // Track Google Ads Conversion
     trackConversion('whatsapp');
-
     window.open(wpUrl, '_blank');
   };
 
   const getStepColor = (currentStep: number) => {
     return step === currentStep ? 'var(--color-accent)' : (step > currentStep ? '#A3B3C2' : '#5C6C7C');
   };
+
+  const setDefaultMeasurements = () => {
+    setWindowWidth(Math.round(limits.min_width * 1.5));
+    setWindowHeight(Math.round(limits.min_height * 1.5));
+  };
+
+  if (!isLoaded) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+        <div style={{ width: '40px', height: '40px', border: '3px solid rgba(189, 149, 75, 0.2)', borderTopColor: '#BD954B', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '2rem 2rem 5rem', display: 'grid', gridTemplateColumns: '280px 1fr', gap: '4rem', alignItems: 'start' }}>

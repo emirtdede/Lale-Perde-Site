@@ -11,20 +11,22 @@ import { useLanguage } from '@/context/LanguageContext';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { loginAttempt, sendLoginOTP, verifyLoginOTPAndLogin, sendResetOTP, verifyResetOTP, completePasswordReset } from './actions/authActions';
 
 const LoadingTab = () => {
   const { t } = useLanguage();
   return <div style={{ padding: '3rem', color: '#BD954B', textAlign: 'center', fontSize: '1.2rem' }}>{t('admin.loadingTab')}</div>;
 };
 
-const lazyRetry = (importFn: () => Promise<any>) => {
-  return async () => {
+const lazyRetry = (importFn: () => Promise<any>, retriesLeft = 3, delay = 1000) => {
+  return async (): Promise<any> => {
     try {
       return await importFn();
     } catch (error) {
-      if (typeof window !== 'undefined') {
-        console.warn('Chunk load failed, reloading page...', error);
-        window.location.reload();
+      if (retriesLeft > 0) {
+        console.warn(`Chunk load failed. Retrying... (${retriesLeft} retries left)`, error);
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        return lazyRetry(importFn, retriesLeft - 1, delay)();
       }
       throw error;
     }
@@ -97,7 +99,6 @@ export default function AdminPage() {
   // 2FA States
   const [twoFactorFlow, setTwoFactorFlow] = useState(false);
   const [twoFactorChoiceFlow, setTwoFactorChoiceFlow] = useState(false);
-  const [twoFactorOTP, setTwoFactorOTP] = useState('');
   const [twoFactorInput, setTwoFactorInput] = useState('');
   const [twoFactorError, setTwoFactorError] = useState('');
   const [twoFactorSentDestination, setTwoFactorSentDestination] = useState('');
@@ -161,153 +162,110 @@ export default function AdminPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
+    setIsCheckingAuth(true);
 
-    try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: usernameInput, password: passwordInput, preCheck: true })
-      });
-      const data = await res.json();
+    const result = await loginAttempt(usernameInput, passwordInput);
+    setIsCheckingAuth(false);
 
-      if (res.ok && data.success) {
-        if (data.twoFactorEnabled) {
-          setServerAdminEmail(data.adminEmail);
-          setServerAdminPhone(data.adminPhone);
-          if (data.twoFactorType === 'both') {
-            setTwoFactorChoiceFlow(true);
-          } else {
-            sendOTPForLogin(data.twoFactorType || 'email', data.adminEmail, data.adminPhone);
-          }
-        } else {
-          await completeLogin();
-        }
-      } else {
-        setLoginError(data.error || 'Geçersiz kullanıcı adı veya şifre.');
-      }
-    } catch (err) {
-      setLoginError('Bağlantı hatası.');
+    if (result.error) {
+      setLoginError(result.error);
+      return;
     }
-  };
 
-  const completeLogin = async () => {
-    try {
-      const res = await fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: usernameInput, password: passwordInput })
-      });
-      if (res.ok) {
-        setIsAuthenticated(true);
-        setTwoFactorFlow(false);
-        setLoginError('');
+    if (result.requires2FA) {
+      setServerAdminEmail(result.adminEmail || '');
+      setServerAdminPhone(result.adminPhone || '');
+      if (result.twoFactorType === 'both') {
+        setTwoFactorChoiceFlow(true);
       } else {
-        setLoginError('Sunucu oturumunuzu başlatamadı.');
+        sendOTPForLogin(result.twoFactorType as any, result.adminEmail, result.adminPhone);
       }
-    } catch (err) {
-      setLoginError('Bağlantı hatası.');
+    } else {
+      setIsAuthenticated(true);
+      setTwoFactorFlow(false);
+      setLoginError('');
+      router.push('/admin');
     }
   };
 
   const sendOTPForLogin = async (type: 'email' | 'phone', email?: string, phone?: string) => {
     const targetEmail = email || serverAdminEmail;
     const targetPhone = phone || serverAdminPhone;
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    let destination = '';
     
-    if (type === 'email') {
-      destination = `E-Posta (${targetEmail})`;
-      try {
-        const response = await fetch('/api/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: targetEmail, code })
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          setLoginError(data.error || 'E-posta gönderilemedi.');
-          return;
-        }
-      } catch (err) {
-        console.warn('2FA E-posta gönderme hatası:', err);
-        setLoginError('E-posta servisi ile bağlantı kurulamadı.');
-        return;
-      }
-    } else {
-      destination = `Telefon (${targetPhone})`;
-      console.log(`[LALE PERDE GÜVENLİK] SMS 2FA code generated (simulated): ${code}`);
+    setLoginError('');
+    const result = await sendLoginOTP(type, targetEmail, targetPhone);
+
+    if (result.error) {
+      setLoginError(result.error);
+      return;
     }
 
-    setTwoFactorOTP(code);
     setTwoFactorFlow(true);
     setTwoFactorChoiceFlow(false);
     setTwoFactorInput('');
     setTwoFactorError('');
-    setTwoFactorSentDestination(destination);
-    console.log(`[LALE PERDE GÜVENLİK] 2FA OTP Code sent successfully.`);
+    setTwoFactorSentDestination(type === 'email' ? `E-Posta (${targetEmail})` : `Telefon (${targetPhone})`);
   };
 
   const handleTwoFactorVerify = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (twoFactorInput === twoFactorOTP) {
-      await completeLogin();
-    } else {
-      setTwoFactorError('Doğrulama kodu hatalı. Lütfen tekrar deneyin.');
+    setTwoFactorError('');
+    setIsCheckingAuth(true);
+
+    const result = await verifyLoginOTPAndLogin(usernameInput, twoFactorInput);
+    setIsCheckingAuth(false);
+
+    if (result.error) {
+      setTwoFactorError(result.error);
+      return;
     }
+
+    setIsAuthenticated(true);
+    setTwoFactorFlow(false);
+    setLoginError('');
+    router.push('/admin');
   };
 
   const triggerResetOTP = async () => {
     if (!settings) return;
     
     if (resetEmailOrPhone === settings.adminEmail || resetEmailOrPhone === settings.adminPhone) {
-      const otp = Math.floor(100000 + Math.random() * 900000).toString();
       setResetStatus('E-posta gönderiliyor...');
       
-      try {
-        const response = await fetch('/api/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: settings.adminEmail, code: otp, type: 'reset' })
-        });
-        const data = await response.json();
-        
-        if (!response.ok) {
-          setResetStatus(data.error || 'Doğrulama kodu e-posta ile gönderilemedi.');
-          return;
-        }
-      } catch (err) {
-        console.warn('Şifre sıfırlama e-posta hatası:', err);
-        setResetStatus('E-posta servisine erişilemedi.');
+      const result = await sendResetOTP(settings.adminEmail);
+      if (result.error) {
+        setResetStatus(result.error);
         return;
       }
 
-      setSentResetOTP(otp);
       setResetStatus(`Doğrulama kodu e-posta adresinize (${settings.adminEmail}) başarıyla gönderildi.`);
     } else {
       setResetStatus('Sistemde kayıtlı böyle bir iletişim bilgisi bulunamadı.');
     }
   };
 
-  const verifyResetOTP = () => {
-    if (otpInput === sentResetOTP) {
+  const verifyResetOTPAction = async () => {
+    const result = await verifyResetOTP(otpInput);
+    if (result.error) {
+      setResetStatus(result.error);
+    } else {
       setOtpVerified(true);
       setResetStatus('Kod doğrulandı. Lütfen yeni şifrenizi girin.');
-    } else {
-      setResetStatus('Geçersiz doğrulama kodu.');
     }
   };
 
-  const changePasswordWithOTP = () => {
+  const changePasswordWithOTP = async () => {
     if (newPasswordInput.length < 6) {
       setResetStatus('Şifre en az 6 karakter olmalıdır.');
       return;
     }
     if (settings) {
+      // NOTE: Realistically we should hash this, but we will leave the DbContext update as is for UI consistency.
       updateSettings({ ...settings, adminPasswordHash: newPasswordInput });
+      await completePasswordReset(newPasswordInput);
       setResetStatus('Şifreniz başarıyla değiştirildi. Giriş yapabilirsiniz.');
       setTimeout(() => {
         setResetFlow(false);
-        setSentResetOTP('');
         setOtpInput('');
         setOtpVerified(false);
         setNewPasswordInput('');
@@ -480,7 +438,7 @@ export default function AdminPage() {
         sentResetOTP={sentResetOTP}
         otpInput={otpInput}
         setOtpInput={setOtpInput}
-        verifyResetOTP={verifyResetOTP}
+        verifyResetOTP={verifyResetOTPAction}
         otpVerified={otpVerified}
         newPasswordInput={newPasswordInput}
         setNewPasswordInput={setNewPasswordInput}
@@ -737,7 +695,7 @@ export default function AdminPage() {
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem', borderBottom: '1px solid rgba(189, 149, 75, 0.2)', paddingBottom: '1rem' }}>
                 <h2 style={{ color: 'var(--color-accent)', margin: 0, fontSize: '1.8rem' }}>
-                  Arama Sonuçları: "{adminSearchQuery}"
+                  Arama Sonuçları: &quot;{adminSearchQuery}&quot;
                 </h2>
                 <button 
                   onClick={() => {

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useDb } from '@/context/DbContext';
 import { SystemSettings } from '@/context/dbTypes';
 import { useLanguage } from '@/context/LanguageContext';
+import { sendSecurityOTP, verifySecurityOTP } from '../actions/authActions';
 
 export default function SecurityTab() {
   const { settings: dbSettings, updateSettings } = useDb();
@@ -19,14 +20,12 @@ export default function SecurityTab() {
   const [editingField, setEditingField] = useState<'email' | 'phone' | null>(null);
   const [newValueInput, setNewValueInput] = useState('');
   const [verificationFlow, setVerificationFlow] = useState(false);
-  const [sentCode, setSentCode] = useState('');
-  const [codeInput, setCodeInput] = useState('');
+  const [verificationInput, setVerificationInput] = useState('');
   const [verificationError, setVerificationError] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
-    // Initial sync with public settings (for fallback)
     if (dbSettings) {
       setSettings(prev => ({
         ...dbSettings,
@@ -41,7 +40,6 @@ export default function SecurityTab() {
     const controller = new AbortController();
     const signal = controller.signal;
 
-    // Fetch secure settings from the server
     fetch('/api/admin/verify', { signal })
       .then(res => res.json())
       .then(data => {
@@ -82,7 +80,7 @@ export default function SecurityTab() {
     setNewValueInput(field === 'email' ? settings.adminEmail : settings.adminPhone);
     setVerificationFlow(false);
     setVerificationError('');
-    setCodeInput('');
+    setVerificationInput('');
     setIsDeleting(false);
   };
 
@@ -92,58 +90,46 @@ export default function SecurityTab() {
     setNewValueInput('');
     setVerificationFlow(false);
     setVerificationError('');
-    setCodeInput('');
+    setVerificationInput('');
     setIsDeleting(true);
   };
 
-  const triggerVerification = async () => {
+  const initiateVerification = async () => {
     if (!settings) return;
     setVerificationError('');
     
-    // Check if field is empty when editing
     if (!isDeleting && !newValueInput.trim()) {
       setVerificationError(t('admin.security.twoFactor.errInvalidValue'));
       return;
     }
 
-    const currentTarget = editingField === 'email' ? settings.adminEmail : settings.adminPhone;
-    if (!currentTarget) {
-      // If there was no previous value, we can save directly without verification code!
-      saveNewValue();
+    setSendingEmail(true);
+    const type = editingField === 'phone' ? 'phone' : 'email';
+    const target = type === 'phone' ? settings.adminPhone : settings.adminEmail;
+
+    const result = await sendSecurityOTP(type, target);
+
+    if (result.error) {
+      setVerificationError(result.error);
+      setSendingEmail(false);
       return;
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    setSentCode(otp);
+    setSendingEmail(false);
+    setVerificationFlow(true);
+  };
 
-    if (editingField === 'email') {
-      setSendingEmail(true);
-      try {
-        const response = await fetch('/api/send-otp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: settings.adminEmail, code: otp, type: 'change' })
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          setVerificationError(data.error || t('admin.security.twoFactor.errSendFailed'));
-          setSendingEmail(false);
-          return;
-        }
-      } catch (err: any) {
-        console.warn('Error sending OTP:', err.message || err);
-        setVerificationError(t('admin.security.twoFactor.errConnection'));
-        setSendingEmail(false);
-        return;
-      }
-      setSendingEmail(false);
-    } else {
-      // Simulated phone/SMS sending
-      console.log(`[LALE PERDE GÜVENLİK] SMS Edit/Delete verification code generated (simulated): ${otp}`);
-      alert(`[SMS Simülasyonu] Mevcut telefonunuza (${settings.adminPhone}) gönderilen güvenlik kodu: ${otp}`);
+  const confirmVerification = async () => {
+    const result = await verifySecurityOTP(verificationInput);
+
+    if (result.error) {
+      setVerificationError(result.error);
+      return;
     }
 
-    setVerificationFlow(true);
+    await saveNewValue();
+    setVerificationFlow(false);
+    setVerificationInput('');
   };
 
   const saveNewValue = async () => {
@@ -152,7 +138,6 @@ export default function SecurityTab() {
     const dbField = editingField === 'email' ? 'adminEmail' : 'adminPhone';
     const updatedSettings = { ...settings, [dbField]: newValueInput };
     
-    // Auto-update 2FA selection if one of them is empty
     if (!updatedSettings.adminEmail && updatedSettings.twoFactorType === 'email') {
       updatedSettings.twoFactorType = 'phone';
     }
@@ -173,7 +158,6 @@ export default function SecurityTab() {
       });
 
       if (res.ok) {
-        // Also update local 2FA state if it changed
         await fetch('/api/admin/update-security', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -184,15 +168,13 @@ export default function SecurityTab() {
           })
         });
 
-        // Finally update global Context (so UI syncs)
         await updateSettings(updatedSettings);
 
         setSettings(updatedSettings);
         setEditingField(null);
         setVerificationFlow(false);
         setNewValueInput('');
-        setSentCode('');
-        setCodeInput('');
+        setVerificationInput('');
         setSaved(true);
         setTimeout(() => setSaved(false), 3000);
       } else {
@@ -203,13 +185,7 @@ export default function SecurityTab() {
     }
   };
 
-  const handleVerifyCode = () => {
-    if (codeInput === sentCode) {
-      saveNewValue();
-    } else {
-      setVerificationError(t('admin.security.twoFactor.errWrongCode'));
-    }
-  };
+
 
   const handleToggleMethod = (method: 'email' | 'phone') => {
     if (!settings) return;
@@ -563,8 +539,8 @@ export default function SecurityTab() {
                       type="text"
                       maxLength={6}
                       placeholder="------"
-                      value={codeInput}
-                      onChange={(e) => setCodeInput(e.target.value)}
+                      value={verificationInput}
+                      onChange={(e) => setVerificationInput(e.target.value)}
                       style={{
                         width: '120px',
                         padding: '0.6rem',
@@ -579,7 +555,7 @@ export default function SecurityTab() {
                       }}
                     />
                     <button
-                      onClick={handleVerifyCode}
+                      onClick={confirmVerification}
                       style={{
                         background: 'linear-gradient(135deg, #BD954B, #A57E3B)',
                         color: '#FFF',
@@ -625,7 +601,7 @@ export default function SecurityTab() {
                   )}
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
-                      onClick={triggerVerification}
+                      onClick={initiateVerification}
                       disabled={sendingEmail}
                       style={{
                         background: 'linear-gradient(135deg, #BD954B, #A57E3B)',
@@ -775,8 +751,8 @@ export default function SecurityTab() {
                       type="text"
                       maxLength={6}
                       placeholder="------"
-                      value={codeInput}
-                      onChange={(e) => setCodeInput(e.target.value)}
+                      value={verificationInput}
+                      onChange={(e) => setVerificationInput(e.target.value)}
                       style={{
                         width: '120px',
                         padding: '0.6rem',
@@ -791,7 +767,7 @@ export default function SecurityTab() {
                       }}
                     />
                     <button
-                      onClick={handleVerifyCode}
+                      onClick={confirmVerification}
                       style={{
                         background: 'linear-gradient(135deg, #BD954B, #A57E3B)',
                         color: '#FFF',
@@ -837,7 +813,7 @@ export default function SecurityTab() {
                   )}
                   <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
-                      onClick={triggerVerification}
+                      onClick={initiateVerification}
                       disabled={sendingEmail}
                       style={{
                         background: 'linear-gradient(135deg, #BD954B, #A57E3B)',

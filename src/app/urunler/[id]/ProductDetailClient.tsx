@@ -61,6 +61,7 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
     }
   }, [width, height, product]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleWhatsAppQuote = () => {
     const latestSettings = dbSettings || settings;
     if (!latestSettings) return;
@@ -253,7 +254,7 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
                 justifyContent: 'center',
                 alignItems: 'center'
               }}>
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'pulse 1.8s infinite' }}>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D4AF37" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: 'pulse-custom 1.8s infinite' }}>
                   <path d="M21.3 8.11L15.89 2.7a1 1 0 0 0-1.41 0L2.7 14.48a1 1 0 0 0 0 1.41l5.41 5.41a1 1 0 0 0 1.41 0L21.3 9.52a1 1 0 0 0 0-1.41z" />
                   <line x1="6.3" y1="9.12" x2="7.71" y2="7.71" />
                   <line x1="9.13" y1="11.95" x2="11.96" y2="9.12" />
@@ -290,28 +291,6 @@ export default function ProductDetailClient({ initialProduct }: ProductDetailCli
               }} />
             </div>
           </div>
-
-          <style dangerouslySetInnerHTML={{__html: `
-            @keyframes spin {
-              to { transform: rotate(360deg); }
-            }
-            @keyframes pulse {
-              0%, 100% { transform: scale(1); opacity: 1; }
-              50% { transform: scale(1.12); opacity: 0.8; }
-            }
-            @keyframes fillProgress {
-              from { width: 0%; }
-              to { width: 100%; }
-            }
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to { opacity: 1; }
-            }
-            @keyframes scaleUp {
-              from { transform: scale(0.95); opacity: 0; }
-              to { transform: scale(1); opacity: 1; }
-            }
-          `}} />
         </div>
       )}
     </div>

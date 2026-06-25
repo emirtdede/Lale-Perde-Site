@@ -45,6 +45,12 @@ export default function MountingTypesSubTab() {
   const [selectedCurtainTypeId, setSelectedCurtainTypeId] = useState<string>('all');
   const [items, setItems] = useState<MountingType[]>([]);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const showError = (msg: string) => {
+    setError(msg);
+    setTimeout(() => setError(null), 4000);
+  };
 
   useEffect(() => {
     setPortalTarget(document.getElementById('admin-tab-actions'));
@@ -130,8 +136,8 @@ export default function MountingTypesSubTab() {
   };
 
   const handleSave = async () => {
-    if (!editForm.id || !editForm.nameTr || !editForm.categoryId || !editForm.curtainTypeId) {
-      alert(t('admin.mountingTypes.alerts.fillNames'));
+    if (!editForm.categoryId || !editForm.curtainTypeId || !editForm.nameTr) {
+      showError(t('admin.mountingTypes.alerts.fillNames'));
       return;
     }
 
@@ -148,7 +154,7 @@ export default function MountingTypesSubTab() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm(t('admin.mountingTypes.alerts.confirmDelete'))) {
+    if (window.confirm(t('admin.mountingTypes.alerts.confirmDelete'))) {
       await deleteMountingType(id);
     }
   };
@@ -166,6 +172,12 @@ export default function MountingTypesSubTab() {
 
   return (
     <div>
+      {error && (
+        <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#DC2626', padding: '1rem', borderRadius: '4px', border: '1px solid #DC2626', marginBottom: '1.5rem' }}>
+          {error}
+        </div>
+      )}
+
       {portalTarget && !editingId && createPortal(
         <button
           onClick={handleAddNew}

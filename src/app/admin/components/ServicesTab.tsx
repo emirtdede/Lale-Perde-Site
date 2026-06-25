@@ -273,6 +273,12 @@ export default function ServicesTab() {
   const [cropQueue, setCropQueue] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const showError = (msg: string) => {
+    setError(msg);
+    setTimeout(() => setError(null), 4000);
+  };
   const [portalTarget, setPortalTarget] = useState<Element | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
 
@@ -372,7 +378,7 @@ export default function ServicesTab() {
       setCropQueue([url]);
     } catch (err) {
       console.warn('Error reading file:', err);
-      alert(t('admin.services.alerts.fileReadError'));
+      showError(t('admin.services.alerts.fileReadError'));
     } finally {
       setIsConverting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -389,7 +395,7 @@ export default function ServicesTab() {
       }));
     } catch (e) {
       console.warn(e);
-      alert(t('admin.services.alerts.fileReadError'));
+      showError(t('admin.services.alerts.fileReadError'));
     } finally {
       setIsConverting(false);
       setCropQueue([]);
@@ -416,6 +422,18 @@ export default function ServicesTab() {
 
   return (
     <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.8rem', color: 'var(--color-primary)' }}>
+          {t('admin.services.title')}
+        </h2>
+      </div>
+
+      {error && (
+        <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#DC2626', padding: '1rem', borderRadius: '4px', border: '1px solid #DC2626', marginBottom: '1.5rem' }}>
+          {error}
+        </div>
+      )}
+
       {portalTarget && !editingId && createPortal(
         <button
           onClick={handleAddNew}

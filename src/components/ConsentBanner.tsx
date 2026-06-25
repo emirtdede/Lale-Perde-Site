@@ -27,7 +27,7 @@ export const ConsentBanner: React.FC = () => {
   const requestLocation = () => {
     if ('geolocation' in navigator) {
       navigator.geolocation.getCurrentPosition(
-        (position) => {
+        (_position) => {
           // Location access granted
           // Optional: You can store rough city info in visitor logs if needed
         },

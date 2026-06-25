@@ -39,7 +39,7 @@ export default function SalesPage() {
           </p>
           <h3 style={{ color: 'var(--color-accent)', marginTop: '2rem', marginBottom: '0.8rem', fontSize: '1.3rem' }}>2. Custom Production Exception (Right of Withdrawal)</h3>
           <p style={{ opacity: 0.85, marginBottom: '1rem' }}>
-            <strong>IMPORTANT:</strong> In accordance with Consumer Protection Legislation, the buyer <strong>cannot exercise the right of withdrawal and cannot request a return</strong> for goods prepared in accordance with the consumer's special requests and personal needs with custom measurements (curtains, roller blinds, venetians, etc.).
+            <strong>IMPORTANT:</strong> In accordance with Consumer Protection Legislation, the buyer <strong>cannot exercise the right of withdrawal and cannot request a return</strong> for goods prepared in accordance with the consumer&apos;s special requests and personal needs with custom measurements (curtains, roller blinds, venetians, etc.).
           </p>
           <h3 style={{ color: 'var(--color-accent)', marginTop: '2rem', marginBottom: '0.8rem', fontSize: '1.3rem' }}>3. Delivery and Installation</h3>
           <p style={{ opacity: 0.85, marginBottom: '1rem' }}>

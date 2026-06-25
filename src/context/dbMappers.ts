@@ -13,7 +13,10 @@ import {
   MountingType
 } from './dbTypes';
 
-export const mapCategoryFromDb = (cat: any): Category => ({
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type DbRecord = Record<string, any>;
+
+export const mapCategoryFromDb = (cat: DbRecord): Category => ({
   id: cat.id,
   nameTr: cat.name_tr,
   nameEn: cat.name_en,
@@ -26,7 +29,7 @@ export const mapCategoryFromDb = (cat: any): Category => ({
   slug: cat.slug,
 });
 
-export const mapCategoryToDb = (cat: any) => ({
+export const mapCategoryToDb = (cat: DbRecord) => ({
   id: cat.id,
   name_tr: cat.nameTr,
   name_en: cat.nameEn,
@@ -39,7 +42,7 @@ export const mapCategoryToDb = (cat: any) => ({
   slug: cat.slug,
 });
 
-export const mapCurtainTypeFromDb = (c: any): CurtainType => ({
+export const mapCurtainTypeFromDb = (c: DbRecord): CurtainType => ({
   id: c.id,
   categoryId: c.category_id,
   nameTr: c.name_tr,
@@ -59,7 +62,7 @@ export const mapCurtainTypeToDb = (c: CurtainType) => ({
   status: c.status,
 });
 
-export const mapFabricTypeFromDb = (f: any): FabricType => ({
+export const mapFabricTypeFromDb = (f: DbRecord): FabricType => ({
   id: f.id,
   categoryId: f.category_id,
   nameTr: f.name_tr,
@@ -79,7 +82,7 @@ export const mapFabricTypeToDb = (f: FabricType) => ({
   status: f.status,
 });
 
-export const mapMountingTypeFromDb = (m: any): MountingType => ({
+export const mapMountingTypeFromDb = (m: DbRecord): MountingType => ({
   id: m.id,
   categoryId: m.category_id,
   curtainTypeId: m.curtain_type_id,
@@ -103,7 +106,7 @@ export const mapMountingTypeToDb = (m: MountingType) => ({
   status: m.status,
 });
 
-export const mapProductFromDb = (p: any): Product => ({
+export const mapProductFromDb = (p: DbRecord): Product => ({
   id: p.id,
   nameTr: p.name_tr,
   nameEn: p.name_en,
@@ -130,7 +133,7 @@ export const mapProductFromDb = (p: any): Product => ({
   mountingTypeIds: p.mounting_type_ids || [],
 });
 
-export const mapProductToDb = (p: any) => ({
+export const mapProductToDb = (p: DbRecord) => ({
   id: p.id,
   name_tr: p.nameTr,
   name_en: p.nameEn,
@@ -157,7 +160,7 @@ export const mapProductToDb = (p: any) => ({
   mounting_type_ids: p.mountingTypeIds || [],
 });
 
-export const mapSettingsFromDb = (s: any): SystemSettings => ({
+export const mapSettingsFromDb = (s: DbRecord): SystemSettings => ({
   storeName: s.store_name,
   phone: s.phone,
   email: s.email,
@@ -218,7 +221,7 @@ export const mapSettingsToDb = (s: SystemSettings) => ({
   campaign_interval: s.campaignInterval || 8,
 });
 
-export const mapHomeContentFromDb = (h: any): HomePageContent => ({
+export const mapHomeContentFromDb = (h: DbRecord): HomePageContent => ({
   philosophyTitleTr: h.philosophy_title_tr,
   philosophyTitleEn: h.philosophy_title_en,
   philosophyDescTr: h.philosophy_desc_tr,
@@ -250,7 +253,7 @@ export const mapHomeContentToDb = (h: HomePageContent) => ({
   featured_category_ids: h.featuredCategoryIds,
 });
 
-export const mapServiceFromDb = (s: any): ServiceItem => ({
+export const mapServiceFromDb = (s: DbRecord): ServiceItem => ({
   id: s.id,
   titleTr: s.title_tr,
   titleEn: s.title_en,
@@ -276,7 +279,7 @@ export const mapServiceToDb = (s: ServiceItem) => ({
   images: s.images,
 });
 
-export const mapGuideFromDb = (g: any): GuideItem => ({
+export const mapGuideFromDb = (g: DbRecord): GuideItem => ({
   id: g.id,
   titleTr: g.title_tr,
   titleEn: g.title_en,
@@ -304,7 +307,7 @@ export const mapGuideToDb = (g: GuideItem) => ({
   display_order: g.displayOrder,
 });
 
-export const mapCampaignFromDb = (c: any): Campaign => ({
+export const mapCampaignFromDb = (c: DbRecord): Campaign => ({
   id: c.id,
   titleTr: c.title_tr,
   titleEn: c.title_en,
@@ -328,7 +331,7 @@ export const mapCampaignToDb = (c: Campaign) => ({
   display_order: c.displayOrder,
 });
 
-export const mapInboxFromDb = (i: any): InboxMessage => ({
+export const mapInboxFromDb = (i: DbRecord): InboxMessage => ({
   id: i.id,
   type: i.type,
   name: i.name,
@@ -345,7 +348,7 @@ export const mapInboxFromDb = (i: any): InboxMessage => ({
   address: i.address,
 });
 
-export const mapInboxToDb = (i: any) => ({
+export const mapInboxToDb = (i: DbRecord) => ({
   id: i.id,
   type: i.type,
   name: i.name,
@@ -361,7 +364,7 @@ export const mapInboxToDb = (i: any) => ({
   address: i.address,
 });
 
-export const mapVisitorLogFromDb = (v: any): VisitorLog => ({
+export const mapVisitorLogFromDb = (v: DbRecord): VisitorLog => ({
   id: v.id,
   city: v.city,
   ip: v.ip,

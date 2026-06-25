@@ -16,7 +16,7 @@ export default function UsagePage() {
           </p>
           <h3 style={{ color: 'var(--color-accent)', marginTop: '2rem', marginBottom: '0.8rem', fontSize: '1.3rem' }}>1. Fikri Mülkiyet</h3>
           <p style={{ opacity: 0.85, marginBottom: '1rem' }}>
-            Bu web sitesinde yer alan tasarımlar, logo, metinler, görseller, fotoğraf albümleri ve kodlamalar Lale Perde'ye aittir. Yazılı izin olmaksızın kısmen veya tamamen kopyalanması, dağıtılması ve ticari amaçlarla kullanılması yasaktır.
+            Bu web sitesinde yer alan tasarımlar, logo, metinler, görseller, fotoğraf albümleri ve kodlamalar Lale Perde&apos;ye aittir. Yazılı izin olmaksızın kısmen veya tamamen kopyalanması, dağıtılması ve ticari amaçlarla kullanılması yasaktır.
           </p>
           <h3 style={{ color: 'var(--color-accent)', marginTop: '2rem', marginBottom: '0.8rem', fontSize: '1.3rem' }}>2. Hizmet Şartları</h3>
           <p style={{ opacity: 0.85, marginBottom: '1rem' }}>

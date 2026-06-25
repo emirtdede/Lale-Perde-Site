@@ -5,6 +5,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useDb } from '../../context/DbContext';
 import { supabase } from '../../lib/supabaseClient';
 import { useGoogleAds } from '../../context/GoogleAdsContext';
+import { submitContactForm } from '../actions/contactActions';
 
 export default function IletisimPage() {
   const { t, language } = useLanguage();
@@ -42,19 +43,19 @@ export default function IletisimPage() {
     // Track Google Ads Conversion
     trackConversion('contact');
 
-    const formspreeUrl = 'https://formspree.io/f/xkolnkpg';
-
-    await addInboxMessage({
+    const result = await submitContactForm({
       type: 'lead',
       name,
       email,
       phone,
       subject: `İletişim Talebi: ${contactSubject}`,
       message: message || `${contactSubject} hakkında bilgi talebi.`,
-      isRead: false,
-      isResolved: false,
-      isArchived: false,
+      formId: 'xkolnkpg'
     });
+
+    if (result.error) {
+      console.warn('Form submission failed:', result.error);
+    }
 
     if (sessionTrackId) {
       const res = await supabase
@@ -64,16 +65,6 @@ export default function IletisimPage() {
       if (res.error) {
         console.warn('Failed to log form interaction completion:', res.error);
       }
-    }
-
-    try {
-      await fetch(formspreeUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, phone, email, subject: contactSubject, message })
-      });
-    } catch (err) {
-      console.warn('Formspree submit failed:', err);
     }
 
     setTimeout(() => {

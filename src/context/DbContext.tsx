@@ -2,6 +2,10 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { supabase } from '../lib/supabaseClient';
+import { addProductAction, updateProductAction, deleteProductAction } from '../app/admin/actions/productActions';
+import { addCategoryAction, updateCategoryAction, deleteCategoryAction, addCurtainTypeAction, updateCurtainTypeAction, deleteCurtainTypeAction, addFabricTypeAction, updateFabricTypeAction, deleteFabricTypeAction, addMountingTypeAction, updateMountingTypeAction, deleteMountingTypeAction } from '../app/admin/actions/categoryActions';
+import { updateSettingsAction, updateHomeContentAction } from '../app/admin/actions/settingsActions';
+import { addServiceAction, updateServiceAction, deleteServiceAction, addGuideAction, updateGuideAction, deleteGuideAction, addCampaignAction, updateCampaignAction, deleteCampaignAction, updateInboxMessageAction } from '../app/admin/actions/contentActions';
 import {
   Product,
   Category,
@@ -172,6 +176,9 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [searchLogs, setSearchLogs] = useState<SearchLog[]>([]);
   const [visitorLogs, setVisitorLogs] = useState<VisitorLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [servicesFetched, setServicesFetched] = useState(false);
+  const [guidesFetched, setGuidesFetched] = useState(false);
+  const [campaignsFetched, setCampaignsFetched] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -213,24 +220,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   
-  const adminDbMutate = async (table: string, action: 'insert' | 'update' | 'delete', data?: any, id?: string, eqField?: string, eqValue?: any) => {
-    try {
-      const response = await fetch('/api/admin/db-proxy', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ table, action, data, id, eqField, eqValue })
-      });
-      const result = await response.json();
-      if (!response.ok || result.error) {
-        console.warn('DB Proxy Error:', result.error);
-        return { error: result.error, data: null };
-      }
-      return { error: null, data: result.data };
-    } catch (err: any) {
-      console.warn('Network Error:', err.message || err);
-      return { error: err, data: null };
-    }
-  };
+
 
   useEffect(() => {
     fetchData();
@@ -238,21 +228,24 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // LAZY FETCHES
   const fetchServicesLazy = async () => {
-    if (services.length > 0) return; // Already fetched
+    if (servicesFetched) return;
     const { data } = await supabase.from('services').select('*');
     if (data) setServices(data.map(mapServiceFromDb));
+    setServicesFetched(true);
   };
 
   const fetchGuidesLazy = async () => {
-    if (guides.length > 0) return;
+    if (guidesFetched) return;
     const { data } = await supabase.from('guides').select('*');
     if (data) setGuides(data.map(mapGuideFromDb));
+    setGuidesFetched(true);
   };
 
   const fetchCampaignsLazy = async () => {
-    if (campaigns.length > 0) return;
+    if (campaignsFetched) return;
     const { data } = await supabase.from('campaigns').select('*');
     if (data) setCampaigns(data.map(mapCampaignFromDb).sort((a, b) => (a.displayOrder || 1) - (b.displayOrder || 1)));
+    setCampaignsFetched(true);
   };
 
   // PAGINATION FETCHES
@@ -296,7 +289,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // PRODUCTS MUTATIONS
   const addProduct = async (p: Omit<Product, 'createdAt' | 'updatedAt'>) => {
-    const { data, error } = await adminDbMutate('products', 'insert', [mapProductToDb(p)]);
+    const { error } = await addProductAction(mapProductToDb(p));
     if (error) {
       console.warn('Error adding product', error);
       return false;
@@ -306,7 +299,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   const updateProduct = async (p: Product) => {
     const dbData = mapProductToDb(p);
-    const { data, error } = await adminDbMutate('products', 'update', dbData, p.id);
+    const { error } = await updateProductAction(p.id, dbData);
     if (error) {
       console.warn('Error updating product', error);
       return false;
@@ -315,7 +308,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const deleteProduct = async (id: string) => {
-    const { error } = await adminDbMutate('products', 'delete', undefined, id);
+    const { error } = await deleteProductAction(id);
     if (error) {
       console.warn('Error deleting product', error);
       return false;
@@ -325,7 +318,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // CATEGORIES MUTATIONS
   const addCategory = async (c: Category) => {
-    const { data, error } = await adminDbMutate('categories', 'insert', [mapCategoryToDb(c)]);
+    const { data, error } = await addCategoryAction(mapCategoryToDb(c));
     if (error) {
       console.warn('Error adding category', error);
       return false;
@@ -337,7 +330,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const updateCategory = async (c: Category) => {
-    const { data, error } = await adminDbMutate('categories', 'update', mapCategoryToDb(c), c.id);
+    const { data, error } = await updateCategoryAction(c.id, mapCategoryToDb(c));
     if (error) {
       console.warn('Error updating category', error);
       return false;
@@ -349,7 +342,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const deleteCategory = async (id: string) => {
-    const { error } = await adminDbMutate('categories', 'delete', undefined, id);
+    const { error } = await deleteCategoryAction(id);
     if (error) {
       console.warn('Error deleting category', error);
       return false;
@@ -360,21 +353,21 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // CURTAIN TYPES MUTATIONS
   const addCurtainType = async (c: Omit<CurtainType, 'id'>) => {
-    const { data, error } = await adminDbMutate('curtain_types', 'insert', [mapCurtainTypeToDb(c as CurtainType)]);
+    const { data, error } = await addCurtainTypeAction(mapCurtainTypeToDb(c as CurtainType));
     if (error) { console.warn('Error adding curtain type', error); return false; }
     if (data && data[0]) setCurtainTypes(prev => [...prev, mapCurtainTypeFromDb(data[0])]);
     return true;
   };
 
   const updateCurtainType = async (c: CurtainType) => {
-    const { data, error } = await adminDbMutate('curtain_types', 'update', mapCurtainTypeToDb(c), c.id);
+    const { data, error } = await updateCurtainTypeAction(c.id, mapCurtainTypeToDb(c));
     if (error) { console.warn('Error updating curtain type', error); return false; }
     if (data && data[0]) setCurtainTypes(prev => prev.map(item => item.id === c.id ? mapCurtainTypeFromDb(data[0]) : item));
     return true;
   };
 
   const deleteCurtainType = async (id: string) => {
-    const { error } = await adminDbMutate('curtain_types', 'delete', undefined, id);
+    const { error } = await deleteCurtainTypeAction(id);
     if (error) { console.warn('Error deleting curtain type', error); return false; }
     setCurtainTypes(prev => prev.filter(item => item.id !== id));
     return true;
@@ -382,21 +375,21 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // FABRIC TYPES MUTATIONS
   const addFabricType = async (f: Omit<FabricType, 'id'>) => {
-    const { data, error } = await adminDbMutate('fabric_types', 'insert', [mapFabricTypeToDb(f as FabricType)]);
+    const { data, error } = await addFabricTypeAction(mapFabricTypeToDb(f as FabricType));
     if (error) { console.warn('Error adding fabric type', error); return false; }
     if (data && data[0]) setFabricTypes(prev => [...prev, mapFabricTypeFromDb(data[0])]);
     return true;
   };
 
   const updateFabricType = async (f: FabricType) => {
-    const { data, error } = await adminDbMutate('fabric_types', 'update', mapFabricTypeToDb(f), f.id);
+    const { data, error } = await updateFabricTypeAction(f.id, mapFabricTypeToDb(f));
     if (error) { console.warn('Error updating fabric type', error); return false; }
     if (data && data[0]) setFabricTypes(prev => prev.map(item => item.id === f.id ? mapFabricTypeFromDb(data[0]) : item));
     return true;
   };
 
   const deleteFabricType = async (id: string) => {
-    const { error } = await adminDbMutate('fabric_types', 'delete', undefined, id);
+    const { error } = await deleteFabricTypeAction(id);
     if (error) { console.warn('Error deleting fabric type', error); return false; }
     setFabricTypes(prev => prev.filter(item => item.id !== id));
     return true;
@@ -404,21 +397,21 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // MOUNTING TYPES MUTATIONS
   const addMountingType = async (m: Omit<MountingType, 'id'>) => {
-    const { data, error } = await adminDbMutate('mounting_types', 'insert', [mapMountingTypeToDb(m as MountingType)]);
+    const { data, error } = await addMountingTypeAction(mapMountingTypeToDb(m as MountingType));
     if (error) { console.warn('Error adding mounting type', error); return false; }
     if (data && data[0]) setMountingTypes(prev => [...prev, mapMountingTypeFromDb(data[0])]);
     return true;
   };
 
   const updateMountingType = async (m: MountingType) => {
-    const { data, error } = await adminDbMutate('mounting_types', 'update', mapMountingTypeToDb(m), m.id);
+    const { data, error } = await updateMountingTypeAction(m.id, mapMountingTypeToDb(m));
     if (error) { console.warn('Error updating mounting type', error); return false; }
     if (data && data[0]) setMountingTypes(prev => prev.map(item => item.id === m.id ? mapMountingTypeFromDb(data[0]) : item));
     return true;
   };
 
   const deleteMountingType = async (id: string) => {
-    const { error } = await adminDbMutate('mounting_types', 'delete', undefined, id);
+    const { error } = await deleteMountingTypeAction(id);
     if (error) { console.warn('Error deleting mounting type', error); return false; }
     setMountingTypes(prev => prev.filter(item => item.id !== id));
     return true;
@@ -426,7 +419,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // SETTINGS MUTATION
   const updateSettings = async (s: SystemSettings) => {
-    const { data, error } = await adminDbMutate('site_settings', 'update', mapSettingsToDb(s), 'main_settings');
+    const { data, error } = await updateSettingsAction(mapSettingsToDb(s));
     if (error) {
       console.warn('Error updating settings', error);
       return false;
@@ -439,7 +432,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // HOME CONTENT MUTATION
   const updateHomeContent = async (h: HomePageContent) => {
-    const { data, error } = await adminDbMutate('home_page_content', 'update', mapHomeContentToDb(h), 'home_content');
+    const { data, error } = await updateHomeContentAction(mapHomeContentToDb(h));
     if (error) {
       console.warn('Error updating home content', error);
       return false;
@@ -452,7 +445,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // SERVICES MUTATIONS
   const addService = async (s: ServiceItem) => {
-    const { data, error } = await adminDbMutate('services', 'insert', [mapServiceToDb(s)]);
+    const { data, error } = await addServiceAction(mapServiceToDb(s));
     if (error) {
       console.warn('Error adding service', error);
       return false;
@@ -464,7 +457,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const updateService = async (s: ServiceItem) => {
-    const { data, error } = await adminDbMutate('services', 'update', mapServiceToDb(s), s.id);
+    const { data, error } = await updateServiceAction(s.id, mapServiceToDb(s));
     if (error) {
       console.warn('Error updating service', error);
       return false;
@@ -476,7 +469,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const deleteService = async (id: string) => {
-    const { error } = await adminDbMutate('services', 'delete', undefined, id);
+    const { error } = await deleteServiceAction(id);
     if (error) {
       console.warn('Error deleting service', error);
       return false;
@@ -487,7 +480,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // GUIDES MUTATIONS
   const addGuide = async (g: GuideItem) => {
-    const { data, error } = await adminDbMutate('guides', 'insert', [mapGuideToDb(g)]);
+    const { data, error } = await addGuideAction(mapGuideToDb(g));
     if (error) {
       console.warn('Error adding guide', error);
       return false;
@@ -499,7 +492,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const updateGuide = async (g: GuideItem) => {
-    const { data, error } = await adminDbMutate('guides', 'update', mapGuideToDb(g), g.id);
+    const { data, error } = await updateGuideAction(g.id, mapGuideToDb(g));
     if (error) {
       console.warn('Error updating guide', error);
       return false;
@@ -511,7 +504,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const deleteGuide = async (id: string) => {
-    const { error } = await adminDbMutate('guides', 'delete', undefined, id);
+    const { error } = await deleteGuideAction(id);
     if (error) {
       console.warn('Error deleting guide', error);
       return false;
@@ -522,7 +515,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
 
   // CAMPAIGNS MUTATIONS
   const addCampaign = async (c: Campaign) => {
-    const { data, error } = await adminDbMutate('campaigns', 'insert', [mapCampaignToDb(c)]);
+    const { data, error } = await addCampaignAction(mapCampaignToDb(c));
     if (error) {
       console.warn('Error adding campaign', error);
       return false;
@@ -534,7 +527,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const updateCampaign = async (c: Campaign) => {
-    const { data, error } = await adminDbMutate('campaigns', 'update', mapCampaignToDb(c), c.id);
+    const { data, error } = await updateCampaignAction(c.id, mapCampaignToDb(c));
     if (error) {
       console.warn('Error updating campaign', error);
       return false;
@@ -546,7 +539,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const deleteCampaign = async (id: string) => {
-    const { error } = await adminDbMutate('campaigns', 'delete', undefined, id);
+    const { error } = await deleteCampaignAction(id);
     if (error) {
       console.warn('Error deleting campaign', error);
       return false;
@@ -571,7 +564,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   };
 
   const updateInboxMessage = async (m: InboxMessage) => {
-    const { data, error } = await adminDbMutate('inbox', 'update', mapInboxToDb(m), m.id);
+    const { data, error } = await updateInboxMessageAction(m.id, mapInboxToDb(m));
     if (error) {
       console.warn('Error updating inbox message', error);
       return false;

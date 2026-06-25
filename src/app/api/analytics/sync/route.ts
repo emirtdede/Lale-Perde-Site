@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import crypto from 'crypto';
-// @ts-ignore
+// @ts-expect-error
 import { Client } from 'pg';
 import { createClient } from '@supabase/supabase-js';
 

@@ -424,6 +424,12 @@ export default function ProductsTab() {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const showError = (msg: string) => {
+    setError(msg);
+    setTimeout(() => setError(null), 4000);
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -477,7 +483,7 @@ export default function ProductsTab() {
 
   const handleAddColor = () => {
     if (!newColorTr.trim() || !newColorEn.trim()) {
-      alert(t('admin.products.alerts.fillColorNames'));
+      showError(t('admin.products.alerts.fillColorNames'));
       return;
     }
     const colorObj = {
@@ -598,7 +604,7 @@ export default function ProductsTab() {
       setCropQueue(prev => [...prev, ...items]);
     } catch (err) {
       console.warn('Error reading files:', err);
-      alert(t('admin.products.alerts.fileReadError'));
+      showError(t('admin.products.alerts.fileReadError'));
     } finally {
       setIsConverting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
@@ -626,7 +632,7 @@ export default function ProductsTab() {
         }));
       }
     } catch (error) {
-      alert(t('admin.products.alerts.fileReadError'));
+      showError(t('admin.products.alerts.fileReadError'));
     } finally {
       setIsConverting(false);
       setCropQueue(prev => prev.slice(1));
@@ -685,6 +691,18 @@ export default function ProductsTab() {
           {t('admin.products.addNew')}
         </button>,
         portalTarget
+      )}
+
+      {error && (
+        <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#DC2626', padding: '1rem', borderRadius: '4px', border: '1px solid #DC2626', marginBottom: '1.5rem' }}>
+          {error}
+        </div>
+      )}
+
+      {saveSuccess && (
+        <div style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#10B981', padding: '1rem', borderRadius: '4px', border: '1px solid #10B981', marginBottom: '1.5rem' }}>
+          Ürün başarıyla kaydedildi!
+        </div>
       )}
 
       {editingId ? (

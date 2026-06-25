@@ -7,8 +7,11 @@ import ConsentBanner from '../components/ConsentBanner';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
 export const metadata: Metadata = {
-  title: 'Lale Perde • Modern Luxury & Scandinavian Minimalism',
+  title: 'Lale Perde',
   description: 'Lale Perde - Evinize zarafet katan modern lüks perde tasarımları. Tül, fon, stor ve akıllı motorlu perde çözümleriyle İskandinav minimalizmi ve editorial estetiği bir araya getiren premium koleksiyonlar.',
+  icons: {
+    icon: '/favicon.svg',
+  }
 };
 
 export default function RootLayout({
@@ -27,7 +30,9 @@ export default function RootLayout({
           <Footer />
           <ConsentBanner />
         </Providers>
-        <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID || "G-F8X2E97400"} />
+        {Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID) && (
+          <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID as string} />
+        )}
       </body>
     </html>
   );

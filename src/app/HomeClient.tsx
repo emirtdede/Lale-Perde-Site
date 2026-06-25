@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useLanguage } from '../context/LanguageContext';
 import { useDb } from '../context/DbContext';
 import { useGoogleAds } from '../context/GoogleAdsContext';
+import { submitContactForm } from './actions/contactActions';
 
 const CategoryImageSlideshow = ({ images, fallbackImage, alt }: { images?: string[], fallbackImage: string, alt: string }) => {
   const [currentIdx, setCurrentIdx] = useState(0);
@@ -80,6 +81,7 @@ export default function HomeClient({
   const storyImgRef = useRef<HTMLDivElement>(null);
   const fabricBgRef = useRef<HTMLDivElement>(null);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { addInboxMessage } = useDb();
 
   const categories = initialCategories;
@@ -152,42 +154,50 @@ export default function HomeClient({
 
   useEffect(() => {
     window.addEventListener('resize', repositionBulbGlow);
-    setTimeout(repositionBulbGlow, 100);
+    const timeoutId = setTimeout(repositionBulbGlow, 100);
 
     // Parallax logic
+    let ticking = false;
     const handleScroll = () => {
-      // Parallax for Hero Background
-      if (heroBgRef.current) {
-        const heroOffset = window.scrollY * 0.4;
-        heroBgRef.current.style.transform = `translateY(${heroOffset}px)`;
-      }
-
-      // Parallax for Story Image
-      if (storyImgRef.current) {
-        const storyContainer = storyImgRef.current.parentElement;
-        if (storyContainer) {
-          const rect = storyContainer.getBoundingClientRect();
-          if (rect.top < window.innerHeight && rect.bottom > 0) {
-            const scrolledRatio = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-            const offset = (scrolledRatio - 0.5) * 100; // range from -50px to 50px
-            storyImgRef.current.style.transform = `translateY(${offset}px) scale(1.1)`;
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          // Parallax for Hero Background
+          if (heroBgRef.current) {
+            const heroOffset = window.scrollY * 0.4;
+            heroBgRef.current.style.transform = `translateY(${heroOffset}px)`;
           }
-        }
-      }
 
-      // Parallax for Fabric Showcase Background
-      if (fabricBgRef.current) {
-        const rect = fabricBgRef.current.parentElement?.getBoundingClientRect();
-        if (rect && rect.top < window.innerHeight && rect.bottom > 0) {
-          const scrolledRatio = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-          const offset = (scrolledRatio - 0.5) * 150;
-          fabricBgRef.current.style.transform = `translateY(${offset}px)`;
-        }
+          // Parallax for Story Image
+          if (storyImgRef.current) {
+            const storyContainer = storyImgRef.current.parentElement;
+            if (storyContainer) {
+              const rect = storyContainer.getBoundingClientRect();
+              if (rect.top < window.innerHeight && rect.bottom > 0) {
+                const scrolledRatio = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+                const offset = (scrolledRatio - 0.5) * 100; // range from -50px to 50px
+                storyImgRef.current.style.transform = `translateY(${offset}px) scale(1.1)`;
+              }
+            }
+          }
+
+          // Parallax for Fabric Showcase Background
+          if (fabricBgRef.current) {
+            const rect = fabricBgRef.current.parentElement?.getBoundingClientRect();
+            if (rect && rect.top < window.innerHeight && rect.bottom > 0) {
+              const scrolledRatio = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
+              const offset = (scrolledRatio - 0.5) * 150;
+              fabricBgRef.current.style.transform = `translateY(${offset}px)`;
+            }
+          }
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
+      clearTimeout(timeoutId);
       window.removeEventListener('resize', repositionBulbGlow);
       window.removeEventListener('scroll', handleScroll);
     };
@@ -201,39 +211,17 @@ export default function HomeClient({
     // Track Google Ads Conversion
     trackConversion('contact');
 
-    const formspreeUrl = 'https://formspree.io/f/xyzyqobd';
-
-    await addInboxMessage({
+    const result = await submitContactForm({
       type: 'appointment',
       name,
       email,
       phone,
       subject: `${service} İçin Keşif Randevusu`,
-      message: `Ev Adresi: ${address}\nTercih Edilen Keşif Tarihi: ${appointmentDate}\nTercih Edilen Keşif Saati: ${appointmentTime}`,
-      isRead: false,
-      isResolved: false,
-      isArchived: false,
-      appointmentDate,
-      appointmentTime,
-      address,
+      message: `Ev Adresi: ${address}\nTercih Edilen Keşif Tarihi: ${appointmentDate}\nTercih Edilen Keşif Saati: ${appointmentTime}`
     });
 
-    try {
-      await fetch(formspreeUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          name, 
-          phone, 
-          email, 
-          service, 
-          appointmentDate, 
-          appointmentTime, 
-          address 
-        })
-      });
-    } catch (err) {
-      console.warn('Formspree submit failed:', err);
+    if (result.error) {
+      console.warn('Form submission failed:', result.error);
     }
 
     setTimeout(() => {
