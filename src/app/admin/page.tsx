@@ -45,8 +45,9 @@ const CampaignsTab = dynamic(() => lazyRetry(() => import('./components/Campaign
 const VisitorsTab = dynamic(() => lazyRetry(() => import('./components/VisitorsTab'))(), { ssr: false, loading: LoadingTab });
 const SecurityTab = dynamic(() => lazyRetry(() => import('./components/SecurityTab'))(), { ssr: false, loading: LoadingTab });
 const GoogleAdsTab = dynamic(() => lazyRetry(() => import('./components/GoogleAdsTab'))(), { ssr: false, loading: LoadingTab });
+const DynamicCommentsTab = dynamic(() => lazyRetry(() => import('./components/CommentsTab'))(), { ssr: false, loading: LoadingTab });
 
-export type AdminTab = 'dashboard' | 'homeContent' | 'categories' | 'products' | 'services' | 'guides' | 'contactInfo' | 'inbox' | 'campaigns' | 'visitors' | 'security' | 'googleAds';
+export type AdminTab = 'dashboard' | 'homeContent' | 'categories' | 'products' | 'services' | 'guides' | 'contactInfo' | 'inbox' | 'campaigns' | 'visitors' | 'security' | 'googleAds' | 'comments';
 
 interface SearchResultItem {
   id: string;
@@ -132,7 +133,7 @@ export default function AdminPage() {
       // Load tab from URL query params
       const params = new URLSearchParams(window.location.search);
       const tabParam = params.get('tab') as AdminTab;
-      const validTabs: AdminTab[] = ['dashboard', 'homeContent', 'categories', 'products', 'services', 'guides', 'contactInfo', 'inbox', 'campaigns', 'visitors', 'security', 'googleAds'];
+      const validTabs: AdminTab[] = ['dashboard', 'homeContent', 'categories', 'products', 'services', 'guides', 'contactInfo', 'inbox', 'campaigns', 'visitors', 'security', 'googleAds', 'comments'];
       if (tabParam && validTabs.includes(tabParam)) {
         setActiveTab(tabParam);
       }
@@ -580,6 +581,7 @@ export default function AdminPage() {
                 visitors: t('admin.sidebar.visitors') || 'Site Visitors',
                 security: t('admin.sidebar.security') || 'Privacy and Security',
                 googleAds: t('admin.sidebar.googleAds') || 'Google Ads Integration',
+                comments: language === 'tr' ? 'Yorum Yönetimi' : 'Comment Management',
               }[activeTab]}
             </h2>
 
@@ -799,6 +801,7 @@ export default function AdminPage() {
               {activeTab === 'visitors' && <VisitorsTab />}
               {activeTab === 'security' && <SecurityTab />}
               {activeTab === 'googleAds' && <GoogleAdsTab />}
+              {activeTab === 'comments' && <DynamicCommentsTab />}
             </div>
           )}
         </main>

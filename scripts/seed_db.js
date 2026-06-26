@@ -207,8 +207,8 @@ const defaultHomePageContent = {
   craft_desc_en: 'Our premium fabrics woven from the finest threads take a special form for your space in master hands.',
   collections_title_tr: 'Seçkin Koleksiyonlarımız',
   collections_title_en: 'Our Selected Collections',
-  collections_desc_tr: 'Yaşam alanlarınızı dönüştürmek için özenle seçilmiş, en çok tercih edilen tasarımlarımız.',
-  collections_desc_en: 'Our most preferred designs, carefully selected to transform your living spaces.',
+  collections_desc_tr: 'Yaşam alanınıza ilham verecek favori tasarımlarımızı keşfedin.',
+  collections_desc_en: 'Discover our favorite designs to inspire your living space.',
   featured_category_ids: []
 };
 
@@ -226,6 +226,45 @@ const defaultGuides = [
 
 const defaultCampaigns = [
   { id: 'cmp-1', title_tr: 'Yaz Koleksiyonu İndirimi', title_en: 'Summer Collection Sale', description_tr: 'Tüm tül perdelerde %20 indirim fırsatı.', description_en: '20% discount on all sheer curtains.', is_active: true, start_date: '2026-06-01', end_date: '2026-08-31' }
+];
+
+const defaultComments = [
+  {
+    id: 'f1',
+    author: 'Selim Aksoy',
+    content_tr: 'Salonumuz için tül ve fon perde siparişi vermiştik. Keten liflerinin dokusu harika, işçilik kusursuz.',
+    content_en: 'We ordered sheer and background curtains for our living room. The linen texture is amazing, craftsmanship is perfect.',
+    rating: 5,
+    is_active: true,
+    display_order: 1
+  },
+  {
+    id: 'f2',
+    author: 'Ayla Yılmaz',
+    content_tr: 'Ölçü sihirbazı sayesinde pencerelerimizin net ölçülerini aldık, gelen perdeler tam milimetrik oturdu.',
+    content_en: 'Thanks to the measuring wizard we got precise measurements, the curtains fit down to the millimeter.',
+    rating: 5,
+    is_active: true,
+    display_order: 2
+  },
+  {
+    id: 'f3',
+    author: 'Caner Demir',
+    content_tr: 'Motorlu perde sistemleri akıllı evimize mükemmel entegre oldu. Sessiz ve son derece lüks.',
+    content_en: 'Motorized curtain systems integrated perfectly with our smart home. Silent and highly luxurious.',
+    rating: 5,
+    is_active: true,
+    display_order: 3
+  },
+  {
+    id: 'f4',
+    author: 'Melis Şen',
+    content_tr: 'Showroomdaki ilgi ve evde ücretsiz keşif hizmetinden çok memnun kaldık. Teşekkürler Lale Perde.',
+    content_en: 'Highly satisfied with the showroom service and free in-house discovery. Thank you Lale Perde.',
+    rating: 5,
+    is_active: true,
+    display_order: 4
+  }
 ];
 
 async function seed() {
@@ -277,6 +316,11 @@ async function seed() {
   const { error: campErr } = await supabase.from('campaigns').insert(defaultCampaigns);
   if (campErr) console.error("Error seeding campaigns:", campErr.message);
   else console.log("Seeded campaigns successfully");
+
+  // Seed Comments
+  const { error: commentErr } = await supabase.from('comments').insert(defaultComments);
+  if (commentErr) console.error("Error seeding comments:", commentErr.message);
+  else console.log("Seeded comments successfully");
 
   console.log("Seeding completed.");
 }

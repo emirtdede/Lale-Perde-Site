@@ -8,56 +8,24 @@ import { useLanguage } from '../context/LanguageContext';
 import { useDb } from '../context/DbContext';
 import { useGoogleAds } from '../context/GoogleAdsContext';
 import { submitContactForm } from './actions/contactActions';
-
-const CategoryImageSlideshow = ({ images, fallbackImage, alt }: { images?: string[], fallbackImage: string, alt: string }) => {
-  const [currentIdx, setCurrentIdx] = useState(0);
-  const slideImages = React.useMemo(() => {
-    return images && images.length > 0 ? images : [fallbackImage];
-  }, [images, fallbackImage]);
-
-  useEffect(() => {
-    if (slideImages.length <= 1) return;
-    const interval = setInterval(() => {
-      setCurrentIdx((prev) => (prev + 1) % slideImages.length);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [slideImages]);
-
-  return (
-    <div className="collection-img" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', overflow: 'hidden' }}>
-      {slideImages.map((img, index) => (
-        <div
-          key={index}
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100%',
-            backgroundImage: `url(${img})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            opacity: index === currentIdx ? 1 : 0,
-            transition: 'opacity 1.2s ease-in-out',
-            zIndex: index === currentIdx ? 1 : 0,
-          }}
-          aria-label={alt}
-        />
-      ))}
-    </div>
-  );
-};
+import ParticlesLogo from '../components/ParticlesLogo';
+import CollectionsCarousel from '../components/CollectionsCarousel';
+import MarqueeComments from '../components/MarqueeComments';
+import MeasurePromoVisual from '../components/MeasurePromoVisual';
+import LineDivider from '../components/LineDivider';
 
 export default function HomeClient({ 
   initialCategories, 
   initialServices, 
   initialSettings, 
-  initialHomeContent 
+  initialHomeContent,
+  initialProducts
 }: { 
   initialCategories: any[]; 
   initialServices: any[]; 
   initialSettings: any; 
   initialHomeContent: any; 
+  initialProducts: any[];
 }) {
   const { t, language } = useLanguage();
   const router = useRouter();
@@ -76,113 +44,104 @@ export default function HomeClient({
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const { fetchCommentsLazy, comments, homeContent: dbHomeContent } = useDb();
+
+  const categories = initialCategories;
+  const services = initialServices && initialServices.length > 0 ? initialServices : [
+    {
+      id: 'work-1',
+      titleTr: 'Zekeriyaköy Villa Projesi',
+      titleEn: 'Zekeriyaköy Villa Project',
+      descriptionTr: 'Salon ve yatak odalarında keten tül ve motorlu kadife fon perde uygulamaları.',
+      descriptionEn: 'Linen tulle and motorized velvet drapery applications in living room and bedrooms.',
+      image: '/assets/scandi.png',
+      focalX: 50,
+      focalY: 45
+    },
+    {
+      id: 'work-2',
+      titleTr: 'Göktürk Rezidans Penthouse',
+      titleEn: 'Göktürk Residence Penthouse',
+      descriptionTr: 'Minimalist dekorasyona uygun ahşap jaluzi ve modern dalga tül perdeler.',
+      descriptionEn: 'Wooden venetian blinds and modern wave tulle curtains matching minimalist decor.',
+      image: '/assets/fabric.png',
+      focalX: 50,
+      focalY: 50
+    },
+    {
+      id: 'work-3',
+      titleTr: 'Tarabya Yalı Dairesi',
+      titleEn: 'Tarabya Bosphorus Apartment',
+      descriptionTr: 'Boğaz manzarasına eşlik eden premium ipek fon perdeler ve motorlu stor sistemler.',
+      descriptionEn: 'Premium silk draperies and motorized roller systems accompanying the Bosphorus view.',
+      image: '/assets/hero.png',
+      focalX: 50,
+      focalY: 60
+    },
+    {
+      id: 'work-4',
+      titleTr: 'Bebek Sahil Evi',
+      titleEn: 'Bebek Coastal House',
+      descriptionTr: 'Lüks salon alanı için ipek keten tül ve modern katlamalı perde tasarımları.',
+      descriptionEn: 'Silk-linen tulle and modern roman shade designs for the luxury living area.',
+      image: '/assets/fabric.png',
+      focalX: 50,
+      focalY: 50
+    },
+    {
+      id: 'work-5',
+      titleTr: 'Kemerburgaz Konakları',
+      titleEn: 'Kemerburgaz Mansions',
+      descriptionTr: 'Yüksek tavanlı salonlar için akustik özellikli kadife fon perdeler.',
+      descriptionEn: 'Acoustic velvet draperies tailored for high-ceiling living spaces.',
+      image: '/assets/scandi.png',
+      focalX: 50,
+      focalY: 50
+    },
+    {
+      id: 'work-6',
+      titleTr: 'Şişli Modern Ofis',
+      titleEn: 'Şişli Modern Office',
+      descriptionTr: 'Çalışma alanları için motorlu dikey stor ve jaluzi perde otomasyonu.',
+      descriptionEn: 'Motorized vertical roller and venetian blind automation systems for work environments.',
+      image: '/assets/hero.png',
+      focalX: 50,
+      focalY: 50
+    }
+  ];
+  const settings = initialSettings;
+  const homeContent = dbHomeContent || initialHomeContent;
+
+  // Lightbox Zoom & Pan states
+  const [activeLightboxImage, setActiveLightboxImage] = useState<string | null>(null);
+  const [lightboxZoom, setLightboxZoom] = useState(1);
+  const [lightboxOffset, setLightboxOffset] = useState({ x: 0, y: 0 });
+  const [isLightboxDragging, setIsLightboxDragging] = useState(false);
+  const lightboxDragStart = useRef({ x: 0, y: 0 });
+
+  useEffect(() => {
+    fetchCommentsLazy?.();
+  }, [fetchCommentsLazy]);
+
+  // Measure wizard Card 3D tilt coordinate state
+  const [wizardCoords, setWizardCoords] = useState({ x: 0, y: 0 });
+  const [isWizardHovered, setIsWizardHovered] = useState(false);
+
   // Parallax elements references
   const heroRef = useRef<HTMLDivElement>(null);
   const heroBgRef = useRef<HTMLDivElement>(null);
-  const bulbGlowRef = useRef<HTMLDivElement>(null);
-  const storyImgRef = useRef<HTMLDivElement>(null);
   const fabricBgRef = useRef<HTMLDivElement>(null);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { addInboxMessage } = useDb();
-
-  const categories = initialCategories;
-  const services = initialServices;
-  const settings = initialSettings;
-  const homeContent = initialHomeContent;
-
-  // Load initial settings, categories, home content, and services
   useEffect(() => {
-    if (services.length > 0) {
-      setService(services[0].titleTr);
-    }
-
-    // Handle service query parameter to auto-select in form
-    if (typeof window !== 'undefined') {
-      const params = new URLSearchParams(window.location.search);
-      const queryService = params.get('service');
-      if (queryService) {
-        // Find if it matches service id, titleTr, or titleEn
-        const matched = services.find((s: any) => 
-          s.id === queryService || 
-          s.titleTr === queryService || 
-          s.titleEn === queryService
-        );
-        if (matched) {
-          setService(matched.titleTr);
-        }
-      }
-    }
-  }, [services]);
-
-  // Bulb positioning logic
-  const bulbOrigX = 0.743;
-  const bulbOrigY = 0.298;
-
-  const repositionBulbGlow = () => {
-    if (!heroRef.current || !heroBgRef.current || !bulbGlowRef.current) return;
-
-    const bgWidth = heroRef.current.clientWidth;
-    const bgHeight = heroRef.current.clientHeight * 1.2; // 120% height from CSS
-
-    const imgRatio = 1.0; // Square original image ratio
-    const containerRatio = bgWidth / bgHeight;
-
-    let renderedWidth, renderedHeight;
-    let offsetLeft = 0;
-    let offsetTop = 0;
-
-    if (containerRatio > imgRatio) {
-      renderedWidth = bgWidth;
-      renderedHeight = bgWidth / imgRatio;
-      offsetTop = (bgHeight - renderedHeight) / 2;
-    } else {
-      renderedHeight = bgHeight;
-      renderedWidth = bgHeight * imgRatio;
-      offsetLeft = (bgWidth - renderedWidth) / 2;
-    }
-
-    const bulbPixelX = offsetLeft + (bulbOrigX * renderedWidth);
-    const bulbPixelY = offsetTop + (bulbOrigY * renderedHeight);
-
-    // Apply values to elements
-    bulbGlowRef.current.style.left = `${bulbPixelX}px`;
-    bulbGlowRef.current.style.top = `${bulbPixelY}px`;
-
-    // Pass custom properties to CSS so glow cast aligns in %
-    heroBgRef.current.style.setProperty('--bulb-x', `${(bulbPixelX / bgWidth) * 100}%`);
-    heroBgRef.current.style.setProperty('--bulb-y', `${(bulbPixelY / bgHeight) * 100}%`);
-  };
-
-  useEffect(() => {
-    window.addEventListener('resize', repositionBulbGlow);
-    const timeoutId = setTimeout(repositionBulbGlow, 100);
-
-    // Parallax logic
     let ticking = false;
     const handleScroll = () => {
       if (!ticking) {
         window.requestAnimationFrame(() => {
-          // Parallax for Hero Background
           if (heroBgRef.current) {
             const heroOffset = window.scrollY * 0.4;
             heroBgRef.current.style.transform = `translateY(${heroOffset}px)`;
           }
 
-          // Parallax for Story Image
-          if (storyImgRef.current) {
-            const storyContainer = storyImgRef.current.parentElement;
-            if (storyContainer) {
-              const rect = storyContainer.getBoundingClientRect();
-              if (rect.top < window.innerHeight && rect.bottom > 0) {
-                const scrolledRatio = (window.innerHeight - rect.top) / (window.innerHeight + rect.height);
-                const offset = (scrolledRatio - 0.5) * 100; // range from -50px to 50px
-                storyImgRef.current.style.transform = `translateY(${offset}px) scale(1.1)`;
-              }
-            }
-          }
-
-          // Parallax for Fabric Showcase Background
           if (fabricBgRef.current) {
             const rect = fabricBgRef.current.parentElement?.getBoundingClientRect();
             if (rect && rect.top < window.innerHeight && rect.bottom > 0) {
@@ -199,18 +158,15 @@ export default function HomeClient({
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
-      clearTimeout(timeoutId);
-      window.removeEventListener('resize', repositionBulbGlow);
       window.removeEventListener('scroll', handleScroll);
     };
   }, [categories]);
 
-  // Appointment Submission
+  // Appointment Form Submission
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    // Track Google Ads Conversion
     trackConversion('contact');
 
     const result = await submitContactForm({
@@ -238,65 +194,101 @@ export default function HomeClient({
     }, 1200);
   };
 
-  const particles = [
-    { x: '-35px', y: '-45px', delay: '0s', size: '3px' },
-    { x: '45px', y: '-30px', delay: '1.5s', size: '2px' },
-    { x: '-55px', y: '30px', delay: '0.8s', size: '4px' },
-    { x: '35px', y: '55px', delay: '2.2s', size: '2px' },
-    { x: '-15px', y: '65px', delay: '3s', size: '3px' },
-    { x: '60px', y: '15px', delay: '1.2s', size: '4px' },
-    { x: '-50px', y: '-20px', delay: '2.7s', size: '2px' },
-  ];
+  // Helper for tracking dynamic cursor coordinates on Measure wizard glass visual
+  const handleWizardMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1; // Range -1 to 1
+    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1; // Range -1 to 1
+    setWizardCoords({ x, y });
+  };
+
+  // Helper card style calculation for works gallery tilt
+  const [galleryTilt, setGalleryTilt] = useState<{ [key: string]: { x: number; y: number } }>({});
+  
+  const handleGalleryMouseMove = (id: string, e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+    setGalleryTilt((prev) => ({ ...prev, [id]: { x, y } }));
+  };
+
+  const handleGalleryMouseLeave = (id: string) => {
+    setGalleryTilt((prev) => ({ ...prev, [id]: { x: 0, y: 0 } }));
+  };
+
+  // Lightbox Handlers
+  const handleLightboxMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsLightboxDragging(true);
+    lightboxDragStart.current = { x: e.clientX - lightboxOffset.x, y: e.clientY - lightboxOffset.y };
+  };
+
+  const handleLightboxMouseMove = (e: React.MouseEvent) => {
+    if (!isLightboxDragging) return;
+    setLightboxOffset({
+      x: e.clientX - lightboxDragStart.current.x,
+      y: e.clientY - lightboxDragStart.current.y
+    });
+  };
+
+  const handleLightboxMouseUp = () => {
+    setIsLightboxDragging(false);
+  };
+
+  const zoomIn = () => setLightboxZoom(prev => Math.min(prev + 0.25, 4));
+  const zoomOut = () => setLightboxZoom(prev => Math.max(prev - 0.25, 0.5));
+  const resetZoom = () => {
+    setLightboxZoom(1);
+    setLightboxOffset({ x: 0, y: 0 });
+  };
+
+  const logoConfig = settings?.logoConfig || {
+    theme: 'gold',
+    interactionRadius: 30,
+    returnSpeed: 0.001,
+    friction: 0.86,
+    scatterPower: 30
+  };
 
   return (
     <>
-      {/* Parallax Hero Section */}
-      <section id="hero" className={`hero ${isNight ? 'night' : ''}`} ref={heroRef}>
+      {/* 1. HERO SECTION WITH FIXED VIDEO BACKGROUND */}
+      <section id="hero" className="hero" ref={heroRef} style={{ position: 'relative', overflow: 'hidden' }}>
         <div 
           className="hero-bg" 
           id="hero-bg" 
           ref={heroBgRef}
+          style={{ position: 'absolute', inset: 0 }}
         >
-          <Image 
-            src="/assets/hero.png" 
-            alt="Lale Perde" 
-            fill 
-            priority
-            quality={90}
-            style={{ objectFit: 'cover', zIndex: -1 }} 
+          {/* WebM Video background container */}
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', objectFit: 'cover', zIndex: -2 }}
+          >
+            <source src="/assets/videos/hero-background.webm" type="video/webm" />
+          </video>
+          {/* Overlay at 60% opacity with Navy Brand color #1A2E40 */}
+          <div 
+            style={{ 
+              position: 'absolute', 
+              inset: 0, 
+              backgroundColor: '#1A2E40', 
+              opacity: 0.60, 
+              zIndex: -1 
+            }} 
           />
-          <div style={{ position: 'absolute', inset: 0, backgroundImage: 'linear-gradient(to bottom, rgba(26, 46, 64, 0.4), rgba(26, 46, 64, 0.7))', zIndex: -1 }} />
-          <div className="bulb-glow" id="bulb-glow" ref={bulbGlowRef}>
-            <div className="particles-container">
-              {particles.map((p, idx) => (
-                <div 
-                  key={idx}
-                  className="particle" 
-                  style={{
-                    '--x': p.x,
-                    '--y': p.y,
-                    '--delay': p.delay,
-                    '--size': p.size
-                  } as React.CSSProperties}
-                />
-              ))}
-            </div>
-          </div>
         </div>
-        <div className="light-overlay" id="light-overlay"></div>
         <div className="hero-content">
           <p className="hero-subtitle">{t('hero.subtitle')}</p>
-          <h1 className="hero-title">{t('hero.title')}: <span>Lale Perde</span></h1>
+          <h1 className="hero-title">{t('hero.title')}:<br /><span>Lale Perde</span></h1>
           <div className="cta-group">
             <Link href="/urunler" className="btn-primary">{t('hero.discoverBtn')}</Link>
             <a href="#randevu" className="btn-outline">{t('hero.appointmentBtn')}</a>
           </div>
-        </div>
-        
-        {/* Cozy Night / Day Switch */}
-        <div className="light-switch" id="light-switch" title="Işığı Aç/Kapat" onClick={() => setIsNight(!isNight)}>
-          <span className="switch-icon">{isNight ? '☾' : '☼'}</span>
-          <span className="switch-text">{isNight ? t('hero.night') : t('hero.day')}</span>
         </div>
 
         <div className="scroll-down">
@@ -305,82 +297,271 @@ export default function HomeClient({
         </div>
       </section>
 
-      {/* Story / Philosophy Section */}
-      <section id="hikayemiz" className="story">
-        <div className="story-img-container reveal active">
-          <div className="story-img" id="story-img" ref={storyImgRef} style={{ position: 'relative', overflow: 'hidden' }}>
-            <Image src="/assets/scandi.png" alt={t('story.title')} fill style={{ objectFit: 'cover' }} />
+      {/* 2. KINETIC LOGO SECTION (PHILOSOPHY) */}
+      <section id="hikayemiz" style={{ padding: '6rem 0', minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--color-neutral)', position: 'relative' }}>
+        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '4rem', alignItems: 'center', width: '100%' }}>
+          
+          {/* Particles logo rendering box without border frame */}
+          <div 
+            style={{ 
+              width: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              position: 'relative'
+            }}
+          >
+            <ParticlesLogo 
+              theme={logoConfig.theme}
+              interactionRadius={logoConfig.interactionRadius}
+              returnSpeed={logoConfig.returnSpeed}
+              friction={logoConfig.friction}
+              scatterPower={logoConfig.scatterPower}
+            />
+          </div>
+
+          <div className="story-content reveal active" style={{ paddingRight: 0 }}>
+            <span className="section-label">{t('story.label')}</span>
+            <h2 className="section-title" style={{ fontFamily: 'var(--font-serif)', fontSize: '2.5rem', marginBottom: '2rem' }}>
+              {homeContent ? (language === 'tr' ? homeContent.philosophyTitleTr : homeContent.philosophyTitleEn) : t('story.title')}
+            </h2>
+            <p className="story-text" style={{ fontSize: '1.05rem', lineHeight: '1.8', opacity: 0.95, fontWeight: 300, marginBottom: '1.5rem' }}>
+              {homeContent ? (language === 'tr' ? homeContent.philosophyDescTr : homeContent.philosophyDescEn) : t('story.text1')}
+            </p>
+            <div className="story-quote story-quote-shimmer" style={{ borderLeft: '3px solid #BD954B', paddingLeft: '1.5rem', margin: '2rem 0', fontStyle: 'italic', fontSize: '1.2rem' }}>
+              {t('story.quote')}
+            </div>
+            <p className="story-text" style={{ fontSize: '1.05rem', lineHeight: '1.8', opacity: 0.95, fontWeight: 300 }}>{t('story.text2')}</p>
           </div>
         </div>
-        <div className="story-content reveal active">
-          <span className="section-label">{t('story.label')}</span>
-          <h2 className="section-title">
-            {homeContent ? (language === 'tr' ? homeContent.philosophyTitleTr : homeContent.philosophyTitleEn) : t('story.title')}
-          </h2>
-          <p className="story-text">
-            {homeContent ? (language === 'tr' ? homeContent.philosophyDescTr : homeContent.philosophyDescEn) : t('story.text1')}
-          </p>
-          <div className="story-quote">{t('story.quote')}</div>
-          <p className="story-text">{t('story.text2')}</p>
+      </section>
+
+      {/* 3. COLLECTIONS (3D WHEEL CAROUSEL) */}
+      <section id="koleksiyonlar" className="collections" style={{ padding: '6rem 0', background: '#0A141D', overflow: 'hidden' }}>
+        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+          <div className="collections-header reveal active" style={{ textAlign: 'center', marginBottom: '4rem' }}>
+            <span className="section-label" style={{ color: '#BD954B', letterSpacing: '2px', display: 'block', marginBottom: '1rem' }}>{t('collections.label')}</span>
+            <h2 className="section-title" style={{ fontFamily: 'var(--font-serif)', fontSize: '2.8rem', color: '#ffffff', marginBottom: '1.5rem' }}>
+              {homeContent ? (language === 'tr' ? homeContent.collectionsTitleTr : homeContent.collectionsTitleEn) : t('collections.title')}
+            </h2>
+            <p className="collections-desc" style={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 300, margin: '0 auto' }}>
+              {homeContent ? (language === 'tr' ? homeContent.collectionsDescTr : homeContent.collectionsDescEn) : t('collections.subtitle')}
+            </p>
+          </div>
+
+          <CollectionsCarousel categories={categories} />
         </div>
       </section>
 
-      {/* Parallax Fabric Showcase */}
-      <section className="fabric-showcase">
-        <div className="fabric-bg" id="fabric-bg" ref={fabricBgRef} style={{ backgroundImage: "linear-gradient(to bottom, rgba(26, 46, 64, 0.6), rgba(26, 46, 64, 0.6)), url('/assets/fabric.png')" }}></div>
-        <div className="fabric-content reveal active">
-          <span className="section-label" style={{ color: 'var(--color-accent)' }}>{t('fabric.label')}</span>
-          <h2 className="fabric-title" style={{ color: 'var(--color-white)' }}>
-            {homeContent ? (language === 'tr' ? homeContent.craftTitleTr : homeContent.craftTitleEn) : t('fabric.title')}
-          </h2>
-          <p style={{ maxWidth: '600px', margin: '0 auto 2rem', fontWeight: 300, fontSize: '1.1rem', color: 'var(--color-white)' }}>
-            {homeContent ? (language === 'tr' ? homeContent.craftDescTr : homeContent.craftDescEn) : t('fabric.desc')}
-          </p>
-          <Link href="/urunler" className="btn-primary">{t('fabric.btn')}</Link>
-        </div>
-      </section>
+      {/* 4. MEASURE WIZARD PROMO SECTION (REDESIGNED LUXURY SEGMENT) */}
+      <section style={{ padding: '7rem 0', background: 'var(--color-neutral)', overflow: 'hidden' }}>
+        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '4rem', alignItems: 'stretch' }}>
+            
+            {/* Left side: Guide and Steps */}
+            <div>
+              <span className="section-label" style={{ color: '#BD954B', letterSpacing: '3px' }}>
+                {language === 'tr' ? 'MİLİMETRİK HESAPLAMA' : 'PRECISE CALCULATION'}
+              </span>
+              <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.8rem', color: 'var(--color-primary)', marginBottom: '1.5rem', lineHeight: '1.2' }}>
+                {language === 'tr' ? 'Akıllı Ölçü Sihirbazı' : 'Smart Measure Wizard'}
+              </h2>
+              <p style={{ color: 'var(--color-text)', fontWeight: 300, fontSize: '1.05rem', lineHeight: '1.7', marginBottom: '2.5rem', opacity: 0.9 }}>
+                {language === 'tr' 
+                  ? 'Kendi pencerelerinizin ölçülerini profesyonel bir hassasiyetle çıkarın. Akıllı sihirbazımız, payları ve pile oranlarını otomatik hesaplayarak sıfır hata garantisi sunar.'
+                  : 'Obtain professional-grade window measurements easily. Our smart calculation engine handles fullness and fabric folds automatically to guarantee a flawless fit.'}
+              </p>
 
-      {/* Collections Grid Section */}
-      <section id="koleksiyonlar" className="collections">
-        <div className="collections-header reveal active">
-          <span className="section-label">{t('collections.label')}</span>
-          <h2 className="section-title" style={{ marginBottom: '1.5rem' }}>
-            {homeContent ? (language === 'tr' ? homeContent.collectionsTitleTr : homeContent.collectionsTitleEn) : t('collections.title')}
-          </h2>
-          <p style={{ color: 'var(--color-primary)', fontWeight: 300 }}>
-            {homeContent ? (language === 'tr' ? homeContent.collectionsDescTr : homeContent.collectionsDescEn) : t('collections.subtitle')}
-          </p>
-        </div>
-
-        <div className="collections-grid">
-          {(() => {
-            const featured = homeContent?.featuredCategoryIds;
-            const displayCategories = featured && featured.length > 0
-              ? categories.filter(c => featured.includes(c.id))
-              : categories;
-            return displayCategories.map((cat, idx) => (
-              <div 
-                key={cat.id} 
-                className="collection-card reveal active" 
-                style={{ transitionDelay: `${0.1 * (idx + 1)}s` }}
-                onClick={() => router.push(`/urunler?category=${cat.id}`)}
-              >
-                <CategoryImageSlideshow images={cat.images} fallbackImage={cat.image} alt={language === 'tr' ? cat.nameTr : cat.nameEn} />
-                <div className="collection-info">
-                  <span className="collection-num">{t('collections.collectionNum')} 0{idx + 1}</span>
-                  <h3 className="collection-name">{language === 'tr' ? cat.nameTr : cat.nameEn}</h3>
-                  <p className="collection-desc">
-                    {language === 'tr' ? cat.descriptionTr : cat.descriptionEn}
-                  </p>
-                </div>
+              {/* Steps display */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '1.8rem', marginBottom: '2.5rem' }}>
+                {[
+                  {
+                    num: '01',
+                    titleTr: 'Model ve Tarz Belirleme',
+                    titleEn: 'Style & Model Selection',
+                    descTr: 'Tül, fon veya modern jaluzi seçeneklerinden odanıza uygun stili işaretleyin.',
+                    descEn: 'Select the curtain type (tulle, drapery, roller, wood) that mirrors your space.'
+                  },
+                  {
+                    num: '02',
+                    titleTr: 'Görsel Yönlendirmeli Ölçü',
+                    titleEn: 'Visual Measurement Guide',
+                    descTr: 'Rehberleri takip ederek pencere genişliğini ve yüksekliğini milimetrik girin.',
+                    descEn: 'Enter accurate width and height values by following simple visual guides.'
+                  },
+                  {
+                    num: '03',
+                    titleTr: 'Tek Tıkla Siparişe Dönüştür',
+                    titleEn: 'Instant Fabrication Report',
+                    descTr: 'Tasarım özetini kaydedin, keşif ekibimize anında iletin veya sipariş edin.',
+                    descEn: 'Save your customized report, instantly share with our discovery team or place an order.'
+                  }
+                ].map((step, idx) => (
+                  <div key={idx} style={{ display: 'flex', gap: '1.5rem', alignItems: 'flex-start' }}>
+                    <div style={{ 
+                      fontFamily: 'var(--font-serif)', 
+                      fontSize: '1.25rem', 
+                      fontWeight: 600, 
+                      color: '#BD954B',
+                      background: 'rgba(189, 149, 75, 0.1)',
+                      width: '40px',
+                      height: '40px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0
+                    }}>
+                      {step.num}
+                    </div>
+                    <div>
+                      <h4 style={{ fontFamily: 'var(--font-sans)', fontSize: '1rem', fontWeight: 600, color: 'var(--color-primary)', marginBottom: '0.3rem' }}>
+                        {language === 'tr' ? step.titleTr : step.titleEn}
+                      </h4>
+                      <p style={{ fontSize: '0.9rem', color: 'var(--color-text)', opacity: 0.7, fontWeight: 300, lineHeight: '1.5' }}>
+                        {language === 'tr' ? step.descTr : step.descEn}
+                      </p>
+                    </div>
+                  </div>
+                ))}
               </div>
-            ));
-          })()}
+
+              <Link href="/olcu-sihirbazi" className="btn-primary" style={{ display: 'inline-block', borderRadius: '30px' }}>
+                {language === 'tr' ? 'Ölçü Almaya Başla' : 'Start Measuring'}
+              </Link>
+            </div>
+
+            {/* Right side: Embedded Measure Promo Visual Component */}
+            <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
+              <MeasurePromoVisual />
+            </div>
+
+          </div>
         </div>
       </section>
 
-      {/* Appointment / Contact Section */}
-      <section id="randevu" className="appointment">
+      {/* 5. PARALLAX GALLERY: TAMAMLANAN ÇALIŞMALAR */}
+      <section style={{ padding: '3.5rem 0 0 0', background: '#0A141D', overflow: 'hidden' }}>
+        <div style={{ width: '100%', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '2.5rem', padding: '0 2rem' }}>
+            <span className="section-label" style={{ color: '#BD954B' }}>{t('fabric.label')}</span>
+            <h2 className="section-title" style={{ fontFamily: 'var(--font-serif)', fontSize: '2.8rem', color: '#ffffff', marginBottom: '1rem' }}>
+              {language === 'tr' ? 'Tamamlanan Seçkin Çalışmalarımız' : 'Our Completed Premium Works'}
+            </h2>
+            <p style={{ color: 'rgba(255, 255, 255, 0.7)', fontWeight: 300, maxWidth: '600px', margin: '0 auto' }}>
+              {language === 'tr' 
+                ? 'Lale Perde dokunuşuyla zerafete kavuşmuş mekanlardan ilham verici kesitler.'
+                : 'Inspiring spaces enriched with elegance by Lale Perde craftsmanship.'}
+            </p>
+          </div>
+
+          {/* Full-width responsive Grid */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(12, 1fr)', 
+            gridAutoRows: 'minmax(180px, auto)',
+            gap: '1rem',
+            width: '100%',
+            padding: '0 2rem',
+            boxSizing: 'border-box'
+          }}>
+            {(homeContent?.references?.items && homeContent.references.items.length > 0
+              ? homeContent.references.items
+              : services.map((s, idx) => {
+                  const colIdx = idx % 3;
+                  const rowIdx = Math.floor(idx / 3);
+                  return {
+                    ...s,
+                    gridColumnStart: colIdx * 4 + 1,
+                    gridColumnEnd: (colIdx + 1) * 4 + 1,
+                    gridRowStart: rowIdx * 2 + 1,
+                    gridRowEnd: (rowIdx + 1) * 2 + 1
+                  };
+                })
+            ).map((item: any, idx: number) => {
+              const tilt = galleryTilt[item.id] || { x: 0, y: 0 };
+              return (
+                <div
+                  key={item.id}
+                  onMouseMove={(e) => handleGalleryMouseMove(item.id, e)}
+                  onMouseLeave={() => handleGalleryMouseLeave(item.id)}
+                  onClick={() => {
+                    if (item.image) {
+                      setActiveLightboxImage(item.image);
+                      resetZoom();
+                    }
+                  }}
+                  style={{
+                    gridColumnStart: item.gridColumnStart,
+                    gridColumnEnd: item.gridColumnEnd,
+                    gridRowStart: item.gridRowStart,
+                    gridRowEnd: item.gridRowEnd,
+                    position: 'relative',
+                    minHeight: '260px',
+                    borderRadius: '12px',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                    transform: `perspective(800px) rotateX(${tilt.y * -5}deg) rotateY(${tilt.x * 5}deg)`,
+                    transition: 'transform 0.1s ease, box-shadow 0.3s',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+                  }}
+                >
+                  <Image
+                    src={item.image || '/assets/fabric.png'}
+                    alt={language === 'tr' ? item.titleTr : item.titleEn}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 800px"
+                    style={{
+                      objectFit: 'cover',
+                      transform: `scale(1.1) translate(${tilt.x * -8}px, ${tilt.y * -8}px)`,
+                      transition: 'transform 0.1s ease',
+                      zIndex: -1
+                    }}
+                  />
+                  <div 
+                    style={{ 
+                      position: 'absolute', 
+                      inset: 0, 
+                      background: 'linear-gradient(to bottom, transparent 40%, rgba(10, 20, 29, 0.95))',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'flex-end',
+                      padding: '2rem'
+                    }}
+                  >
+                    <span style={{ color: '#BD954B', fontSize: '0.8rem', letterSpacing: '2px', textTransform: 'uppercase', marginBottom: '0.5rem', fontWeight: 500 }}>
+                      {t('collections.collectionNum')} 0{idx + 1}
+                    </span>
+                    <h3 style={{ fontFamily: 'var(--font-serif)', color: '#ffffff', fontSize: '1.4rem', marginBottom: '0.5rem' }}>
+                      {language === 'tr' ? item.titleTr : item.titleEn}
+                    </h3>
+                    <p style={{ color: 'rgba(255, 255, 255, 0.75)', fontSize: '0.9rem', fontWeight: 300, lineHeight: '1.4' }}>
+                      {language === 'tr' ? item.descriptionTr : item.descriptionEn}
+                    </p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. YORUMLAR (MARQUEE RIBBON) */}
+      <section style={{ padding: '2rem 0 6rem 0', background: '#0A141D' }}>
+        <div className="container" style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 2rem' }}>
+          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
+            <LineDivider />
+            <span className="section-label">{language === 'tr' ? 'MÜŞTERİ YORUMLARI' : 'TESTIMONIALS'}</span>
+            <h2 className="section-title" style={{ fontFamily: 'var(--font-serif)', fontSize: '2.8rem', color: '#ffffff' }}>
+              {language === 'tr' ? 'Hakkımızda Neler Dediler?' : 'What Our Customers Say'}
+            </h2>
+          </div>
+        </div>
+        <MarqueeComments comments={comments} />
+      </section>
+
+      {/* 7. APPOINTMENT / CONTACT FORM SECTION */}
+      <section id="randevu" className="appointment" style={{ padding: '6rem 0', background: 'var(--color-primary)' }}>
         <div className="appointment-info reveal active">
           <span className="section-label">{t('appointment.label')}</span>
           <h2 className="appointment-title">{t('appointment.title')}</h2>
@@ -524,6 +705,181 @@ export default function HomeClient({
           )}
         </div>
       </section>
+
+      {/* 8. ZOOMABLE LIGHTBOX MODAL FOR REFERENCES */}
+      {activeLightboxImage && (
+        <div 
+          style={{
+            position: 'fixed',
+            inset: 0,
+            backgroundColor: 'rgba(5, 10, 15, 0.95)',
+            backdropFilter: 'blur(10px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 99999,
+            overflow: 'hidden',
+            userSelect: 'none'
+          }}
+          onMouseMove={handleLightboxMouseMove}
+          onMouseUp={handleLightboxMouseUp}
+          onMouseLeave={handleLightboxMouseUp}
+        >
+          {/* Close Area Backdrop */}
+          <div 
+            style={{ position: 'absolute', inset: 0, zIndex: 1 }}
+            onClick={() => setActiveLightboxImage(null)}
+          />
+
+          {/* Interactive Zoomable Image */}
+          <div 
+            style={{
+              position: 'relative',
+              width: '90vw',
+              height: '85vh',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              zIndex: 2,
+              cursor: isLightboxDragging ? 'grabbing' : 'grab',
+            }}
+            onMouseDown={handleLightboxMouseDown}
+          >
+            <img 
+              src={activeLightboxImage} 
+              alt="Reference Detail" 
+              draggable={false}
+              style={{
+                maxWidth: '100%',
+                maxHeight: '100%',
+                objectFit: 'contain',
+                transform: `translate(${lightboxOffset.x}px, ${lightboxOffset.y}px) scale(${lightboxZoom})`,
+                transition: isLightboxDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                transformOrigin: 'center center',
+                boxShadow: '0 20px 50px rgba(0,0,0,0.5)',
+                borderRadius: '8px'
+              }}
+            />
+          </div>
+
+          {/* Controls HUD */}
+          <div 
+            style={{
+              position: 'absolute',
+              bottom: '2.5rem',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '1rem',
+              background: 'rgba(15, 24, 32, 0.85)',
+              border: '1px solid rgba(189, 149, 75, 0.3)',
+              padding: '0.8rem 1.5rem',
+              borderRadius: '30px',
+              zIndex: 10,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.5)',
+              backdropFilter: 'blur(5px)'
+            }}
+          >
+            {/* Zoom Out Button */}
+            <button 
+              onClick={(e) => { e.stopPropagation(); zoomOut(); }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#FFF',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              —
+            </button>
+
+            {/* Current Zoom Level / Reset */}
+            <span 
+              onClick={(e) => { e.stopPropagation(); resetZoom(); }}
+              style={{
+                color: '#BD954B',
+                fontSize: '0.9rem',
+                fontWeight: 600,
+                cursor: 'pointer',
+                letterSpacing: '1px',
+                minWidth: '50px',
+                textAlign: 'center'
+              }}
+              title="Sıfırla / Reset"
+            >
+              {Math.round(lightboxZoom * 100)}%
+            </span>
+
+            {/* Zoom In Button */}
+            <button 
+              onClick={(e) => { e.stopPropagation(); zoomIn(); }}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: '#FFF',
+                fontSize: '1.2rem',
+                cursor: 'pointer',
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'background 0.2s',
+              }}
+              onMouseOver={(e) => e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'}
+              onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+            >
+              ＋
+            </button>
+          </div>
+
+          {/* Top Right Close Button */}
+          <button 
+            onClick={() => setActiveLightboxImage(null)}
+            style={{
+              position: 'absolute',
+              top: '2rem',
+              right: '2rem',
+              background: 'rgba(15, 24, 32, 0.85)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              color: '#FFF',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              fontSize: '1.2rem',
+              zIndex: 10,
+              boxShadow: '0 5px 15px rgba(0,0,0,0.3)',
+              transition: 'all 0.2s'
+            }}
+            onMouseOver={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(189, 149, 75, 0.5)';
+              e.currentTarget.style.color = '#BD954B';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)';
+              e.currentTarget.style.color = '#FFF';
+            }}
+          >
+            ✕
+          </button>
+        </div>
+      )}
     </>
   );
 }

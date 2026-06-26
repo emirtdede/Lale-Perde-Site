@@ -182,9 +182,10 @@ export const tr = {
       contactInfo: "İletişim Bilgileri",
       inbox: "Gelen Kutusu",
       campaigns: "Kampanyalar",
-      visitors: "Site Ziyaretçileri",
+      visitors: "Ziyaretçi Analizi",
       security: "Gizlilik ve Güvenlik",
       googleAds: "Google Ads",
+      comments: "Yorum Yönetimi",
       logout: "Oturumu Kapat"
     },
     login: {
@@ -450,6 +451,7 @@ export const tr = {
       }
     },
     services: {
+      title: "Hizmetler",
       addNew: "+ Yeni Hizmet Ekle",
       addNewTitle: "Yeni Hizmet Ekle",
       editTitle: "Hizmet Düzenle",
@@ -697,7 +699,7 @@ export const tr = {
       }
     },
     visitors: {
-      panelTitle: "Analitik Paneli",
+      panelTitle: "Ziyaretçi Analizi",
       refresh: "Yenile",
       topCities: "🗺️ En Çok Ziyaret Edilen Şehirler",
       totalStats: "📊 Toplam Sayısal Veriler",

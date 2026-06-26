@@ -115,3 +115,37 @@ export async function updateInboxMessageAction(id: string, data: any) {
     return { error: err.message };
   }
 }
+
+// --- COMMENTS ---
+export async function addCommentAction(data: any) {
+  try {
+    await verifyAdminSession();
+    const { data: result, error } = await supabaseAdmin.from('comments').insert([data]).select();
+    if (error) return { error: error.message };
+    return { data: result };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+export async function updateCommentAction(id: string, data: any) {
+  try {
+    await verifyAdminSession();
+    const { data: result, error } = await supabaseAdmin.from('comments').update(data).eq('id', id).select();
+    if (error) return { error: error.message };
+    return { data: result };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+export async function deleteCommentAction(id: string) {
+  try {
+    await verifyAdminSession();
+    const { error } = await supabaseAdmin.from('comments').delete().eq('id', id);
+    if (error) return { error: error.message };
+    return { data: true };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}

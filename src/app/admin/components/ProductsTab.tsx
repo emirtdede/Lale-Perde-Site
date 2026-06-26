@@ -666,9 +666,13 @@ export default function ProductsTab() {
       if (success) {
         setIsAddingNew(false);
         setEditingId(finalForm.id);
+        await loadData();
       }
     } else {
-      await updateProduct(finalForm);
+      const success = await updateProduct(finalForm);
+      if (success) {
+        await loadData();
+      }
     }
 
     setSaveSuccess(true);

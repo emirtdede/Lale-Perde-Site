@@ -50,6 +50,7 @@ export interface Category {
   descriptionTr?: string;
   descriptionEn?: string;
   slug?: string;
+  carouselOrder?: number;
 }
 
 export interface CurtainType {
@@ -100,6 +101,13 @@ export interface SystemSettings {
   facebookUrl?: string;
   linkedinUrl?: string;
   campaignInterval?: number;
+  logoConfig?: {
+    theme: 'gold' | 'ruby' | 'emerald' | 'sapphire';
+    interactionRadius: number;
+    returnSpeed: number;
+    friction: number;
+    scatterPower: number;
+  };
 }
 
 export interface HomePageContent {
@@ -116,6 +124,21 @@ export interface HomePageContent {
   collectionsDescTr: string;
   collectionsDescEn: string;
   featuredCategoryIds?: string[];
+  references?: {
+    layoutType: string;
+    items: {
+      id: string;
+      image: string;
+      titleTr: string;
+      titleEn: string;
+      descriptionTr: string;
+      descriptionEn: string;
+      gridColumnStart?: number;
+      gridColumnEnd?: number;
+      gridRowStart?: number;
+      gridRowEnd?: number;
+    }[];
+  };
 }
 
 export interface ServiceItem {
@@ -129,6 +152,8 @@ export interface ServiceItem {
   status: 'active' | 'passive';
   image?: string;
   images?: string[];
+  focalX?: number;
+  focalY?: number;
 }
 
 export interface GuideItem {

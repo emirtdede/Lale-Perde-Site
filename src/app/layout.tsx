@@ -4,6 +4,7 @@ import { Providers } from '../components/Providers';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ConsentBanner from '../components/ConsentBanner';
+import ScrollToTop from '../components/ScrollToTop';
 import { GoogleAnalytics } from '@next/third-parties/google';
 
 export const metadata: Metadata = {
@@ -29,6 +30,7 @@ export default function RootLayout({
           </main>
           <Footer />
           <ConsentBanner />
+          <ScrollToTop />
         </Providers>
         {Boolean(process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID) && (
           <GoogleAnalytics gaId={process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID as string} />

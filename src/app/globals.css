@@ -44,6 +44,9 @@
   
   --transition-smooth: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);
   --transition-fast: all 0.3s ease;
+
+  --shimmer-color-base: #1A2E40;   /* Lacivert taban */
+  --shimmer-color-flash: #BD954B;  /* Altın parıltı */
 }
 
 [data-theme="dark"] {
@@ -60,6 +63,9 @@
   --color-border: rgba(189, 149, 75, 0.2);
   --color-text-light: #F9FBF7;
   --color-text-dark: #F9FBF7;
+
+  --shimmer-color-base: #BD954B;   /* Altın taban */
+  --shimmer-color-flash: #FFF5D6;  /* Krem/Beyaz parıltı */
 }
 
 /* Dark theme readability overrides for headings and primary colored texts */
@@ -511,6 +517,31 @@ section {
   margin: 2.5rem 0;
 }
 
+@keyframes shimmerText {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.story-quote-shimmer {
+  background: linear-gradient(120deg, var(--shimmer-color-base) 25%, var(--shimmer-color-flash) 50%, var(--shimmer-color-base) 75%);
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: shimmerText 10s linear infinite;
+  display: inline-block;
+}
+
+@media (min-width: 1024px) {
+  .story-quote-shimmer {
+    white-space: nowrap;
+  }
+}
+
 /* Showcase Section with Parallax Background */
 .fabric-showcase {
   position: relative;
@@ -558,6 +589,59 @@ section {
   text-align: center;
   margin-bottom: 5rem;
   max-width: 700px;
+}
+
+.collections-desc {
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .collections-desc {
+    white-space: normal;
+  }
+}
+
+/* Carousel Navigation Arrows */
+.carousel-nav-btn {
+  position: absolute;
+  top: calc(50% - 31.5px) !important;
+  transform: translateY(-50%) !important;
+  z-index: 150;
+  background: rgba(26, 46, 64, 0.6);
+  border: 1px solid #BD954B;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #BD954B;
+  font-size: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+.carousel-nav-btn:hover {
+  background: #BD954B !important;
+  color: #1A2E40 !important;
+}
+
+.carousel-nav-btn.prev {
+  left: 25px;
+}
+
+.carousel-nav-btn.next {
+  right: 25px;
+}
+
+@media (min-width: 1024px) {
+  .carousel-nav-btn.prev {
+    left: calc(50% - 290px);
+  }
+  .carousel-nav-btn.next {
+    right: calc(50% - 290px);
+  }
 }
 
 .collections-grid {
@@ -721,6 +805,8 @@ section {
   padding: 4rem;
   border: 1px solid rgba(212, 175, 55, 0.15);
   backdrop-filter: blur(10px);
+  position: relative;
+  left: -30px;
 }
 
 .form-grid {

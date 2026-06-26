@@ -27,6 +27,7 @@ export const mapCategoryFromDb = (cat: DbRecord): Category => ({
   descriptionTr: cat.description_tr,
   descriptionEn: cat.description_en,
   slug: cat.slug,
+  carouselOrder: cat.carousel_order || 0,
 });
 
 export const mapCategoryToDb = (cat: DbRecord) => ({
@@ -40,6 +41,7 @@ export const mapCategoryToDb = (cat: DbRecord) => ({
   description_tr: cat.descriptionTr,
   description_en: cat.descriptionEn,
   slug: cat.slug,
+  carousel_order: cat.carouselOrder || 0,
 });
 
 export const mapCurtainTypeFromDb = (c: DbRecord): CurtainType => ({
@@ -188,6 +190,13 @@ export const mapSettingsFromDb = (s: DbRecord): SystemSettings => ({
   facebookUrl: s.facebook_url || '',
   linkedinUrl: s.linkedin_url || '',
   campaignInterval: s.campaign_interval || 8,
+  logoConfig: s.logo_config || {
+    theme: 'gold',
+    interactionRadius: 30,
+    returnSpeed: 0.001,
+    friction: 0.86,
+    scatterPower: 30
+  },
 });
 
 export const mapSettingsToDb = (s: SystemSettings) => ({
@@ -213,6 +222,7 @@ export const mapSettingsToDb = (s: SystemSettings) => ({
   facebook_url: s.facebookUrl || null,
   linkedin_url: s.linkedinUrl || null,
   campaign_interval: s.campaignInterval || 8,
+  logo_config: s.logoConfig || null,
 });
 
 export const mapHomeContentFromDb = (h: DbRecord): HomePageContent => ({
@@ -229,6 +239,7 @@ export const mapHomeContentFromDb = (h: DbRecord): HomePageContent => ({
   collectionsDescTr: h.collections_desc_tr,
   collectionsDescEn: h.collections_desc_en,
   featuredCategoryIds: h.featured_category_ids || [],
+  references: h.references || { layoutType: 'preset1', items: [] },
 });
 
 export const mapHomeContentToDb = (h: HomePageContent) => ({
@@ -245,6 +256,7 @@ export const mapHomeContentToDb = (h: HomePageContent) => ({
   collections_desc_tr: h.collectionsDescTr,
   collections_desc_en: h.collectionsDescEn,
   featured_category_ids: h.featuredCategoryIds,
+  references: h.references || { layoutType: 'preset1', items: [] },
 });
 
 export const mapServiceFromDb = (s: DbRecord): ServiceItem => ({
@@ -258,6 +270,8 @@ export const mapServiceFromDb = (s: DbRecord): ServiceItem => ({
   status: s.status,
   image: s.image,
   images: s.images || [],
+  focalX: s.focal_x ? Number(s.focal_x) : 50.0,
+  focalY: s.focal_y ? Number(s.focal_y) : 50.0,
 });
 
 export const mapServiceToDb = (s: ServiceItem) => ({
@@ -271,6 +285,8 @@ export const mapServiceToDb = (s: ServiceItem) => ({
   status: s.status,
   image: s.image,
   images: s.images,
+  focal_x: s.focalX,
+  focal_y: s.focalY,
 });
 
 export const mapGuideFromDb = (g: DbRecord): GuideItem => ({
@@ -376,4 +392,25 @@ export const mapVisitorLogToDb = (v: VisitorLog) => ({
   timestamp: v.timestamp,
   duration: v.duration,
   is_bot: v.isBot,
+});
+
+export const mapCommentFromDb = (c: DbRecord): any => ({
+  id: c.id,
+  author: c.author,
+  contentTr: c.content_tr,
+  contentEn: c.content_en,
+  rating: c.rating,
+  isActive: c.is_active,
+  displayOrder: c.display_order,
+  createdAt: c.created_at,
+});
+
+export const mapCommentToDb = (c: any) => ({
+  id: c.id,
+  author: c.author,
+  content_tr: c.contentTr,
+  content_en: c.contentEn,
+  rating: c.rating,
+  is_active: c.isActive,
+  display_order: c.displayOrder,
 });

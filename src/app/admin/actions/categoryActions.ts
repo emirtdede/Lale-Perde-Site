@@ -6,8 +6,8 @@ import { supabaseAdmin, verifyAdminSession } from './utils';
 export async function addCategoryAction(data: any) {
   try {
     await verifyAdminSession();
-    const { name_tr, name_en, image, images, status, display_order, description_tr, description_en, slug } = data || {};
-    const safeData = { name_tr, name_en, image, images, status, display_order, description_tr, description_en, slug };
+    const { id, name_tr, name_en, image, images, status, display_order, description_tr, description_en, slug } = data || {};
+    const safeData = { id, name_tr, name_en, image, images, status, display_order, description_tr, description_en, slug };
     const { data: result, error } = await supabaseAdmin.from('categories').insert([safeData]).select();
     if (error) return { error: error.message };
     return { data: result };

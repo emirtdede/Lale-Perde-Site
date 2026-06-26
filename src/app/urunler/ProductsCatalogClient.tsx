@@ -336,7 +336,7 @@ function ProductsCatalogContent({ initialProducts, initialCategories, initialCur
               </button>
             </div>
           ) : (
-            <div className="product-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="product-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
               {filteredProducts.map(product => {
                 const title = language === 'tr' ? product.nameTr : product.nameEn;
                 const catName = language === 'tr' ? product.categoryTr : product.categoryEn;
@@ -346,7 +346,6 @@ function ProductsCatalogContent({ initialProducts, initialCategories, initialCur
                 return (
                   <div 
                     key={product.id} 
-                    className="hover:-translate-y-[5px]"
                     style={{ 
                       backgroundColor: 'var(--color-card-bg)', 
                       borderRadius: '4px', 
@@ -357,6 +356,8 @@ function ProductsCatalogContent({ initialProducts, initialCategories, initialCur
                       border: '1px solid var(--color-border)',
                       transition: 'transform 0.3s ease'
                     }} 
+                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
+                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                     onClick={() => router.push(`/urunler/${product.id}`)}
                   >
                     <div style={{ position: 'relative', height: '280px', width: '100%', overflow: 'hidden' }}>

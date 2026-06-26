@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient';
 import { addProductAction, updateProductAction, deleteProductAction } from '../app/admin/actions/productActions';
 import { addCategoryAction, updateCategoryAction, deleteCategoryAction, addCurtainTypeAction, updateCurtainTypeAction, deleteCurtainTypeAction, addFabricTypeAction, updateFabricTypeAction, deleteFabricTypeAction, addMountingTypeAction, updateMountingTypeAction, deleteMountingTypeAction } from '../app/admin/actions/categoryActions';
 import { updateSettingsAction, updateHomeContentAction } from '../app/admin/actions/settingsActions';
-import { addServiceAction, updateServiceAction, deleteServiceAction, addGuideAction, updateGuideAction, deleteGuideAction, addCampaignAction, updateCampaignAction, deleteCampaignAction, updateInboxMessageAction } from '../app/admin/actions/contentActions';
+import { addServiceAction, updateServiceAction, deleteServiceAction, addGuideAction, updateGuideAction, deleteGuideAction, addCampaignAction, updateCampaignAction, deleteCampaignAction, updateInboxMessageAction, addCommentAction, updateCommentAction, deleteCommentAction } from '../app/admin/actions/contentActions';
 import {
   Product,
   Category,
@@ -35,6 +35,7 @@ interface DbContextType {
   inbox: InboxMessage[];
   searchLogs: SearchLog[];
   visitorLogs: VisitorLog[];
+  comments: any[];
   loading: boolean;
   
   // Products
@@ -104,6 +105,12 @@ interface DbContextType {
   fetchServicesLazy?: () => Promise<void>;
   fetchGuidesLazy?: () => Promise<void>;
   fetchCampaignsLazy?: () => Promise<void>;
+  fetchCommentsLazy?: () => Promise<void>;
+  
+  // Comments CRUD
+  addComment: (comment: any) => Promise<boolean>;
+  updateComment: (comment: any) => Promise<boolean>;
+  deleteComment: (id: string) => Promise<boolean>;
 }
 
 const DbContext = createContext<DbContextType | undefined>(undefined);
@@ -132,7 +139,9 @@ import {
   mapFabricTypeFromDb,
   mapFabricTypeToDb,
   mapMountingTypeFromDb,
-  mapMountingTypeToDb
+  mapMountingTypeToDb,
+  mapCommentFromDb,
+  mapCommentToDb
 } from './dbMappers';
 
 export {
@@ -179,6 +188,8 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
   const [servicesFetched, setServicesFetched] = useState(false);
   const [guidesFetched, setGuidesFetched] = useState(false);
   const [campaignsFetched, setCampaignsFetched] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+  const [commentsFetched, setCommentsFetched] = useState(false);
 
   const fetchData = async () => {
     try {
@@ -195,7 +206,7 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
         supabase.from('categories').select('*').order('display_order', { ascending: true }),
         supabase.from('curtain_types').select('*').order('display_order', { ascending: true }),
         supabase.from('fabric_types').select('*').order('display_order', { ascending: true }),
-        supabase.from('site_settings').select('id, store_name, phone, email, address, whatsapp_number, google_maps_embed, announcement_tr, announcement_en, announcement_active, working_hours_tr, working_hours_en, google_ads_id, ads_label_whatsapp, ads_label_contact, shopier_url, instagram_url, facebook_url, linkedin_url, campaign_interval'),
+        supabase.from('site_settings').select('id, store_name, phone, email, address, whatsapp_number, google_maps_embed, announcement_tr, announcement_en, announcement_active, working_hours_tr, working_hours_en, google_ads_id, ads_label_whatsapp, ads_label_contact, shopier_url, instagram_url, facebook_url, linkedin_url, campaign_interval, logo_config'),
         supabase.from('home_page_content').select('*'),
         supabase.from('mounting_types').select('*').order('display_order', { ascending: true })
       ]);
@@ -247,6 +258,13 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     if (data) setCampaigns(data.map(mapCampaignFromDb).sort((a, b) => (a.displayOrder || 1) - (b.displayOrder || 1)));
     setCampaignsFetched(true);
   }, [campaignsFetched]);
+
+  const fetchCommentsLazy = useCallback(async () => {
+    if (commentsFetched) return;
+    const { data } = await supabase.from('comments').select('*').order('display_order', { ascending: true });
+    if (data) setComments(data.map(mapCommentFromDb));
+    setCommentsFetched(true);
+  }, [commentsFetched]);
 
   // PAGINATION FETCHES
   const fetchProductsPaginated = async (page: number, limit: number = 50) => {
@@ -548,6 +566,32 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     return true;
   };
 
+  // COMMENTS MUTATIONS
+  const addComment = async (c: any) => {
+    const { data, error } = await addCommentAction(mapCommentToDb(c));
+    if (error) { console.warn('Error adding comment', error); return false; }
+    if (data && data[0]) {
+      setComments(prev => [...prev, mapCommentFromDb(data[0])].sort((a, b) => a.displayOrder - b.displayOrder));
+    }
+    return true;
+  };
+
+  const updateComment = async (c: any) => {
+    const { data, error } = await updateCommentAction(c.id, mapCommentToDb(c));
+    if (error) { console.warn('Error updating comment', error); return false; }
+    if (data && data[0]) {
+      setComments(prev => prev.map(item => item.id === c.id ? mapCommentFromDb(data[0]) : item).sort((a, b) => a.displayOrder - b.displayOrder));
+    }
+    return true;
+  };
+
+  const deleteComment = async (id: string) => {
+    const { error } = await deleteCommentAction(id);
+    if (error) { console.warn('Error deleting comment', error); return false; }
+    setComments(prev => prev.filter(item => item.id !== id).sort((a, b) => a.displayOrder - b.displayOrder));
+    return true;
+  };
+
   // INBOX MUTATIONS
   const addInboxMessage = async (m: Omit<InboxMessage, 'id' | 'date'>) => {
     const id = `msg-${Date.now()}`;
@@ -703,10 +747,15 @@ export const DbProvider: React.FC<{ children: React.ReactNode }> = ({ children }
     
     fetchServicesLazy,
     fetchGuidesLazy,
-    fetchCampaignsLazy
+    fetchCampaignsLazy,
+    fetchCommentsLazy,
+    comments,
+    addComment,
+    updateComment,
+    deleteComment
   }), [
     categories, curtainTypes, fabricTypes, mountingTypes, settings, homeContent, 
-    services, guides, campaigns, inbox, searchLogs, visitorLogs, loading
+    services, guides, campaigns, inbox, searchLogs, visitorLogs, loading, comments
   ]);
 
   return (

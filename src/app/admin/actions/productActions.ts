@@ -6,7 +6,7 @@ export async function addProductAction(data: any) {
   try {
     await verifyAdminSession();
     const {
-      name_tr, name_en, category_tr, category_en, category_id,
+      id, name_tr, name_en, category_tr, category_en, category_id,
       description_tr, description_en, colors, fabric_type_tr, fabric_type_en,
       price_multiplier, popularity, images, tech_specs_tr, tech_specs_en,
       status, cover_image, display_order, curtain_type_id, fabric_type_id,
@@ -14,7 +14,7 @@ export async function addProductAction(data: any) {
     } = data || {};
 
     const safeData = {
-      name_tr, name_en, category_tr, category_en, category_id,
+      id, name_tr, name_en, category_tr, category_en, category_id,
       description_tr, description_en, colors, fabric_type_tr, fabric_type_en,
       price_multiplier, popularity, images, tech_specs_tr, tech_specs_en,
       status, cover_image, display_order, curtain_type_id, fabric_type_id,

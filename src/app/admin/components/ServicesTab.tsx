@@ -148,17 +148,13 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, onCrop, onCan
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
       }}>
-        <h3 style={{ color: '#E0E6ED', fontFamily: 'var(--font-serif)', fontSize: '1.4rem', marginBottom: '0.5rem', textAlign: 'center' }}>
-          {t('admin.services.crop.title')}
-        </h3>
-        <p style={{ color: '#A3B3C2', fontSize: '0.85rem', marginBottom: '1rem', textAlign: 'center' }}>
-          {t('admin.services.crop.info')}
-        </p>
-
-        {/* Cropper Viewport Container */}
-        <div 
+        <h4 style={{ color: '#E0E6ED', marginBottom: '1rem', alignSelf: 'flex-start' }}>Görseli Kes</h4>
+        <div style={{
+          width: `${containerWidth}px`, height: `${containerHeight}px`,
+          position: 'relative', overflow: 'hidden', backgroundColor: '#000',
+          cursor: isDragging ? 'grabbing' : 'grab', borderRadius: '6px'
+        }}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -166,97 +162,39 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, onCrop, onCan
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleMouseUp}
-          style={{
-            position: 'relative',
-            width: `${containerWidth}px`,
-            height: `${containerHeight}px`,
-            overflow: 'hidden',
-            borderRadius: '6px',
-            border: '2px solid var(--color-accent)',
-            cursor: 'move',
-            backgroundColor: '#050B0F',
-            userSelect: 'none'
-          }}
         >
           <img
             ref={imgRef}
             src={imageSrc}
-            alt="Kırpılacak görsel"
             onLoad={handleImageLoad}
-            draggable={false}
+            alt="To crop"
             style={{
               position: 'absolute',
-              top: '50%',
-              left: '50%',
-              width: `${initSize.w}px`,
-              height: `${initSize.h}px`,
-              transform: `translate(-50%, -50%) translate(${offset.x}px, ${offset.y}px) scale(${zoom})`,
-              transformOrigin: 'center center',
-              pointerEvents: 'none'
+              userSelect: 'none',
+              pointerEvents: 'none',
+              transform: `translate(-50%, -50%)`,
+              left: `calc(50% + ${offset.x}px)`,
+              top: `calc(50% + ${offset.y}px)`,
+              width: `${initSize.w * zoom}px`,
+              height: `${initSize.h * zoom}px`
             }}
           />
         </div>
-
-        {/* Zoom Slider */}
-        <div style={{ width: '100%', marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <span style={{ color: '#A3B3C2', fontSize: '0.8rem' }}>Zoom:</span>
+        <div style={{ width: '100%', marginTop: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+          <span style={{ color: '#A3B3C2', fontSize: '0.85rem' }}>{t('admin.services.zoom')}:</span>
           <input
             type="range"
             min="1"
             max="3"
-            step="0.01"
+            step="0.05"
             value={zoom}
             onChange={(e) => setZoom(parseFloat(e.target.value))}
-            style={{
-              flex: 1,
-              accentColor: 'var(--color-accent)',
-              height: '6px',
-              borderRadius: '3px',
-              background: '#1A2530',
-              outline: 'none',
-              cursor: 'pointer'
-            }}
+            style={{ flex: 1, accentColor: 'var(--color-accent)' }}
           />
-          <span style={{ color: '#E0E6ED', fontSize: '0.8rem', minWidth: '30px' }}>{Math.round(zoom * 100)}%</span>
         </div>
-
-        {/* Actions */}
-        <div style={{ display: 'flex', gap: '1rem', width: '100%', marginTop: '2rem' }}>
-          <button 
-            onClick={handleCrop} 
-            style={{
-              flex: 1,
-              background: 'linear-gradient(135deg, #BD954B, #A57E3B)',
-              color: '#FFF',
-              border: 'none',
-              padding: '0.8rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              fontWeight: 600,
-              transition: 'opacity 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.opacity = '0.9'}
-            onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
-          >
-            {t('admin.services.crop.saveBtn')}
-          </button>
-          <button 
-            onClick={onCancel}
-            style={{
-              flex: 1,
-              background: 'transparent',
-              color: '#A3B3C2',
-              border: '1px solid #A3B3C2',
-              padding: '0.8rem',
-              borderRadius: '6px',
-              cursor: 'pointer',
-              transition: 'all 0.2s'
-            }}
-            onMouseOver={(e) => { e.currentTarget.style.color = '#FFF'; e.currentTarget.style.borderColor = '#FFF'; }}
-            onMouseOut={(e) => { e.currentTarget.style.color = '#A3B3C2'; e.currentTarget.style.borderColor = '#A3B3C2'; }}
-          >
-            {t('admin.services.crop.cancelBtn')}
-          </button>
+        <div style={{ display: 'flex', gap: '1rem', width: '100%', marginTop: '1.5rem' }}>
+          <button onClick={handleCrop} style={{ flex: 1, background: 'linear-gradient(135deg, #BD954B, #A57E3B)', color: '#FFF', border: 'none', padding: '0.7rem', borderRadius: '6px', cursor: 'pointer', fontWeight: 600 }}>{t('admin.services.cropAndSave')}</button>
+          <button onClick={onCancel} style={{ flex: 1, background: 'transparent', color: '#A3B3C2', border: '1px solid #A3B3C2', padding: '0.7rem', borderRadius: '6px', cursor: 'pointer' }}>{t('admin.services.cancel')}</button>
         </div>
       </div>
     </div>
@@ -265,22 +203,26 @@ const ImageCropModal: React.FC<ImageCropModalProps> = ({ imageSrc, onCrop, onCan
 
 export default function ServicesTab() {
   const { services: dbServices, addService, updateService, deleteService } = useDb();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
   const [services, setServices] = useState<ServiceItem[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<Partial<ServiceItem>>({});
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  const [error, setError] = useState('');
   const [isConverting, setIsConverting] = useState(false);
   const [cropQueue, setCropQueue] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [portalTarget, setPortalTarget] = useState<Element | null>(null);
+
+  // Drag and Drop
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
-  const [error, setError] = useState<string | null>(null);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const showError = (msg: string) => {
     setError(msg);
-    setTimeout(() => setError(null), 4000);
+    setTimeout(() => setError(''), 5000);
   };
-  const [portalTarget, setPortalTarget] = useState<Element | null>(null);
-  const [isAddingNew, setIsAddingNew] = useState(false);
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     setDraggedIndex(index);
@@ -324,7 +266,11 @@ export default function ServicesTab() {
 
   const handleEdit = (service: ServiceItem) => {
     setEditingId(service.id);
-    setEditForm(service);
+    setEditForm({
+      ...service,
+      focalX: service.focalX !== undefined ? service.focalX : 50,
+      focalY: service.focalY !== undefined ? service.focalY : 50
+    });
     setIsAddingNew(false);
   };
 
@@ -340,6 +286,8 @@ export default function ServicesTab() {
       icon: 'Ruler',
       status: 'active',
       image: '',
+      focalX: 50,
+      focalY: 50,
       displayOrder: services.length + 1
     });
   };
@@ -357,6 +305,18 @@ export default function ServicesTab() {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setEditForm({ ...editForm, [e.target.name]: e.target.value });
+  };
+
+  // Focal Point Picker calculation
+  const handleFocalPointSelect = (e: React.MouseEvent<HTMLDivElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.round(((e.clientX - rect.left) / rect.width) * 100);
+    const y = Math.round(((e.clientY - rect.top) / rect.height) * 100);
+    setEditForm(prev => ({
+      ...prev,
+      focalX: x,
+      focalY: y
+    }));
   };
 
   const fileToDataUrl = (file: File): Promise<string> => {
@@ -422,11 +382,6 @@ export default function ServicesTab() {
 
   return (
     <div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-        <h2 style={{ fontFamily: 'var(--font-serif)', fontSize: '1.8rem', color: 'var(--color-primary)' }}>
-          {t('admin.services.title')}
-        </h2>
-      </div>
 
       {error && (
         <div style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#DC2626', padding: '1rem', borderRadius: '4px', border: '1px solid #DC2626', marginBottom: '1.5rem' }}>
@@ -451,43 +406,80 @@ export default function ServicesTab() {
           </h3>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-            {/* Image Upload Area */}
+            {/* Image Upload and Focal Point Picker */}
             <div>
               <label style={labelStyle}>{t('admin.services.coverImageLabel')}</label>
-              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center' }}>
-                <div style={{
-                  width: '180px', height: '101px',
-                  backgroundColor: '#1A242C', borderRadius: '6px',
-                  backgroundImage: editForm.image ? `url(${editForm.image})` : 'none',
-                  backgroundSize: 'cover', backgroundPosition: 'center',
-                  border: '1px solid rgba(189,149,75,0.2)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#A3B3C2', fontSize: '0.8rem'
-                }}>
-                  {!editForm.image && t('admin.services.noImage')}
-                </div>
-                <button
-                  onClick={() => fileInputRef.current?.click()}
+              <div style={{ display: 'flex', gap: '1.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+                
+                {/* Visual Focal Point Selector Board */}
+                <div 
+                  onClick={editForm.image ? handleFocalPointSelect : undefined}
                   style={{
-                    background: 'transparent', color: 'var(--color-accent)',
-                    border: '1px solid var(--color-accent)', padding: '0.5rem 1rem',
-                    borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
+                    width: '320px', height: '180px',
+                    backgroundColor: '#1A242C', borderRadius: '8px',
+                    backgroundImage: editForm.image ? `url(${editForm.image})` : 'none',
+                    backgroundSize: 'cover', backgroundPosition: 'center',
+                    border: '2px solid rgba(189,149,75,0.3)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    color: '#A3B3C2', fontSize: '0.85rem',
+                    position: 'relative',
+                    cursor: editForm.image ? 'crosshair' : 'default',
+                    overflow: 'hidden'
                   }}
                 >
-                  {isConverting ? t('admin.services.uploading') : t('admin.services.selectImage')}
-                </button>
-                {editForm.image && (
+                  {!editForm.image && t('admin.services.noImage')}
+                  
+                  {/* Crosshair indicator overlay */}
+                  {editForm.image && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: `${editForm.focalX}%`,
+                        top: `${editForm.focalY}%`,
+                        width: '24px', height: '24px',
+                        border: '2px solid #BD954B',
+                        borderRadius: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        background: 'rgba(26, 46, 64, 0.6)',
+                        pointerEvents: 'none',
+                        boxShadow: '0 0 8px #BD954B',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                      }}
+                    >
+                      <div style={{ width: '4px', height: '4px', backgroundColor: '#BD954B', borderRadius: '50%' }} />
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.8rem' }}>
                   <button
-                    onClick={() => setEditForm({ ...editForm, image: '' })}
+                    onClick={() => fileInputRef.current?.click()}
                     style={{
-                      background: 'transparent', color: '#FF6B6B',
-                      border: '1px solid #FF6B6B', padding: '0.5rem 1rem',
-                      borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'
+                      background: 'transparent', color: 'var(--color-accent)',
+                      border: '1px solid var(--color-accent)', padding: '0.5rem 1rem',
+                      borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600
                     }}
                   >
-                    {t('admin.services.removeImage')}
+                    {isConverting ? t('admin.services.uploading') : t('admin.services.selectImage')}
                   </button>
-                )}
+                  {editForm.image && (
+                    <button
+                      onClick={() => setEditForm({ ...editForm, image: '', focalX: 50, focalY: 50 })}
+                      style={{
+                        background: 'transparent', color: '#FF6B6B',
+                        border: '1px solid #FF6B6B', padding: '0.5rem 1rem',
+                        borderRadius: '4px', cursor: 'pointer', fontSize: '0.85rem'
+                      }}
+                    >
+                      {t('admin.services.removeImage')}
+                    </button>
+                  )}
+                  {editForm.image && (
+                    <div style={{ fontSize: '0.8rem', color: '#A3B3C2', marginTop: '0.5rem' }}>
+                      Odak Noktası: X: {editForm.focalX}%, Y: {editForm.focalY}%
+                    </div>
+                  )}
+                </div>
               </div>
               <input
                 ref={fileInputRef}
@@ -598,65 +590,38 @@ export default function ServicesTab() {
                       )}
                     </td>
                     <td style={{ padding: '1rem', fontWeight: 500 }}>
-                      {service.titleTr} <span style={{ color: '#A3B3C2', fontSize: '0.85rem', display: 'block', marginTop: '0.2rem' }}>{service.titleEn}</span>
+                      {language === 'tr' ? service.titleTr : service.titleEn}
                     </td>
-                    <td style={{ padding: '1rem', color: '#A3B3C2' }}>
-                      {service.descriptionTr}
+                    <td style={{ padding: '1rem', color: '#A3B3C2', maxWidth: '300px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {language === 'tr' ? service.descriptionTr : service.descriptionEn}
                     </td>
                     <td style={{ padding: '1rem' }}>
                       <span style={{
                         padding: '0.2rem 0.5rem',
                         borderRadius: '4px',
                         fontSize: '0.75rem',
-                        backgroundColor: service.status === 'active' ? 'rgba(76, 175, 80, 0.1)' : 'rgba(255, 152, 0, 0.1)',
-                        color: service.status === 'active' ? '#4CAF50' : '#FF9800'
+                        fontWeight: 600,
+                        backgroundColor: service.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        color: service.status === 'active' ? '#10B981' : '#EF4444'
                       }}>
                         {service.status === 'active' ? t('admin.services.statusActive') : t('admin.services.statusPassive')}
                       </span>
                     </td>
                     <td style={{ padding: '1rem', textAlign: 'right' }}>
-                      <button
-                        onClick={() => handleEdit(service)}
-                        title={t('admin.services.edit')}
-                        style={{
-                          background: 'none',
-                          border: '1px solid rgba(189, 149, 75, 0.3)',
-                          color: 'var(--color-accent)',
-                          padding: '0.35rem 0.5rem',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          marginRight: '0.5rem',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(189,149,75,0.1)'; e.currentTarget.style.borderColor = 'var(--color-accent)'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(189, 149, 75, 0.3)'; }}
-                      >
-                        <EditIcon />
-                      </button>
-
-                      <button
-                        onClick={() => handleDelete(service.id)}
-                        title={t('admin.services.delete')}
-                        style={{
-                          background: 'none',
-                          border: '1px solid rgba(255, 75, 75, 0.3)',
-                          color: '#FF6B6B',
-                          padding: '0.35rem 0.5rem',
-                          borderRadius: '4px',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          transition: 'all 0.2s',
-                        }}
-                        onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,75,75,0.1)'; e.currentTarget.style.borderColor = '#FF6B6B'; }}
-                        onMouseOut={(e) => { e.currentTarget.style.background = 'none'; e.currentTarget.style.borderColor = 'rgba(255,75,75,0.3)'; }}
-                      >
-                        <TrashIcon />
-                      </button>
+                      <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                        <button 
+                          onClick={() => handleEdit(service)}
+                          style={{ background: 'rgba(189, 149, 75, 0.1)', border: '1px solid rgba(189,149,75,0.2)', color: 'var(--color-accent)', padding: '0.4rem', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          <EditIcon />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete(service.id)}
+                          style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#EF4444', padding: '0.4rem', borderRadius: '4px', cursor: 'pointer' }}
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
@@ -665,6 +630,7 @@ export default function ServicesTab() {
           </table>
         </div>
       )}
+
       {cropQueue.length > 0 && (
         <ImageCropModal
           imageSrc={cropQueue[0]}

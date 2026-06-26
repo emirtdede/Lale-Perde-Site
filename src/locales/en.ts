@@ -182,9 +182,10 @@ export const en = {
       contactInfo: "Contact Info",
       inbox: "Inbox",
       campaigns: "Campaigns",
-      visitors: "Site Visitors",
+      visitors: "Visitor Analytics",
       security: "Privacy & Security",
       googleAds: "Google Ads",
+      comments: "Comment Management",
       logout: "Log Out"
     },
     login: {
@@ -450,6 +451,7 @@ export const en = {
       }
     },
     services: {
+      title: "Services",
       addNew: "+ Add New Service",
       addNewTitle: "Add New Service",
       editTitle: "Edit Service",
@@ -697,7 +699,7 @@ export const en = {
       }
     },
     visitors: {
-      panelTitle: "Analytics Panel",
+      panelTitle: "Visitor Analytics",
       refresh: "Refresh",
       topCities: "🗺️ Top Visited Cities",
       totalStats: "📊 Total Numerical Data",
