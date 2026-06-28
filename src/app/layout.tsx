@@ -49,7 +49,7 @@ export default async function RootLayout({
   }
 
   return (
-    <html lang="tr" data-theme="dark" suppressHydrationWarning data-scroll-behavior="smooth">
+    <html lang="tr" suppressHydrationWarning data-scroll-behavior="smooth">
       <body suppressHydrationWarning>
         <Providers initialData={initialData}>
           <Header />
