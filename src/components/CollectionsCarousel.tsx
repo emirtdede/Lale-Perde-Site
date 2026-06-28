@@ -18,12 +18,24 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
   const [isDragging, setIsDragging] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   
+  // State for zero-error render & load-complete logic
+  const [imagesLoaded, setImagesLoaded] = useState<Record<string, boolean>>({});
+  const [isClientLoaded, setIsClientLoaded] = useState(false);
+  
   const startX = useRef(0);
   const startRotation = useRef(0);
   const velocity = useRef(0);
   const lastTime = useRef(0);
   const lastX = useRef(0);
   const requestRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    setIsClientLoaded(true);
+  }, []);
+
+  const handleImageLoad = (id: string) => {
+    setImagesLoaded((prev) => ({ ...prev, [id]: true }));
+  };
 
   const activeCategories = React.useMemo(() => {
     return categories
@@ -177,8 +189,8 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
         className="kinetic-carousel-wheel"
         style={{
           position: 'relative',
-          width: '280px',
-          height: '420px',
+          width: '302px',   // 280px * 1.08
+          height: '453px',  // 420px * 1.08
           transformStyle: 'preserve-3d',
           transform: `rotateY(${rotation}deg)`,
           transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
@@ -219,7 +231,6 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
                 pointerEvents: isVisible ? 'auto' : 'none',
                 filter: isActive ? 'none' : 'brightness(0.65)',
                 zIndex: isActive ? 10 : 1,
-                willChange: 'transform, opacity',
               }}
             >
               {/* Card Container (Image only, 85% height of outer container) */}
@@ -236,23 +247,28 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
                   boxShadow: isActive 
                     ? '0 15px 35px rgba(189, 149, 75, 0.45)' 
                     : '0 8px 24px rgba(0, 0, 0, 0.4)',
-                  transform: isActive ? 'scale(1.08) translate3d(0,0,0)' : 'scale(0.95) translate3d(0,0,0)',
+                  transform: isActive ? 'scale(1) translateZ(0)' : 'scale(0.88) translateZ(0)',
                   transition: 'all 0.4s ease',
-                  willChange: 'transform',
                 }}
               >
                 <div style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
+                  {!isClientLoaded && (
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(26,46,64,0.5)' }}>
+                       <span style={{ color: '#BD954B' }}>Yükleniyor...</span>
+                    </div>
+                  )}
                   <Image
                     src={cat.image || '/assets/scandi.png'}
                     alt={language === 'tr' ? cat.nameTr : cat.nameEn}
                     fill
-                    sizes="600px"
-                    priority={isActive}
-                    quality={95}
+                    sizes="400px"
+                    priority={true}
+                    quality={100}
+                    onLoad={() => handleImageLoad(cat.id)}
                     style={{
                       objectFit: 'cover',
-                      transform: 'translate3d(0, 0, 0)',
-                      transition: 'transform 0.8s ease',
+                      transition: 'opacity 0.4s ease',
+                      opacity: imagesLoaded[cat.id] ? 1 : 0
                     }}
                     className="carousel-image"
                   />
@@ -270,8 +286,7 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
                   textAlign: 'center',
                   paddingTop: '0.8rem',
                   transition: 'all 0.4s ease',
-                  transform: isActive ? 'scale(1.08) translate3d(0,0,0)' : 'scale(0.95) translate3d(0,0,0)',
-                  willChange: 'transform',
+                  transform: isActive ? 'scale(1) translateZ(0)' : 'scale(0.88) translateZ(0)',
                 }}
               >
                 <h3 
