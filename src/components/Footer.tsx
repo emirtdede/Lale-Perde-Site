@@ -141,8 +141,8 @@ export const Footer: React.FC = () => {
           </div>
         </div>
 
-        <div className="footer-col-links">
-          <h4>{language === 'tr' ? 'Hızlı Yönlendirmeler' : 'Quick Navigation'}</h4>
+        <div className="footer-col-links footer-col-pages">
+          <h4>{language === 'tr' ? 'Sayfalar' : 'Pages'}</h4>
           <ul className="footer-links-list">
             <li><Link href="/">{t('nav.home')}</Link></li>
             <li><Link href="/urunler">{t('nav.products')}</Link></li>
@@ -153,13 +153,36 @@ export const Footer: React.FC = () => {
           </ul>
         </div>
 
+        <div className="footer-col-links">
+          <h4>{language === 'tr' ? 'Yasal Bilgilendirme' : 'Legal Information'}</h4>
+          <ul className="footer-links-list">
+            <li><Link href="/gizlilik-politikasi">{language === 'tr' ? 'Gizlilik Politikası' : 'Privacy Policy'}</Link></li>
+            <li><Link href="/cerez-politikasi">{language === 'tr' ? 'Çerez Politikası' : 'Cookie Policy'}</Link></li>
+            <li><Link href="/kvkk-aydinlatma">{language === 'tr' ? 'KVKK Aydınlatma Metni' : 'KVKK Text'}</Link></li>
+            <li><Link href="/kullanim-kosullari">{language === 'tr' ? 'Kullanım Koşulları' : 'Terms of Use'}</Link></li>
+            <li><Link href="/mesafeli-satis">{language === 'tr' ? 'Mesafeli Satış Sözleşmesi' : 'Distance Selling Agreement'}</Link></li>
+            <li><Link href="/on-bilgilendirme">{language === 'tr' ? 'Ön Bilgilendirme Formu' : 'Preliminary Information Form'}</Link></li>
+            <li><Link href="/garanti-taahhutnamesi">{language === 'tr' ? 'Garanti Taahhütnamesi' : 'Warranty Declaration'}</Link></li>
+            <li><Link href="/iade-ve-cayma">{language === 'tr' ? 'İade ve Cayma Şartları' : 'Return & Withdrawal Terms'}</Link></li>
+          </ul>
+        </div>
+
         <div className="footer-col-map">
           <h4>{t('footer.colHours')}</h4>
-          <div className="footer-hours-item">
-            <svg className="contact-svg-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <div className="footer-hours-item" style={{ alignItems: 'flex-start' }}>
+            <svg className="contact-svg-icon" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" style={{ marginTop: '3px', flexShrink: 0 }}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>{language === 'tr' ? settings?.workingHoursTr : settings?.workingHoursEn}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.3rem' }}>
+              {(() => {
+                const hoursText = language === 'tr' ? settings?.workingHoursTr : settings?.workingHoursEn;
+                if (!hoursText) return null;
+                const parts = hoursText.split('|');
+                return parts.map((part, idx) => (
+                  <span key={idx} style={{ display: 'block' }}>{part.trim()}</span>
+                ));
+              })()}
+            </div>
           </div>
           
           <div className="footer-map-container">
@@ -177,30 +200,39 @@ export const Footer: React.FC = () => {
       </div>
       <div className="footer-bottom" style={{ borderTop: '1px solid var(--color-border)', paddingTop: '2rem', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
         <div className="footer-bottom-flex" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1.5rem' }}>
-          <p className="footer-copyright" style={{ margin: 0, color: 'var(--color-accent)' }}>&copy; {currentYear} Lale Perde. {t('footer.allRightsReserved')}</p>
-          <div className="footer-legal-links" style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap' }}>
-            <Link href="/gizlilik-politikasi" style={{ fontSize: '0.85rem', opacity: 0.8, textDecoration: 'none', color: 'rgba(255, 255, 255, 0.7)', transition: 'var(--transition-smooth)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-accent)'} onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}>
-              {t('footer.gizlilik')}
-            </Link>
-            <Link href="/cerez-politikasi" style={{ fontSize: '0.85rem', opacity: 0.8, textDecoration: 'none', color: 'rgba(255, 255, 255, 0.7)', transition: 'var(--transition-smooth)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-accent)'} onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}>
-              {t('footer.cerez')}
-            </Link>
-            <Link href="/kvkk-aydinlatma" style={{ fontSize: '0.85rem', opacity: 0.8, textDecoration: 'none', color: 'rgba(255, 255, 255, 0.7)', transition: 'var(--transition-smooth)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-accent)'} onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}>
-              {t('footer.kvkk')}
-            </Link>
-            <Link href="/kullanim-kosullari" style={{ fontSize: '0.85rem', opacity: 0.8, textDecoration: 'none', color: 'rgba(255, 255, 255, 0.7)', transition: 'var(--transition-smooth)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-accent)'} onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}>
-              {t('footer.kullanici')}
-            </Link>
-            <Link href="/mesafeli-satis" style={{ fontSize: '0.85rem', opacity: 0.8, textDecoration: 'none', color: 'rgba(255, 255, 255, 0.7)', transition: 'var(--transition-smooth)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-accent)'} onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}>
-              {t('footer.satis')}
-            </Link>
-            <Link href="/on-bilgilendirme" style={{ fontSize: '0.85rem', opacity: 0.8, textDecoration: 'none', color: 'rgba(255, 255, 255, 0.7)', transition: 'var(--transition-smooth)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-accent)'} onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}>
-              {t('footer.bilgi')}
-            </Link>
-            <Link href="/iade-ve-cayma" style={{ fontSize: '0.85rem', opacity: 0.8, textDecoration: 'none', color: 'rgba(255, 255, 255, 0.7)', transition: 'var(--transition-smooth)' }} onMouseOver={(e) => e.currentTarget.style.color = 'var(--color-accent)'} onMouseOut={(e) => e.currentTarget.style.color = 'rgba(255, 255, 255, 0.7)'}>
-              {t('footer.iade')}
-            </Link>
-          </div>
+          <p className="footer-copyright footer-shimmer" style={{ margin: 0 }}>&copy; {currentYear} Lale Perde. {t('footer.allRightsReserved')}</p>
+          <a 
+            href="https://vellium.dev" 
+            target="_blank" 
+            rel="noopener noreferrer" 
+            className="footer-attribution" 
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none', transition: 'opacity 0.3s ease' }}
+            onMouseOver={(e) => e.currentTarget.style.opacity = '0.8'}
+            onMouseOut={(e) => e.currentTarget.style.opacity = '1'}
+          >
+            <svg 
+              version="1.0" 
+              xmlns="http://www.w3.org/2000/svg"
+              width="22" 
+              height="18" 
+              viewBox="0 145 1024 818" 
+              style={{ flexShrink: 0 }}
+            >
+              <defs>
+                <linearGradient id="velliumShimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#BD954B" />
+                  <stop offset="50%" stopColor="#FFF5D6" />
+                  <stop offset="100%" stopColor="#BD954B" />
+                  <animate attributeName="x1" from="-200%" to="200%" dur="6s" repeatCount="indefinite" />
+                  <animate attributeName="x2" from="-100%" to="300%" dur="6s" repeatCount="indefinite" />
+                </linearGradient>
+              </defs>
+              <g transform="translate(0.000000,1024.000000) scale(0.100000,-0.100000)" fill="url(#velliumShimmer)" stroke="none">
+                <path d="M53 8745 c-34 -24 -29 -64 12 -112 52 -61 101 -80 235 -93 410 -38 673 -149 923 -389 161 -155 293 -332 442 -591 106 -186 1284 -2552 2777 -5580 621 -1260 655 -1327 674 -1334 22 -8 47 38 236 422 773 1576 1151 2344 1548 3147 117 237 259 525 315 640 350 715 1261 2549 1313 2643 256 465 528 758 836 903 161 75 298 110 530 135 175 19 214 32 266 91 46 53 53 93 18 117 -27 19 -189 21 -718 6 -626 -18 -768 -30 -1008 -86 -260 -61 -467 -156 -682 -313 -97 -71 -300 -274 -374 -374 -147 -198 -178 -257 -674 -1272 -115 -236 -373 -761 -572 -1165 -200 -404 -504 -1023 -676 -1375 -369 -754 -336 -690 -354 -690 -8 0 -67 106 -141 255 -185 368 -886 1784 -1431 2890 -469 952 -541 1092 -626 1225 -287 449 -705 733 -1233 839 -228 46 -487 61 -1203 72 -373 5 -413 5 -433 -11z m1717 -370 c184 -30 402 -121 560 -234 171 -121 350 -325 463 -527 55 -99 606 -1204 1367 -2744 608 -1230 930 -1873 946 -1890 12 -13 16 -13 28 0 13 13 278 547 751 1515 62 127 240 487 395 800 155 314 331 669 390 790 355 726 736 1487 780 1560 166 275 368 471 615 597 207 105 451 166 553 139 76 -21 66 -62 -72 -288 -85 -140 -211 -382 -396 -758 -92 -187 -353 -713 -580 -1170 -792 -1595 -1317 -2664 -1742 -3550 -399 -830 -687 -1410 -702 -1413 -20 -4 -297 544 -701 1388 -430 899 -2542 5154 -2657 5355 -26 44 -80 137 -121 208 -86 146 -94 169 -73 202 24 37 64 41 196 20z"/>
+              </g>
+            </svg>
+            <span className="footer-shimmer" style={{ fontWeight: 400 }}>Designed & Developed by Vellium</span>
+          </a>
         </div>
       </div>
     </footer>

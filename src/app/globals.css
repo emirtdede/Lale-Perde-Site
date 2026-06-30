@@ -1320,8 +1320,23 @@ footer {
   }
 
   .appointment-title {
-    font-size: 2.2rem !important;
+    font-size: 1.8rem !important;
     line-height: 1.3 !important;
+  }
+  .appointment-info > p {
+    font-size: 0.95rem !important;
+    line-height: 1.5 !important;
+  }
+  .contact-text h4 {
+    font-size: 0.75rem !important;
+  }
+  .contact-text p, .contact-text p a {
+    font-size: 0.95rem !important;
+    word-break: break-all;
+  }
+  .contact-icon {
+    width: 40px !important;
+    height: 40px !important;
   }
   
   .collections-grid {
@@ -1423,10 +1438,17 @@ footer {
   /* Koleksiyonlar Carousel Navigasyon Butonları Çakışma Önleme */
   .kinetic-carousel-wrapper {
     padding: 1.5rem 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+    width: 100% !important;
   }
   .kinetic-carousel-wheel {
     width: 220px !important;
     height: 350px !important;
+    margin: 0 auto !important;
+    position: relative !important;
   }
   .carousel-nav-btn {
     width: 42px !important;
@@ -1450,12 +1472,36 @@ footer {
     letter-spacing: 0.15em !important;
   }
   .appointment-title {
-    font-size: 1.8rem !important;
+    font-size: 1.4rem !important;
     line-height: 1.3 !important;
+  }
+  .appointment-info > p {
+    font-size: 0.85rem !important;
+    line-height: 1.4 !important;
+  }
+  .contact-text h4 {
+    font-size: 0.7rem !important;
+  }
+  .contact-text p, .contact-text p a {
+    font-size: 0.85rem !important;
+    word-break: break-all;
+  }
+  .contact-icon {
+    width: 36px !important;
+    height: 36px !important;
+  }
+  .kinetic-carousel-wrapper {
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    margin: 0 auto !important;
+    width: 100% !important;
   }
   .kinetic-carousel-wheel {
     width: 195px !important;
     height: 320px !important;
+    margin: 0 auto !important;
+    position: relative !important;
   }
   .carousel-nav-btn {
     width: 38px !important;
@@ -1678,8 +1724,8 @@ header#main-header.not-home.has-banner.scrolled + main {
 
 .professional-footer .footer-grid {
   display: grid;
-  grid-template-columns: 1.5fr 1fr 1.5fr;
-  gap: 5rem;
+  grid-template-columns: 1.5fr 1fr 1fr 1.5fr;
+  gap: 3rem;
   max-width: 1400px;
   margin: 0 auto 4rem;
 }
@@ -1822,6 +1868,10 @@ header#main-header.not-home.has-banner.scrolled + main {
   border-color: var(--color-accent);
 }
 
+.footer-col-pages {
+  padding-left: 2.5rem;
+}
+
 /* Responsiveness for Footer */
 @media (max-width: 1024px) {
   .professional-footer .footer-grid {
@@ -1830,6 +1880,9 @@ header#main-header.not-home.has-banner.scrolled + main {
   }
   .footer-col-map {
     grid-column: span 2;
+  }
+  .footer-col-pages {
+    padding-left: 0 !important;
   }
 }
 
@@ -2177,4 +2230,23 @@ input[type="number"] {
   main [style*="borderBottom: 2px solid"] {
     flex-wrap: wrap !important;
   }
+}
+
+@keyframes footerShimmerText {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.footer-shimmer {
+  background: linear-gradient(120deg, #BD954B 40%, #FFF5D6 50%, #BD954B 60%) fixed;
+  background-size: 200% auto;
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: footerShimmerText 6s linear infinite;
+  display: inline-block;
 }

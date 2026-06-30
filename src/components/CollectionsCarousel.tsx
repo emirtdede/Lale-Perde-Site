@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useLanguage } from '../context/LanguageContext';
+import Link from 'next/link';
 import { Category } from '../context/dbTypes';
 
 interface CollectionsCarouselProps {
@@ -16,6 +17,7 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
   
   const [isDragging, setIsDragging] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
   
   const rotationRef = useRef(0);
   const wheelRef = useRef<HTMLDivElement>(null);
@@ -30,7 +32,14 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
   const lastX = useRef(0);
   const requestRef = useRef<number | null>(null);
 
-
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const handleImageLoad = (id: string) => {
     setImagesLoaded((prev) => ({ ...prev, [id]: true }));
@@ -187,6 +196,7 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
           position: 'relative',
           width: '302px',   // 280px * 1.08
           height: '453px',  // 420px * 1.08
+          margin: '0 auto',
           transformStyle: 'preserve-3d',
           transform: 'rotateY(0deg)',
           transition: isDragging ? 'none' : 'transform 0.6s cubic-bezier(0.25, 1, 0.5, 1)',
@@ -194,7 +204,9 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
       >
         {activeCategories.map((cat, idx) => {
           const itemAngle = idx * angleStep;
-          const zDepth = Math.max(300, 160 + count * 40);
+          const zDepth = isMobile
+            ? Math.max(140, 90 + count * 15)
+            : Math.max(300, 160 + count * 40);
           const isActive = idx === activeIndex;
           const diff = Math.abs(idx - activeIndex);
           const distance = Math.min(diff, count - diff);
@@ -202,14 +214,24 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
           const isVisible = isActive || isNeighbor;
 
           return (
-            <div
+            <Link
               key={cat.id}
-              onClick={() => {
-                if (!isVisible) return;
-                if (isActive) {
-                  router.push(`/urunler?category=${cat.id}`);
-                } else {
+              href={`/urunler?category=${cat.id}`}
+              onClick={(e) => {
+                if (!isVisible) {
+                  e.preventDefault();
+                  return;
+                }
+                if (!isActive) {
+                  e.preventDefault();
                   selectCategory(idx);
+                } else if (isDragging) {
+                  e.preventDefault();
+                }
+              }}
+              onAuxClick={(e) => {
+                if (!isActive || !isVisible || isDragging) {
+                  e.preventDefault();
                 }
               }}
               style={{
@@ -227,6 +249,8 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
                 pointerEvents: isVisible ? 'auto' : 'none',
                 filter: isActive ? 'none' : 'brightness(0.65)',
                 zIndex: isActive ? 10 : 1,
+                display: 'block',
+                textDecoration: 'none'
               }}
             >
               {/* Card Container (Image only, 85% height of outer container) */}
@@ -299,7 +323,7 @@ export default function CollectionsCarousel({ categories }: CollectionsCarouselP
                   {language === 'tr' ? cat.nameTr : cat.nameEn}
                 </h3>
               </div>
-            </div>
+            </Link>
           );
         })}
       </div>
